@@ -1,0 +1,752 @@
+# ============================================================================
+# models.yaml - Khai báo Semantic Layer cho AdventureWorksDW2025
+# ============================================================================
+# File này định nghĩa models (tables), columns (với mô tả), và relationships
+# mà AI sẽ sử dụng để hiểu database và sinh SQL chính xác.
+#
+# Conventions:
+#   - name: tên cột gốc trong DB (dùng để query thật)
+#   - display_name: tên rõ nghĩa cho AI đọc (bỏ nếu name đã rõ)
+#   - description: mô tả bằng tiếng Việt cho AI hiểu ngữ nghĩa
+# ============================================================================
+
+models:
+  # ─── DIMENSION TABLES ─────────────────────────────────────────────────────
+
+  - name: customers
+    table: dbo.DimCustomer
+    description: >
+      Thông tin khách hàng cá nhân. Mỗi dòng là 1 khách hàng,
+      bao gồm tên, email, ngày sinh, thu nhập, nghề nghiệp, địa chỉ.
+    primary_key: CustomerKey
+    columns:
+      - name: CustomerKey
+        display_name: "Mã khách hàng"
+        type: integer
+        description: "Mã khách hàng (PK, dùng để join với bảng bán hàng)"
+      - name: GeographyKey
+        display_name: "Mã địa lý"
+        type: integer
+        description: "FK tới bảng geography (vị trí địa lý khách hàng)"
+      - name: CustomerAlternateKey
+        display_name: "Mã khách hàng thay thế"
+        type: string
+        description: "Mã khách hàng thay thế (business key)"
+      - name: Title
+        display_name: "Danh xưng"
+        type: string
+        description: "Danh xưng: Mr., Mrs., Ms."
+      - name: FirstName
+        display_name: "Tên"
+        type: string
+        description: "Tên khách hàng"
+      - name: MiddleName
+        display_name: "Tên đệm"
+        type: string
+        description: "Tên đệm"
+      - name: LastName
+        display_name: "Họ"
+        type: string
+        description: "Họ khách hàng"
+      - name: BirthDate
+        display_name: "Ngày sinh"
+        type: date
+        description: "Ngày sinh khách hàng"
+      - name: MaritalStatus
+        display_name: "Tình trạng hôn nhân"
+        type: string
+        description: "Tình trạng hôn nhân: S = Single, M = Married"
+      - name: Gender
+        display_name: "Giới tính"
+        type: string
+        description: "Giới tính: M = Male, F = Female"
+      - name: EmailAddress
+        display_name: "Email"
+        type: string
+        description: "Địa chỉ email"
+      - name: YearlyIncome
+        display_name: "Thu nhập hàng năm"
+        type: decimal
+        description: "Thu nhập hàng năm (USD)"
+      - name: TotalChildren
+        display_name: "Tổng số con"
+        type: integer
+        description: "Tổng số con"
+      - name: EnglishEducation
+        display_name: "Trình độ học vấn"
+        type: string
+        description: "Trình độ học vấn: Bachelors, Graduate Degree, High School, Partial College, Partial High School"
+      - name: EnglishOccupation
+        display_name: "Nghề nghiệp"
+        type: string
+        description: "Nghề nghiệp: Professional, Skilled Manual, Clerical, Management, Manual"
+      - name: HouseOwnerFlag
+        display_name: "Sở hữu nhà"
+        type: string
+        description: "Có sở hữu nhà không: 1 = Có, 0 = Không"
+      - name: NumberCarsOwned
+        display_name: "Số xe sở hữu"
+        type: integer
+        description: "Số xe ô tô sở hữu"
+      - name: AddressLine1
+        display_name: "Địa chỉ"
+        type: string
+        description: "Địa chỉ dòng 1"
+      - name: Phone
+        display_name: "Số điện thoại"
+        type: string
+        description: "Số điện thoại"
+      - name: DateFirstPurchase
+        display_name: "Ngày mua đầu tiên"
+        type: date
+        description: "Ngày mua hàng đầu tiên"
+      - name: CommuteDistance
+        display_name: "Khoảng cách đi làm"
+        type: string
+        description: "Khoảng cách đi làm: 0-1 Miles, 1-2 Miles, 2-5 Miles, 5-10 Miles, 10+ Miles"
+
+  - name: products
+    table: dbo.DimProduct
+    description: >
+      Danh mục sản phẩm. Mỗi dòng là 1 sản phẩm bao gồm tên,
+      mã, màu sắc, kích thước, giá niêm yết, chi phí, và danh mục phụ.
+    primary_key: ProductKey
+    columns:
+      - name: ProductKey
+        display_name: "Mã sản phẩm"
+        type: integer
+        description: "Mã sản phẩm (PK)"
+      - name: ProductAlternateKey
+        display_name: "Mã SKU"
+        type: string
+        description: "Mã sản phẩm thay thế (SKU)"
+      - name: ProductSubcategoryKey
+        display_name: "Mã danh mục phụ"
+        type: integer
+        description: "FK tới bảng danh mục phụ sản phẩm"
+      - name: EnglishProductName
+        display_name: "Tên sản phẩm"
+        type: string
+        description: "Tên sản phẩm (tiếng Anh)"
+      - name: StandardCost
+        display_name: "Chi phí sản xuất"
+        type: decimal
+        description: "Chi phí sản xuất tiêu chuẩn (USD)"
+      - name: Color
+        display_name: "Màu sắc"
+        type: string
+        description: "Màu sắc sản phẩm"
+      - name: SafetyStockLevel
+        display_name: "Tồn kho an toàn"
+        type: integer
+        description: "Mức tồn kho an toàn"
+      - name: ReorderPoint
+        display_name: "Điểm đặt hàng lại"
+        type: integer
+        description: "Điểm đặt hàng lại"
+      - name: ListPrice
+        display_name: "Giá niêm yết"
+        type: decimal
+        description: "Giá niêm yết (USD)"
+      - name: Size
+        display_name: "Kích thước"
+        type: string
+        description: "Kích thước sản phẩm"
+      - name: DaysToManufacture
+        display_name: "Số ngày sản xuất"
+        type: integer
+        description: "Số ngày sản xuất"
+      - name: DealerPrice
+        display_name: "Giá đại lý"
+        type: decimal
+        description: "Giá đại lý (USD)"
+      - name: Status
+        display_name: "Trạng thái"
+        type: string
+        description: "Trạng thái sản phẩm: Current, NULL (discontinued)"
+
+  - name: product_subcategories
+    table: dbo.DimProductSubcategory
+    description: "Danh mục phụ sản phẩm (vd: Road Bikes, Mountain Bikes, Jerseys...)"
+    primary_key: ProductSubcategoryKey
+    columns:
+      - name: ProductSubcategoryKey
+        display_name: "Mã danh mục phụ"
+        type: integer
+        description: "Mã danh mục phụ (PK)"
+      - name: ProductCategoryKey
+        display_name: "Mã danh mục chính"
+        type: integer
+        description: "FK tới bảng danh mục chính"
+      - name: EnglishProductSubcategoryName
+        display_name: "Tên danh mục phụ"
+        type: string
+        description: "Tên danh mục phụ (tiếng Anh)"
+
+  - name: product_categories
+    table: dbo.DimProductCategory
+    description: "Danh mục chính sản phẩm: Bikes, Components, Clothing, Accessories"
+    primary_key: ProductCategoryKey
+    columns:
+      - name: ProductCategoryKey
+        display_name: "Mã danh mục chính"
+        type: integer
+        description: "Mã danh mục chính (PK)"
+      - name: EnglishProductCategoryName
+        display_name: "Tên danh mục chính"
+        type: string
+        description: "Tên danh mục chính (tiếng Anh): Bikes, Components, Clothing, Accessories"
+
+  - name: dates
+    table: dbo.DimDate
+    description: >
+      Bảng chiều thời gian (Date Dimension). Chứa thông tin ngày, tuần, tháng,
+      quý, năm cho cả lịch Calendar và Fiscal.
+    primary_key: DateKey
+    columns:
+      - name: DateKey
+        display_name: "Mã ngày"
+        type: integer
+        description: "Mã ngày (PK, format: YYYYMMDD)"
+      - name: FullDateAlternateKey
+        display_name: "Ngày đầy đủ"
+        type: date
+        description: "Ngày đầy đủ dạng date"
+      - name: EnglishDayNameOfWeek
+        display_name: "Tên ngày trong tuần"
+        type: string
+        description: "Tên ngày trong tuần (tiếng Anh): Monday, Tuesday..."
+      - name: DayNumberOfMonth
+        display_name: "Ngày trong tháng"
+        type: integer
+        description: "Ngày trong tháng (1-31)"
+      - name: DayNumberOfYear
+        display_name: "Ngày trong năm"
+        type: integer
+        description: "Ngày trong năm (1-366)"
+      - name: WeekNumberOfYear
+        display_name: "Tuần trong năm"
+        type: integer
+        description: "Tuần trong năm (1-53)"
+      - name: EnglishMonthName
+        display_name: "Tên tháng"
+        type: string
+        description: "Tên tháng (tiếng Anh): January, February..."
+      - name: MonthNumberOfYear
+        display_name: "Tháng trong năm"
+        type: integer
+        description: "Tháng trong năm (1-12)"
+      - name: CalendarQuarter
+        display_name: "Quý"
+        type: integer
+        description: "Quý trong năm (1-4)"
+      - name: CalendarYear
+        display_name: "Năm"
+        type: integer
+        description: "Năm dương lịch"
+      - name: CalendarSemester
+        display_name: "Nửa năm"
+        type: integer
+        description: "Học kỳ/nửa năm (1-2)"
+      - name: FiscalQuarter
+        display_name: "Quý tài chính"
+        type: integer
+        description: "Quý tài chính (1-4)"
+      - name: FiscalYear
+        display_name: "Năm tài chính"
+        type: integer
+        description: "Năm tài chính"
+
+  - name: geography
+    table: dbo.DimGeography
+    description: "Thông tin địa lý: thành phố, tiểu bang/tỉnh, quốc gia, vùng bán hàng."
+    primary_key: GeographyKey
+    columns:
+      - name: GeographyKey
+        display_name: "Mã địa lý"
+        type: integer
+        description: "Mã địa lý (PK)"
+      - name: City
+        display_name: "Thành phố"
+        type: string
+        description: "Tên thành phố"
+      - name: StateProvinceCode
+        display_name: "Mã tỉnh/tiểu bang"
+        type: string
+        description: "Mã tiểu bang/tỉnh"
+      - name: StateProvinceName
+        display_name: "Tên tỉnh/tiểu bang"
+        type: string
+        description: "Tên tiểu bang/tỉnh"
+      - name: CountryRegionCode
+        display_name: "Mã quốc gia"
+        type: string
+        description: "Mã quốc gia"
+      - name: EnglishCountryRegionName
+        display_name: "Tên quốc gia"
+        type: string
+        description: "Tên quốc gia (tiếng Anh)"
+      - name: PostalCode
+        display_name: "Mã bưu điện"
+        type: string
+        description: "Mã bưu điện"
+      - name: SalesTerritoryKey
+        display_name: "Mã vùng bán hàng"
+        type: integer
+        description: "FK tới bảng vùng bán hàng"
+
+  - name: sales_territory
+    table: dbo.DimSalesTerritory
+    description: "Vùng bán hàng: North America, Europe, Pacific..."
+    primary_key: SalesTerritoryKey
+    columns:
+      - name: SalesTerritoryKey
+        display_name: "Mã vùng bán hàng"
+        type: integer
+        description: "Mã vùng bán hàng (PK)"
+      - name: SalesTerritoryAlternateKey
+        display_name: "Mã vùng thay thế"
+        type: integer
+        description: "Mã vùng thay thế"
+      - name: SalesTerritoryRegion
+        display_name: "Tên vùng"
+        type: string
+        description: "Tên vùng: Northwest, Northeast, Central, Southwest, Southeast, Canada, France, Germany, Australia, United Kingdom"
+      - name: SalesTerritoryCountry
+        display_name: "Quốc gia vùng bán hàng"
+        type: string
+        description: "Quốc gia của vùng bán hàng"
+      - name: SalesTerritoryGroup
+        display_name: "Nhóm vùng"
+        type: string
+        description: "Nhóm vùng: North America, Europe, Pacific"
+
+  - name: currency
+    table: dbo.DimCurrency
+    description: "Danh sách tiền tệ: USD, EUR, GBP..."
+    primary_key: CurrencyKey
+    columns:
+      - name: CurrencyKey
+        display_name: "Mã tiền tệ"
+        type: integer
+        description: "Mã tiền tệ (PK)"
+      - name: CurrencyAlternateKey
+        display_name: "Mã ISO tiền tệ"
+        type: string
+        description: "Mã tiền tệ ISO (vd: USD, EUR)"
+      - name: CurrencyName
+        display_name: "Tên tiền tệ"
+        type: string
+        description: "Tên tiền tệ đầy đủ"
+
+  - name: promotions
+    table: dbo.DimPromotion
+    description: "Chương trình khuyến mãi: No Discount, Volume Discount..."
+    primary_key: PromotionKey
+    columns:
+      - name: PromotionKey
+        display_name: "Mã khuyến mãi"
+        type: integer
+        description: "Mã khuyến mãi (PK)"
+      - name: PromotionAlternateKey
+        display_name: "Mã KM thay thế"
+        type: integer
+        description: "Mã khuyến mãi thay thế"
+      - name: EnglishPromotionName
+        display_name: "Tên khuyến mãi"
+        type: string
+        description: "Tên chương trình khuyến mãi"
+      - name: EnglishPromotionType
+        display_name: "Loại khuyến mãi"
+        type: string
+        description: "Loại khuyến mãi"
+      - name: EnglishPromotionCategory
+        display_name: "Danh mục khuyến mãi"
+        type: string
+        description: "Danh mục khuyến mãi"
+      - name: StartDate
+        display_name: "Ngày bắt đầu"
+        type: datetime
+        description: "Ngày bắt đầu khuyến mãi"
+      - name: EndDate
+        display_name: "Ngày kết thúc"
+        type: datetime
+        description: "Ngày kết thúc khuyến mãi"
+      - name: MinQty
+        display_name: "Số lượng tối thiểu"
+        type: integer
+        description: "Số lượng tối thiểu để áp dụng"
+      - name: MaxQty
+        display_name: "Số lượng tối đa"
+        type: integer
+        description: "Số lượng tối đa được áp dụng"
+
+  - name: resellers
+    table: dbo.DimReseller
+    description: "Đại lý/nhà bán lẻ: thông tin về cửa hàng, loại hình kinh doanh, số nhân viên."
+    primary_key: ResellerKey
+    columns:
+      - name: ResellerKey
+        display_name: "Mã đại lý"
+        type: integer
+        description: "Mã đại lý (PK)"
+      - name: GeographyKey
+        display_name: "Mã địa lý"
+        type: integer
+        description: "FK tới bảng geography"
+      - name: ResellerAlternateKey
+        display_name: "Mã đại lý thay thế"
+        type: string
+        description: "Mã đại lý thay thế"
+      - name: ResellerName
+        display_name: "Tên đại lý"
+        type: string
+        description: "Tên đại lý/cửa hàng"
+      - name: NumberEmployees
+        display_name: "Số nhân viên"
+        type: integer
+        description: "Số nhân viên"
+      - name: OrderFrequency
+        display_name: "Tần suất đặt hàng"
+        type: string
+        description: "Tần suất đặt hàng: A = Annual, S = Semi-Annual, Q = Quarterly"
+      - name: ProductLine
+        display_name: "Dòng sản phẩm"
+        type: string
+        description: "Dòng sản phẩm bán"
+      - name: BusinessType
+        display_name: "Loại hình kinh doanh"
+        type: string
+        description: "Loại hình kinh doanh: Warehouse, Specialty Bike Shop, Value Added Reseller"
+      - name: AnnualSales
+        display_name: "Doanh thu hàng năm"
+        type: decimal
+        description: "Doanh thu hàng năm (USD)"
+      - name: AnnualRevenue
+        display_name: "Doanh thu ròng hàng năm"
+        type: decimal
+        description: "Doanh thu ròng hàng năm (USD)"
+      - name: YearOpened
+        display_name: "Năm mở cửa hàng"
+        type: integer
+        description: "Năm mở cửa hàng"
+
+  # ─── FACT TABLES ───────────────────────────────────────────────────────────
+
+  - name: internet_sales
+    table: dbo.FactInternetSales
+    description: >
+      Doanh số bán hàng qua Internet (B2C).
+      Mỗi dòng là 1 dòng đơn hàng online, chứa thông tin sản phẩm,
+      khách hàng, ngày đặt/giao, số lượng, giá, chi phí.
+    primary_key: SalesOrderNumber
+    columns:
+      - name: ProductKey
+        display_name: "Mã sản phẩm"
+        type: integer
+        description: "FK tới bảng sản phẩm"
+      - name: OrderDateKey
+        display_name: "Mã ngày đặt hàng"
+        type: integer
+        description: "FK tới bảng ngày (ngày đặt hàng)"
+      - name: DueDateKey
+        display_name: "Mã ngày đáo hạn"
+        type: integer
+        description: "FK tới bảng ngày (ngày đáo hạn)"
+      - name: ShipDateKey
+        display_name: "Mã ngày giao hàng"
+        type: integer
+        description: "FK tới bảng ngày (ngày giao hàng)"
+      - name: CustomerKey
+        display_name: "Mã khách hàng"
+        type: integer
+        description: "FK tới bảng khách hàng"
+      - name: PromotionKey
+        display_name: "Mã khuyến mãi"
+        type: integer
+        description: "FK tới bảng khuyến mãi"
+      - name: CurrencyKey
+        display_name: "Mã tiền tệ"
+        type: integer
+        description: "FK tới bảng tiền tệ"
+      - name: SalesTerritoryKey
+        display_name: "Mã vùng bán hàng"
+        type: integer
+        description: "FK tới bảng vùng bán hàng"
+      - name: SalesOrderNumber
+        display_name: "Mã đơn hàng"
+        type: string
+        description: "Mã đơn hàng (vd: SO43697)"
+      - name: SalesOrderLineNumber
+        display_name: "Số thứ tự dòng"
+        type: integer
+        description: "Số thứ tự dòng trong đơn hàng"
+      - name: RevisionNumber
+        display_name: "Phiên bản sửa đổi"
+        type: integer
+        description: "Phiên bản sửa đổi đơn hàng"
+      - name: OrderQuantity
+        display_name: "Số lượng đặt"
+        type: integer
+        description: "Số lượng sản phẩm đặt"
+      - name: UnitPrice
+        display_name: "Đơn giá"
+        type: decimal
+        description: "Đơn giá sản phẩm (USD)"
+      - name: ExtendedAmount
+        display_name: "Thành tiền"
+        type: decimal
+        description: "Thành tiền = UnitPrice × OrderQuantity"
+      - name: UnitPriceDiscountPct
+        display_name: "Phần trăm giảm giá"
+        type: decimal
+        description: "Phần trăm giảm giá"
+      - name: DiscountAmount
+        display_name: "Số tiền giảm giá"
+        type: decimal
+        description: "Số tiền giảm giá (USD)"
+      - name: ProductStandardCost
+        display_name: "Chi phí sản xuất"
+        type: decimal
+        description: "Chi phí sản xuất tiêu chuẩn (USD)"
+      - name: TotalProductCost
+        display_name: "Tổng chi phí sản phẩm"
+        type: decimal
+        description: "Tổng chi phí sản phẩm (USD)"
+      - name: SalesAmount
+        display_name: "Doanh thu"
+        type: decimal
+        description: "Doanh thu thực tế (USD) = ExtendedAmount - DiscountAmount"
+      - name: TaxAmt
+        display_name: "Thuế"
+        type: decimal
+        description: "Số tiền thuế (USD)"
+      - name: Freight
+        display_name: "Phí vận chuyển"
+        type: decimal
+        description: "Chi phí vận chuyển (USD)"
+      - name: OrderDate
+        display_name: "Ngày đặt hàng"
+        type: datetime
+        description: "Ngày đặt hàng"
+      - name: DueDate
+        display_name: "Ngày đáo hạn"
+        type: datetime
+        description: "Ngày đáo hạn"
+      - name: ShipDate
+        display_name: "Ngày giao hàng"
+        type: datetime
+        description: "Ngày giao hàng thực tế"
+
+  - name: reseller_sales
+    table: dbo.FactResellerSales
+    description: >
+      Doanh số bán hàng qua đại lý (B2B).
+      Mỗi dòng là 1 dòng đơn hàng bán cho đại lý, chứa sản phẩm,
+      nhân viên bán, ngày, số lượng, doanh thu.
+    primary_key: SalesOrderNumber
+    columns:
+      - name: ProductKey
+        display_name: "Mã sản phẩm"
+        type: integer
+        description: "FK tới bảng sản phẩm"
+      - name: OrderDateKey
+        display_name: "Mã ngày đặt hàng"
+        type: integer
+        description: "FK tới bảng ngày (ngày đặt hàng)"
+      - name: DueDateKey
+        display_name: "Mã ngày đáo hạn"
+        type: integer
+        description: "FK tới bảng ngày (ngày đáo hạn)"
+      - name: ShipDateKey
+        display_name: "Mã ngày giao hàng"
+        type: integer
+        description: "FK tới bảng ngày (ngày giao hàng)"
+      - name: ResellerKey
+        display_name: "Mã đại lý"
+        type: integer
+        description: "FK tới bảng đại lý"
+      - name: EmployeeKey
+        display_name: "Mã nhân viên"
+        type: integer
+        description: "FK tới bảng nhân viên (người bán)"
+      - name: PromotionKey
+        display_name: "Mã khuyến mãi"
+        type: integer
+        description: "FK tới bảng khuyến mãi"
+      - name: CurrencyKey
+        display_name: "Mã tiền tệ"
+        type: integer
+        description: "FK tới bảng tiền tệ"
+      - name: SalesTerritoryKey
+        display_name: "Mã vùng bán hàng"
+        type: integer
+        description: "FK tới bảng vùng bán hàng"
+      - name: SalesOrderNumber
+        display_name: "Mã đơn hàng đại lý"
+        type: string
+        description: "Mã đơn hàng đại lý"
+      - name: SalesOrderLineNumber
+        display_name: "Số thứ tự dòng"
+        type: integer
+        description: "Số thứ tự dòng trong đơn hàng"
+      - name: OrderQuantity
+        display_name: "Số lượng đặt"
+        type: integer
+        description: "Số lượng sản phẩm đặt"
+      - name: UnitPrice
+        display_name: "Đơn giá"
+        type: decimal
+        description: "Đơn giá sản phẩm (USD)"
+      - name: ExtendedAmount
+        display_name: "Thành tiền"
+        type: decimal
+        description: "Thành tiền = UnitPrice × OrderQuantity"
+      - name: UnitPriceDiscountPct
+        display_name: "Phần trăm giảm giá"
+        type: decimal
+        description: "Phần trăm giảm giá"
+      - name: DiscountAmount
+        display_name: "Số tiền giảm giá"
+        type: decimal
+        description: "Số tiền giảm giá (USD)"
+      - name: ProductStandardCost
+        display_name: "Chi phí sản xuất"
+        type: decimal
+        description: "Chi phí sản xuất tiêu chuẩn (USD)"
+      - name: TotalProductCost
+        display_name: "Tổng chi phí sản phẩm"
+        type: decimal
+        description: "Tổng chi phí sản phẩm (USD)"
+      - name: SalesAmount
+        display_name: "Doanh thu"
+        type: decimal
+        description: "Doanh thu thực tế (USD)"
+      - name: TaxAmt
+        display_name: "Thuế"
+        type: decimal
+        description: "Số tiền thuế (USD)"
+      - name: Freight
+        display_name: "Phí vận chuyển"
+        type: decimal
+        description: "Chi phí vận chuyển (USD)"
+      - name: OrderDate
+        display_name: "Ngày đặt hàng"
+        type: datetime
+        description: "Ngày đặt hàng"
+      - name: DueDate
+        display_name: "Ngày đáo hạn"
+        type: datetime
+        description: "Ngày đáo hạn"
+      - name: ShipDate
+        display_name: "Ngày giao hàng"
+        type: datetime
+        description: "Ngày giao hàng thực tế"
+
+# ─── RELATIONSHIPS ─────────────────────────────────────────────────────────
+
+relationships:
+  # Internet Sales
+  - name: internet_sales_to_customer
+    from: internet_sales
+    to: customers
+    type: MANY_TO_ONE
+    condition: "internet_sales.CustomerKey = customers.CustomerKey"
+
+  - name: internet_sales_to_product
+    from: internet_sales
+    to: products
+    type: MANY_TO_ONE
+    condition: "internet_sales.ProductKey = products.ProductKey"
+
+  - name: internet_sales_to_order_date
+    from: internet_sales
+    to: dates
+    type: MANY_TO_ONE
+    condition: "internet_sales.OrderDateKey = dates.DateKey"
+
+  - name: internet_sales_to_currency
+    from: internet_sales
+    to: currency
+    type: MANY_TO_ONE
+    condition: "internet_sales.CurrencyKey = currency.CurrencyKey"
+
+  - name: internet_sales_to_promotion
+    from: internet_sales
+    to: promotions
+    type: MANY_TO_ONE
+    condition: "internet_sales.PromotionKey = promotions.PromotionKey"
+
+  - name: internet_sales_to_territory
+    from: internet_sales
+    to: sales_territory
+    type: MANY_TO_ONE
+    condition: "internet_sales.SalesTerritoryKey = sales_territory.SalesTerritoryKey"
+
+  # Reseller Sales
+  - name: reseller_sales_to_product
+    from: reseller_sales
+    to: products
+    type: MANY_TO_ONE
+    condition: "reseller_sales.ProductKey = products.ProductKey"
+
+  - name: reseller_sales_to_reseller
+    from: reseller_sales
+    to: resellers
+    type: MANY_TO_ONE
+    condition: "reseller_sales.ResellerKey = resellers.ResellerKey"
+
+  - name: reseller_sales_to_order_date
+    from: reseller_sales
+    to: dates
+    type: MANY_TO_ONE
+    condition: "reseller_sales.OrderDateKey = dates.DateKey"
+
+  - name: reseller_sales_to_currency
+    from: reseller_sales
+    to: currency
+    type: MANY_TO_ONE
+    condition: "reseller_sales.CurrencyKey = currency.CurrencyKey"
+
+  - name: reseller_sales_to_promotion
+    from: reseller_sales
+    to: promotions
+    type: MANY_TO_ONE
+    condition: "reseller_sales.PromotionKey = promotions.PromotionKey"
+
+  - name: reseller_sales_to_territory
+    from: reseller_sales
+    to: sales_territory
+    type: MANY_TO_ONE
+    condition: "reseller_sales.SalesTerritoryKey = sales_territory.SalesTerritoryKey"
+
+  # Dimension relationships
+  - name: customer_to_geography
+    from: customers
+    to: geography
+    type: MANY_TO_ONE
+    condition: "customers.GeographyKey = geography.GeographyKey"
+
+  - name: geography_to_territory
+    from: geography
+    to: sales_territory
+    type: MANY_TO_ONE
+    condition: "geography.SalesTerritoryKey = sales_territory.SalesTerritoryKey"
+
+  - name: product_to_subcategory
+    from: products
+    to: product_subcategories
+    type: MANY_TO_ONE
+    condition: "products.ProductSubcategoryKey = product_subcategories.ProductSubcategoryKey"
+
+  - name: subcategory_to_category
+    from: product_subcategories
+    to: product_categories
+    type: MANY_TO_ONE
+    condition: "product_subcategories.ProductCategoryKey = product_categories.ProductCategoryKey"
+
+  - name: reseller_to_geography
+    from: resellers
+    to: geography
+    type: MANY_TO_ONE
+    condition: "resellers.GeographyKey = geography.GeographyKey"

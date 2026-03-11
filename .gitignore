@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+
+# Environment variables (KHÔNG push key thật lên GitHub)
+.env
+
+# ChromaDB data
+chroma_data/
+chroma_test_data/
+
+# Manifests (generated)
+manifests/
+
+# IDE
+.vscode/
+.idea/
+
+# Temp files
+*.tmp
+test_output.txt

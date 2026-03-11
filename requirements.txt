@@ -1,0 +1,15 @@
+# Phase 1: Database Connector
+pyodbc>=5.1.0
+sqlalchemy>=2.0.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+pyyaml>=6.0
+
+# Phase 3: Indexing
+chromadb>=0.5.0
+huggingface_hub>=0.20.0
+numpy
+# openai
+# fastapi
+# uvicorn

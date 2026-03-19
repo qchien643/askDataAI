@@ -57,6 +57,13 @@ async def lifespan(app: FastAPI):
                 manifest=deploy.manifest,
                 indexer=deploy.indexer,
                 engine=deploy.connector.engine,
+                num_candidates=settings.num_candidates,
+                enable_column_pruning=settings.enable_column_pruning,
+                enable_cot_reasoning=settings.enable_cot_reasoning,
+                enable_schema_linking=settings.enable_schema_linking,
+                enable_voting=settings.enable_voting,
+                glossary_path=settings.glossary_path,
+                memory_path=settings.memory_path,
             )
             logger.info(
                 f"Auto-deployed: {result.models_count} models, "
@@ -95,6 +102,14 @@ app.add_middleware(
 # ── Request/Response Models ──
 class AskRequest(BaseModel):
     question: str
+    # Per-request feature toggles (None = dùng config mặc định)
+    enable_schema_linking: bool | None = None
+    enable_column_pruning: bool | None = None
+    enable_cot_reasoning: bool | None = None
+    enable_voting: bool | None = None
+    enable_glossary: bool | None = None
+    enable_memory: bool | None = None
+    num_candidates: int | None = None
 
 
 class SQLExecuteRequest(BaseModel):
@@ -152,6 +167,13 @@ def deploy():
                 manifest=deploy.manifest,
                 indexer=deploy.indexer,
                 engine=deploy.connector.engine,
+                num_candidates=settings.num_candidates,
+                enable_column_pruning=settings.enable_column_pruning,
+                enable_cot_reasoning=settings.enable_cot_reasoning,
+                enable_schema_linking=settings.enable_schema_linking,
+                enable_voting=settings.enable_voting,
+                glossary_path=settings.glossary_path,
+                memory_path=settings.memory_path,
             )
 
         return {
@@ -173,13 +195,37 @@ def ask(request: AskRequest):
     """
     Hỏi câu hỏi → chạy full pipeline → trả SQL + data.
 
-    Tương đương POST /v1/asks + GET /v1/asks/{id}/result trong WrenAI gốc,
-    nhưng synchronous (trả luôn trong 1 response).
+    Có thể bật/tắt từng node qua request body:
+    - enable_schema_linking: true/false
+    - enable_column_pruning: true/false
+    - enable_cot_reasoning: true/false
+    - enable_voting: true/false
+    - enable_glossary: true/false
+    - enable_memory: true/false
+    - num_candidates: 1-5
+    Nếu không truyền (null) → dùng giá trị mặc định từ config.
     """
     _ensure_deployed()
 
     try:
-        result = _state["ask_pipeline"].ask(request.question)
+        # Build per-request overrides (chỉ gửi những field có giá trị)
+        overrides = {}
+        if request.enable_schema_linking is not None:
+            overrides["enable_schema_linking"] = request.enable_schema_linking
+        if request.enable_column_pruning is not None:
+            overrides["enable_column_pruning"] = request.enable_column_pruning
+        if request.enable_cot_reasoning is not None:
+            overrides["enable_cot_reasoning"] = request.enable_cot_reasoning
+        if request.enable_voting is not None:
+            overrides["enable_voting"] = request.enable_voting
+        if request.enable_glossary is not None:
+            overrides["enable_glossary"] = request.enable_glossary
+        if request.enable_memory is not None:
+            overrides["enable_memory"] = request.enable_memory
+        if request.num_candidates is not None:
+            overrides["num_candidates"] = request.num_candidates
+
+        result = _state["ask_pipeline"].ask(request.question, overrides=overrides)
 
         return _serialize({
             "question": result.question,
@@ -194,6 +240,17 @@ def ask(request: AskRequest):
             "retries": result.retries,
             "error": result.error,
             "models_used": result.models_used,
+            # Advanced pipeline metadata
+            "pipeline_info": {
+                "reasoning_steps": result.reasoning_steps,
+                "schema_links": result.schema_links,
+                "columns_pruned": result.columns_pruned,
+                "candidates_generated": result.candidates_generated,
+                "voting_method": result.voting_method,
+                "glossary_matches": result.glossary_matches,
+                "similar_traces": result.similar_traces,
+                "active_features": result.active_features,
+            },
         })
 
     except Exception as e:

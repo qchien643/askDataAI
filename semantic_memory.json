@@ -1,0 +1,72 @@
+{
+  "traces": [
+    {
+      "question": "top 5 các khánh hàng mua nhiều hàng nhất và loại hàng họ đã mua nhiều nhất?",
+      "sql": "\nWITH CustomerCategorySales AS (\n    SELECT\n        i.CustomerKey,\n        pc.ProductCategoryKey,\n        SUM(i.OrderQuantity) AS TotalQuantityByCategory\n    FROM internet_sales i\n    JOIN products p ON i.ProductKey = p.ProductKey\n    JOIN product_subcategories ps ON p.ProductSubcategoryKey = ps.ProductSubcategoryKey\n    JOIN product_categories pc ON ps.ProductCategoryKey = pc.ProductCategoryKey\n    GROUP BY i.CustomerKey, pc.ProductCategoryKey\n),\nMaxCategoryPerCustomer AS (\n    SELECT\n        CustomerKey,\n        ProductCategoryKey,\n        TotalQuantityByCategory,\n        DENSE_RANK() OVER (PARTITION BY CustomerKey ORDER BY TotalQuantityByCategory DESC) AS RankCategory\n    FROM CustomerCategorySales\n),\nTopCategoryPerCustomer AS (\n    SELECT\n        CustomerKey,\n        ProductCategoryKey,\n        TotalQuantityByCategory\n    FROM MaxCategoryPerCustomer\n    WHERE RankCategory = 1\n),\nCustomerTotalSales AS (\n    SELECT\n        CustomerKey,\n        SUM(OrderQuantity) AS TotalQuantity\n    FROM internet_sales\n    GROUP BY CustomerKey\n),\nTopCustomers AS (\n    SELECT TOP 5\n        cts.CustomerKey,\n        cts.TotalQuantity\n    FROM CustomerTotalSales cts\n    ORDER BY cts.TotalQuantity DESC\n)\nSELECT\n    tc.CustomerKey,\n    ISNULL(c.FirstName, '') + ' ' + ISNULL(c.LastName, '') AS CustomerName, -- Tên khách hàng\n    tc.TotalQuantity, -- Tổng số lượng mua\n    pc.EnglishProductCategoryName AS TopProductCategory -- Loại hàng mua nhiều nhất\nFROM TopCustomers tc\nJOIN TopCategoryPerCustomer tcc ON tc.CustomerKey = tcc.CustomerKey\nJOIN product_categories pc ON tcc.ProductCategoryKey = pc.ProductCategoryKey\nJOIN customers c ON tc.CustomerKey = c.CustomerKey\nORDER BY tc.TotalQuantity DESC;",
+      "success": true,
+      "result_hash": "5a9baf438f706efe529568b3cbcb0b92",
+      "error": "",
+      "timestamp": "2026-03-19T22:23:06.295902",
+      "models_used": [
+        "resellers",
+        "internet_sales",
+        "customers",
+        "product_categories",
+        "reseller_sales",
+        "dates",
+        "sales_territory",
+        "product_subcategories",
+        "products",
+        "geography",
+        "currency",
+        "promotions"
+      ],
+      "retries": 0
+    },
+    {
+      "question": "Tổng doanh thu theo tháng",
+      "sql": "WITH MonthlySales AS (\n    SELECT \n        d.CalendarYear,\n        d.MonthNumberOfYear,\n        SUM(isales.SalesAmount) AS TotalSalesAmount\n    FROM internet_sales isales\n    JOIN dates d ON isales.OrderDateKey = d.DateKey\n    GROUP BY d.CalendarYear, d.MonthNumberOfYear\n)\nSELECT \n    CalendarYear,\n    MonthNumberOfYear,\n    TotalSalesAmount\nFROM MonthlySales\nORDER BY CalendarYear, MonthNumberOfYear;",
+      "success": true,
+      "result_hash": "068a5f239d9624974be81a99b1d1c478",
+      "error": "",
+      "timestamp": "2026-03-19T22:33:00.735583",
+      "models_used": [
+        "reseller_sales",
+        "internet_sales",
+        "resellers",
+        "products",
+        "promotions",
+        "geography",
+        "sales_territory",
+        "currency",
+        "dates",
+        "product_subcategories",
+        "customers"
+      ],
+      "retries": 0
+    },
+    {
+      "question": "top 5 các khánh hàng mua nhiều hàng nhất ?",
+      "sql": "WITH CustomerPurchase AS (\n    SELECT \n        c.CustomerKey,\n        c.FirstName,\n        c.LastName,\n        SUM(isales.OrderQuantity) AS TotalQuantity\n    FROM internet_sales isales\n    JOIN customers c ON isales.CustomerKey = c.CustomerKey\n    GROUP BY c.CustomerKey, c.FirstName, c.LastName\n)\nSELECT TOP 5\n    CustomerKey,\n    FirstName,\n    LastName,\n    TotalQuantity,\n    DENSE_RANK() OVER (ORDER BY TotalQuantity DESC) AS Ranking\nFROM CustomerPurchase\nORDER BY TotalQuantity DESC;",
+      "success": true,
+      "result_hash": "db10329ddd9f6c60286808a4d2ee8f12",
+      "error": "",
+      "timestamp": "2026-03-19T22:47:49.329700",
+      "models_used": [
+        "resellers",
+        "internet_sales",
+        "reseller_sales",
+        "product_categories",
+        "promotions",
+        "dates",
+        "sales_territory",
+        "product_subcategories",
+        "currency",
+        "customers",
+        "geography",
+        "products"
+      ],
+      "retries": 0
+    }
+  ]
+}

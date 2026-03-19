@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     # ChromaDB
     chroma_persist_dir: str = Field(default="./chroma_data", alias="CHROMA_PERSIST_DIR")
 
+    # Advanced Pipeline Settings
+    num_candidates: int = Field(default=3, alias="NUM_CANDIDATES")
+    enable_column_pruning: bool = Field(default=True, alias="ENABLE_COLUMN_PRUNING")
+    enable_cot_reasoning: bool = Field(default=True, alias="ENABLE_COT_REASONING")
+    enable_schema_linking: bool = Field(default=True, alias="ENABLE_SCHEMA_LINKING")
+    enable_voting: bool = Field(default=True, alias="ENABLE_VOTING")
+    glossary_path: str = Field(default="./glossary.yaml", alias="GLOSSARY_PATH")
+    memory_path: str = Field(default="./semantic_memory.json", alias="MEMORY_PATH")
+
     @property
     def connection_string(self) -> str:
         """SQLAlchemy connection string cho SQL Server qua pyodbc."""

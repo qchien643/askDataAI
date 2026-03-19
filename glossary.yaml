@@ -1,0 +1,88 @@
+# Business Glossary — Định nghĩa thuật ngữ nghiệp vụ
+# Mini-Wren-AI sẽ dùng glossary này để hiểu đúng ý nghĩa câu hỏi user.
+#
+# Format:
+#   name: tên chính thức
+#   aliases: các cách gọi khác (tiếng Việt, viết tắt, ...)
+#   sql_hint: gợi ý SQL expression
+#   tables: tables liên quan
+#   description: mô tả ý nghĩa
+
+terms:
+  - name: "doanh thu"
+    aliases: ["doanh số", "revenue", "sales", "tổng bán", "tiền bán"]
+    sql_hint: "SUM(SalesAmount)"
+    tables: ["internet_sales"]
+    description: "Tổng tiền bán hàng, tính bằng SUM(SalesAmount) từ bảng internet_sales"
+
+  - name: "lợi nhuận"
+    aliases: ["profit", "lãi", "margin"]
+    sql_hint: "SUM(SalesAmount) - SUM(TotalProductCost)"
+    tables: ["internet_sales"]
+    description: "Lợi nhuận = Doanh thu - Chi phí sản phẩm"
+
+  - name: "số lượng đơn hàng"
+    aliases: ["số đơn", "order count", "tổng đơn"]
+    sql_hint: "COUNT(DISTINCT SalesOrderNumber)"
+    tables: ["internet_sales"]
+    description: "Đếm số đơn hàng duy nhất"
+
+  - name: "số lượng bán"
+    aliases: ["quantity", "số lượng", "SL"]
+    sql_hint: "SUM(OrderQuantity)"
+    tables: ["internet_sales"]
+    description: "Tổng số lượng sản phẩm đã bán"
+
+  - name: "khách hàng"
+    aliases: ["customer", "KH", "người mua"]
+    sql_hint: ""
+    tables: ["customers"]
+    description: "Thông tin khách hàng từ bảng customers"
+
+  - name: "sản phẩm"
+    aliases: ["product", "SP", "hàng hóa", "mặt hàng"]
+    sql_hint: ""
+    tables: ["products"]
+    description: "Thông tin sản phẩm từ bảng products"
+
+  - name: "danh mục sản phẩm"
+    aliases: ["category", "loại sản phẩm", "nhóm SP"]
+    sql_hint: ""
+    tables: ["product_categories"]
+    description: "Phân loại sản phẩm theo danh mục"
+
+  - name: "quý 1"
+    aliases: ["Q1", "quarter 1"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 1 AND 3"
+    tables: ["internet_sales"]
+    description: "Quý 1: tháng 1-3"
+
+  - name: "quý 2"
+    aliases: ["Q2", "quarter 2"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 4 AND 6"
+    tables: ["internet_sales"]
+    description: "Quý 2: tháng 4-6"
+
+  - name: "quý 3"
+    aliases: ["Q3", "quarter 3"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 7 AND 9"
+    tables: ["internet_sales"]
+    description: "Quý 3: tháng 7-9"
+
+  - name: "quý 4"
+    aliases: ["Q4", "quarter 4"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 10 AND 12"
+    tables: ["internet_sales"]
+    description: "Quý 4: tháng 10-12"
+
+  - name: "năm nay"
+    aliases: ["this year", "năm hiện tại"]
+    sql_hint: "YEAR(OrderDate) = YEAR(GETDATE())"
+    tables: ["internet_sales"]
+    description: "Lọc dữ liệu năm hiện tại"
+
+  - name: "năm trước"
+    aliases: ["last year", "năm ngoái"]
+    sql_hint: "YEAR(OrderDate) = YEAR(GETDATE()) - 1"
+    tables: ["internet_sales"]
+    description: "Lọc dữ liệu năm trước"

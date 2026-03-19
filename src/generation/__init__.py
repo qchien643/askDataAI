@@ -1,5 +1,5 @@
 """
-Generation module — SQL Generation + Correction pipeline.
+Generation module — SQL Generation + Correction + Advanced pipeline components.
 """
 
 from src.generation.llm_client import LLMClient
@@ -7,6 +7,10 @@ from src.generation.intent_classifier import IntentClassifier, Intent, IntentRes
 from src.generation.sql_generator import SQLGenerator, SQLGenerationResult
 from src.generation.sql_rewriter import SQLRewriter
 from src.generation.sql_corrector import SQLCorrector, CorrectionResult
+from src.generation.sql_reasoner import SQLReasoner, ReasoningResult
+from src.generation.candidate_generator import CandidateGenerator, CandidateSet, Candidate
+from src.generation.execution_voter import ExecutionVoter, VotingResult
+from src.generation.semantic_memory import SemanticMemory, ExecutionTrace
 
 __all__ = [
     "LLMClient",
@@ -18,4 +22,14 @@ __all__ = [
     "SQLRewriter",
     "SQLCorrector",
     "CorrectionResult",
+    # NEW
+    "SQLReasoner",
+    "ReasoningResult",
+    "CandidateGenerator",
+    "CandidateSet",
+    "Candidate",
+    "ExecutionVoter",
+    "VotingResult",
+    "SemanticMemory",
+    "ExecutionTrace",
 ]

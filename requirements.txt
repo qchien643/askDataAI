@@ -13,3 +13,6 @@ numpy
 # openai
 # fastapi
 # uvicorn
+
+# Gradio UI
+gradio>=4.0.0

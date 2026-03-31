@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.py[cod]
+.git/
+.env
+chroma_data/
+chroma_test_data/
+manifests/
+WrenAI/
+web/
+tests/
+*.md
+.gitignore
+.vscode/
+.idea/
+test_output.txt
+gradio_app.py

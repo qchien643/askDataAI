@@ -45,6 +45,12 @@ Nhiệm vụ: sửa SQL query bị lỗi dựa trên error message và database 
 2. CHỈ dùng tables/columns có trong schema
 3. Tuân thủ T-SQL syntax (TOP thay LIMIT, GETDATE thay NOW, v.v.)
 4. Giữ nguyên ý nghĩa của query gốc
+5. KHÔNG dùng DECLARE @variable — inline giá trị trực tiếp
+6. Nếu query có CTE (WITH ... AS):
+   - KHÔNG dùng ORDER BY trong CTE trừ khi có TOP
+   - KHÔNG lồng WITH bên trong CTE (nested WITH là lỗi cú pháp)
+   - Chỉ dùng 1 keyword WITH ở đầu, các CTE cách nhau bằng dấu phẩy
+7. Nếu lỗi "ORDER BY is invalid in views/CTE": xóa ORDER BY hoặc thêm TOP
 
 ### FORMAT KẾT QUẢ ###
 {
@@ -183,13 +189,27 @@ class SQLCorrector:
     def _correct_sql(
         self, sql: str, error: str, ddl_context: str
     ) -> str | None:
-        """Gửi LLM sửa SQL."""
+        """Gửi LLM sửa SQL, kèm error classification để guide targeted fix."""
         try:
+            # Classify error type
+            error_type, fix_hint = self.classify_error(error)
+            logger.info(f"Error taxonomy: {error_type}")
+
+            # Try auto-fix first (no LLM call needed)
+            auto_fixed = self._try_auto_fix(sql, error_type)
+            if auto_fixed and auto_fixed != sql:
+                logger.info(f"Auto-fixed ({error_type}): {auto_fixed[:80]}...")
+                return auto_fixed
+
+            # LLM correction with taxonomy hint
+            correction_hint = f"\n### LOẠI LỖI: {error_type} ###\n{fix_hint}\n"
+
             user_prompt = SQL_CORRECTION_USER_PROMPT.format(
                 ddl_context=ddl_context,
                 sql=sql,
                 error=error,
             )
+            user_prompt = correction_hint + user_prompt
 
             result = self._llm.chat_json(
                 user_prompt=user_prompt,
@@ -200,3 +220,103 @@ class SQLCorrector:
         except Exception as e:
             logger.error(f"SQL correction LLM call failed: {e}")
             return None
+
+    # ── Taxonomy-guided error classification (SQL-of-Thought 2025) ──
+
+    @staticmethod
+    def classify_error(error: str) -> tuple[str, str]:
+        """
+        Classify SQL error into taxonomy for targeted fix.
+
+        Returns:
+            (error_type, fix_hint) tuple.
+
+        Error types:
+        - INVALID_COLUMN: Column doesn't exist → re-check schema
+        - INVALID_OBJECT: Table doesn't exist → re-check table names
+        - CTE_SYNTAX: ORDER BY in CTE, nested WITH, etc.
+        - MISSING_JOIN: Ambiguous column (exists in multiple tables)
+        - SYNTAX_ERROR: General T-SQL syntax issue
+        - LOGIC_ERROR: Query runs but wrong results (empty, unexpected)
+        """
+        import re
+        error_upper = error.upper()
+
+        if re.search(r"INVALID COLUMN NAME", error_upper):
+            col_match = re.search(r"Invalid column name '(\w+)'", error, re.IGNORECASE)
+            col_name = col_match.group(1) if col_match else "unknown"
+            return "INVALID_COLUMN", (
+                f"Column '{col_name}' không tồn tại. "
+                f"Kiểm tra lại DATABASE SCHEMA, tìm column tương tự. "
+                f"Có thể cần JOIN thêm table khác chứa column này."
+            )
+
+        if re.search(r"INVALID OBJECT NAME", error_upper):
+            obj_match = re.search(r"Invalid object name '([^']+)'", error, re.IGNORECASE)
+            obj_name = obj_match.group(1) if obj_match else "unknown"
+            return "INVALID_OBJECT", (
+                f"Table '{obj_name}' không tồn tại. "
+                f"Kiểm tra lại DATABASE SCHEMA, dùng đúng tên table."
+            )
+
+        if re.search(r"ORDER BY.*(VIEW|SUBQUER|INLINE|DERIVED|CTE)", error_upper):
+            return "CTE_SYNTAX", (
+                "ORDER BY không được phép trong CTE/subquery. "
+                "Xóa ORDER BY hoặc thêm TOP N trước ORDER BY."
+            )
+
+        if re.search(r"AMBIGUOUS COLUMN", error_upper):
+            return "MISSING_JOIN", (
+                "Column tồn tại ở nhiều tables. "
+                "Thêm table alias (ví dụ: t.ColumnName thay vì ColumnName)."
+            )
+
+        if re.search(r"INCORRECT SYNTAX", error_upper):
+            return "SYNTAX_ERROR", (
+                "Lỗi cú pháp T-SQL. Kiểm tra: "
+                "- Dấu phẩy thừa/thiếu "
+                "- Keyword sai vị trí "
+                "- DECLARE (nên inline giá trị)"
+            )
+
+        if re.search(r"CONVERSION|CONVERT|CAST|DATATYPE", error_upper):
+            return "TYPE_ERROR", (
+                "Lỗi kiểu dữ liệu. Dùng CAST() hoặc CONVERT() để chuyển đổi."
+            )
+
+        return "LOGIC_ERROR", "Lỗi logic SQL. Kiểm tra lại JOIN conditions và WHERE clause."
+
+    @staticmethod
+    def _try_auto_fix(sql: str, error_type: str) -> str | None:
+        """
+        Auto-fix deterministic errors without LLM call.
+
+        Returns fixed SQL or None if can't auto-fix.
+        """
+        import re
+
+        if error_type == "CTE_SYNTAX":
+            # Strip ORDER BY in CTEs (but keep in final SELECT)
+            # Find CTEs: WITH name AS (...) and remove ORDER BY inside
+            fixed = sql
+            # Simple approach: if ORDER BY exists without TOP, strip it
+            if re.search(r"\bORDER\s+BY\b", fixed, re.IGNORECASE):
+                if not re.search(r"\bTOP\s+\d+\b", fixed, re.IGNORECASE):
+                    fixed = re.sub(
+                        r"\bORDER\s+BY\s+[^)]+",
+                        "",
+                        fixed,
+                        flags=re.IGNORECASE,
+                    )
+                    return fixed.strip()
+
+        if error_type == "SYNTAX_ERROR":
+            # Strip DECLARE statements
+            if "DECLARE" in sql.upper():
+                lines = sql.split("\n")
+                filtered = [l for l in lines if not l.strip().upper().startswith("DECLARE")]
+                if filtered:
+                    return "\n".join(filtered)
+
+        return None
+

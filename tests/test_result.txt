@@ -1,0 +1,39 @@
+﻿======================================================================
+LAYER 1: HopDetector (regex, 0 LLM calls)
+======================================================================
+  [FAIL] (ASCII superlative) 'Khach hang nao dat nhieu nhat san pham cao cap' ΓåÆ SINGLE (expected MULTI_HOP)
+
+  Result: 18/19 passed, 1 failed
+
+======================================================================
+LAYER 2: SQLChainBuilder (CTE chaining, 0 LLM calls)
+======================================================================
+  [PASS] Single query ΓÇö no CTE wrapping
+  [PASS] 2-step chain ΓÇö 1 CTE + final SELECT
+  [PASS] 3-step chain ΓÇö 2 CTEs + final SELECT
+  [PASS] Semicolon stripping in CTEs
+  [PASS] CTE name sanitization (special chars)
+  [PASS] Empty input ΓÇö returns error
+
+  Result: 6/6 passed, 0 failed
+
+======================================================================
+LAYER 3: Synthesizer aggregate stats (0 LLM calls)
+======================================================================
+  [PASS] Numeric aggregate stats (sum, avg, min, max)
+  [PASS] String unique counts
+  [PASS] Empty rows ΓåÆ total_rows = 0
+  [FAIL] Mixed: {'total_rows': 2, 'value_sum': 300.0, 'value_avg': 150.0, 'value_min': 100.0, 'value_max': 200.0, 'label_unique': 1}
+
+  Result: 3/4 passed, 1 failed
+
+======================================================================
+MULTI-HOP TEST SUMMARY (1.6s)
+======================================================================
+  [FAIL] HopDetector
+  [PASS] SQLChainBuilder
+  [FAIL] SynthesizerStats
+
+  Γ¥î SOME TESTS FAILED
+
+  Tip: Run with --llm for LLM tests, --api for API tests, --all for everything

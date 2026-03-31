@@ -1,210 +1,282 @@
-# 🧠 Mini Wren AI — Text-to-SQL
+# Mini Wren AI
 
-Phiên bản đơn giản của [WrenAI](https://github.com/Canner/WrenAI) — hỏi câu hỏi bằng tiếng Việt, sinh SQL, trả kết quả từ SQL Server.
+**Text-to-SQL Platform** — Hỏi câu hỏi bằng tiếng Việt, nhận SQL + kết quả + biểu đồ tự động.
 
-## Kiến trúc tổng quan
+Lấy cảm hứng từ [WrenAI](https://github.com/Canner/WrenAI), rút gọn và tối ưu cho **SQL Server** + **tiếng Việt**.
 
-Hệ thống gồm **2 pipeline**: Deploy (chạy 1 lần khi khởi động) và Ask (chạy mỗi câu hỏi).
+## ✨ Tính năng
 
-```
-                    ┌─────── DEPLOY PIPELINE (1 lần) ───────┐
-                    │                                        │
-  models.yaml ──→ ManifestBuilder ──→ SchemaIndexer ──→ ChromaDB
-                                                          │
-                    ┌─────── ASK PIPELINE (mỗi câu hỏi) ──┘
-                    │
-  User Question ──→ [1] Intent Classifier (LLM)
-                    │   ↓ TEXT_TO_SQL
-                    [2] Schema Retriever (ChromaDB vector search)
-                    │
-                    [3] Schema Linker (LLM, toggleable)
-                    [4] Column Pruner (LLM, toggleable)
-                    [5] Context Builder (DDL formatting)
-                    [6] Glossary Injection (keyword match, toggleable)
-                    [7] Memory Lookup (Jaccard similarity, toggleable)
-                    [8] CoT Reasoning (LLM, toggleable)
-                    │
-              ┌─────┴─────┐
-              │ voting=on  │ voting=off
-              ▼            ▼
-  [9] Multi-Candidate   [9] SQL Generator
-      Generator (N×LLM)     (1 LLM call)
-  [10] Execution Voter       │
-       (DB execution)        │
-              │               │
-              └───────┬───────┘
-                      ▼
-              [11] SQL Corrector (execute + LLM retry)
-              [12] Memory Save
-                      ▼
-                   Result (SQL + data)
-```
+- 🗣️ **Text-to-SQL**: Hỏi bằng ngôn ngữ tự nhiên → sinh SQL chính xác
+- 📊 **Auto Chart**: Tạo biểu đồ Vega-Lite (bar, line, pie, area...) từ kết quả
+- 🔒 **SQL Guardian**: Bảo vệ injection, read-only, column masking, RLS
+- 🧠 **14-Stage Pipeline**: PreFilter → Intent → Schema → CoT → Generate → Correct → Guard
+- 📖 **Business Glossary**: Ánh xạ thuật ngữ nghiệp vụ
+- 🔍 **Semantic Memory**: Học từ queries thành công trước đó
+- 🐛 **Debug Trace**: Xem chi tiết từng stage trong pipeline
+- 🎨 **Next.js UI**: Chat interface với data table + ERD modeling
 
-### Các tính năng bật/tắt (qua API hoặc Gradio UI)
-
-| Tính năng | Toggle | Mô tả | LLM? |
-|-----------|--------|-------|------|
-| Schema Linking | `enable_schema_linking` | Map entity → table.column | ✅ |
-| Column Pruning | `enable_column_pruning` | Loại bỏ cột không liên quan | ✅ |
-| CoT Reasoning | `enable_cot_reasoning` | Suy luận từng bước trước khi sinh SQL | ✅ |
-| Voting | `enable_voting` | Sinh N SQL candidates + majority vote | ✅×N |
-| Glossary | `enable_glossary` | Inject thuật ngữ nghiệp vụ | ❌ |
-| Memory | `enable_memory` | Few-shot từ lịch sử thành công | ❌ |
-| Candidates | `num_candidates` | Số SQL candidates (1-5) | — |
-
-> 📄 Phân tích chi tiết từng node: xem [PIPELINE_ANALYSIS.md](PIPELINE_ANALYSIS.md)
-
-## Cấu trúc project
+## 🏗 Kiến trúc
 
 ```
-mini-wren-ai/
-├── src/
-│   ├── connectors/          # Kết nối DB + đọc metadata
-│   │   ├── connection.py          # SQLServerConnector (SQLAlchemy)
-│   │   └── schema_introspector.py # Đọc tables, columns, FKs từ DB
-│   ├── modeling/             # Data model layer
-│   │   ├── mdl_schema.py          # Manifest, Model, Column, Relationship
-│   │   ├── manifest_builder.py    # Build manifest từ models.yaml
-│   │   └── deploy.py              # Lưu manifest, tính hash
-│   ├── indexing/             # Vector indexing (ChromaDB)
-│   │   ├── embedder.py            # HuggingFace embedding API
-│   │   ├── vector_store.py        # ChromaDB wrapper
-│   │   └── schema_indexer.py      # Index manifest → 2 collections
-│   ├── retrieval/            # Tìm schema liên quan
-│   │   ├── schema_retriever.py    # Vector search + relationship expansion
-│   │   ├── schema_linker.py       # LLM: entity → table.column mapping
-│   │   ├── column_pruner.py       # LLM: loại bỏ cột không liên quan
-│   │   ├── context_builder.py     # Build DDL context cho LLM
-│   │   └── business_glossary.py   # Keyword-based glossary lookup
-│   ├── generation/           # Sinh SQL + xử lý
-│   │   ├── llm_client.py          # OpenAI-compatible wrapper
-│   │   ├── intent_classifier.py   # Phân loại câu hỏi (LLM)
-│   │   ├── sql_generator.py       # Sinh SQL (LLM)
-│   │   ├── sql_reasoner.py        # Chain-of-Thought reasoning (LLM)
-│   │   ├── candidate_generator.py # Multi-candidate generation (N×LLM)
-│   │   ├── execution_voter.py     # Execution-based voting (DB)
-│   │   ├── sql_rewriter.py        # Model names → DB table names
-│   │   ├── sql_corrector.py       # Validate + auto-correct (LLM retry)
-│   │   └── semantic_memory.py     # Lưu/truy xuất execution traces
-│   ├── pipelines/
-│   │   ├── ask_pipeline.py        # Pipeline chính (12 bước)
-│   │   └── deploy_pipeline.py     # Pipeline deploy
-│   ├── server.py             # FastAPI server
-│   └── config.py             # Settings (.env)
-├── models.yaml               # Định nghĩa business models
-├── glossary.yaml             # Bảng thuật ngữ nghiệp vụ
-├── semantic_memory.json      # Lịch sử execution traces
-├── gradio_app.py             # Gradio Chat UI
-├── PIPELINE_ANALYSIS.md      # Phân tích chi tiết pipeline
-├── API_DOCS.md               # API documentation
-├── .env.example              # Template cấu hình
-└── requirements.txt
+┌─────────────────┐     ┌─────────────────────────────────────┐
+│   Next.js UI    │────▶│  FastAPI Backend (port 8000)         │
+│   (port 3000)   │     │                                     │
+│  ┌────────────┐ │     │  ┌──────────┐  ┌────────────────┐  │
+│  │ Chat       │ │     │  │ Ask      │  │ Chart          │  │
+│  │ Modeling   │ │     │  │ Pipeline │  │ Generator      │  │
+│  │ Settings   │ │     │  │ (14 stg) │  │ (Vega-Lite)    │  │
+│  └────────────┘ │     │  └──────┬───┘  └────────────────┘  │
+└─────────────────┘     │         │                           │
+                        │  ┌──────▼───┐  ┌────────────────┐  │
+                        │  │ ChromaDB │  │ SQL Server     │  │
+                        │  │ (Vector) │  │ (Data Source)  │  │
+                        │  └──────────┘  └────────────────┘  │
+                        └─────────────────────────────────────┘
 ```
 
-## Cài đặt & Khởi động
+## 🚀 Quick Start (Docker)
 
 ### Yêu cầu
+- Docker & Docker Compose
+- SQL Server (host hoặc remote)
+- API key (OpenAI-compatible hoặc GitHub Models)
 
-- Python 3.11+
-- SQL Server (với database AdventureWorksDW2025)
-- ODBC Driver 17 for SQL Server
-
-### Bước 1: Clone & cài đặt
+### 1. Clone & cấu hình
 
 ```bash
-git clone https://github.com/duongvan17/text_to_sql.git
-cd text_to_sql/mini-wren-ai
+git clone <repo-url> mini-wren-ai
+cd mini-wren-ai
+cp .env.example .env
+# Sửa .env với thông tin kết nối thật
+```
 
-# Tạo virtual environment
+### 2. Chạy
+
+```bash
+docker compose up -d
+```
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+
+### 3. Sử dụng
+
+1. Mở http://localhost:3000 → trang Setup hiện ra
+2. Nhập thông tin SQL Server → **Connect**
+3. Chuyển sang trang **Home** → bắt đầu chat
+4. Hỏi: _"Top 5 sản phẩm có doanh thu cao nhất"_
+5. Click **📊 Tạo biểu đồ** để xem visualization
+
+## 💻 Manual Setup (Development)
+
+### Backend
+
+```bash
+# Yêu cầu: Python 3.10+, ODBC Driver 17 for SQL Server
 python -m venv venv
-.\venv\Scripts\activate        # Windows
+venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Linux/Mac
 
-# Cài dependencies
 pip install -r requirements.txt
-```
+pip install fastapi uvicorn openai httpx
 
-### Bước 2: Cấu hình `.env`
+cp .env.example .env
+# Sửa .env
 
-```bash
-copy .env.example .env
-# Mở .env và sửa các giá trị:
-```
-
-```env
-# SQL Server
-SQL_SERVER_HOST=localhost
-SQL_SERVER_PORT=1433
-SQL_SERVER_DB=AdventureWorksDW2025
-SQL_SERVER_USER=sa
-SQL_SERVER_PASS=your_password
-
-# LLM (OpenAI-compatible — dùng GitHub Models, OpenAI, hoặc bất kỳ API compatible)
-OPENAI_API_KEY=your_key
-OPENAI_BASE_URL=https://models.github.ai/inference
-
-# HuggingFace Embeddings
-HUGGINGFACE_API_KEY=your_key
-```
-
-### Bước 3: Khởi động FastAPI server
-
-```bash
-.\venv\Scripts\activate
 python -m uvicorn src.server:app --reload --port 8000
 ```
 
-Server tự động deploy manifest + index ChromaDB khi khởi động.
-
-- 🔗 Swagger UI: http://localhost:8000/docs
-- 🔗 Health check: http://localhost:8000/health
-
-### Bước 4: Khởi động Gradio Chat UI (tuỳ chọn)
+### Frontend
 
 ```bash
-# Mở terminal thứ 2
-.\venv\Scripts\activate
-python gradio_app.py
+cd web
+npm install
+npm run dev
 ```
 
-- 🔗 Chat UI: http://localhost:7860
+Mở http://localhost:3000
 
-## API Endpoints
+## 📋 Pipeline Architecture (14 Stages)
 
-| Method | Endpoint | Chức năng |
-|--------|----------|-----------|
-| GET | `/health` | Health check |
-| POST | `/v1/deploy` | Deploy manifest + index ChromaDB |
-| POST | `/v1/ask` | Hỏi câu hỏi → SQL + data |
-| POST | `/v1/sql/execute` | Chạy SQL trực tiếp |
-| GET | `/v1/models` | Xem models + relationships |
+```
+question → PreFilter → InstructionMatch → IntentClassify → SubIntentDetect
+  → SchemaRetrieval → SchemaLinking → ColumnPruning → ContextBuild
+  → GlossaryInject → MemoryLookup → CoTReason
+  → SQLGeneration → SQLCorrection → Guardian → MemorySave → Result
+```
 
-### Ví dụ: Ask
+| # | Stage | LLM | Ý nghĩa |
+|---|-------|-----|---------|
+| 1 | PreFilter | ❌ | Lọc greeting, destructive, out-of-scope |
+| 2 | InstructionMatch | ❌ | Inject business rules |
+| 3 | IntentClassifier | ✅ | TEXT_TO_SQL / GENERAL / SCHEMA_EXPLORE |
+| 4 | SubIntentDetect | ❌ | RETRIEVAL / AGGREGATION / RANKING... |
+| 5 | SchemaRetrieval | ❌ | Vector search tìm tables liên quan |
+| 6 | SchemaLinking | ✅ | Map entities → tables/columns |
+| 7 | ColumnPruning | ✅ | Loại columns không liên quan |
+| 8 | ContextBuilder | ❌ | Build DDL text |
+| 9 | GlossaryLookup | ❌ | Tra cứu thuật ngữ nghiệp vụ |
+| 10 | SemanticMemory | ❌ | Tra cứu queries tương tự |
+| 11 | CoTReasoning | ✅ | Chain-of-thought plan |
+| 12 | SQLGeneration | ✅ | Sinh SQL (1 candidate, voting=off) |
+| 13 | SQLCorrection | ✅ | Auto-fix lỗi (max 3 retries) |
+| 13.5 | Guardian | ❌ | Security validation |
+| 14 | MemorySave | ❌ | Lưu trace thành công |
+
+**LLM Budget**: 4-6 calls/query (full pipeline)
+
+## 📊 Chart Generation
+
+Sau khi có kết quả SQL, click **"Tạo biểu đồ"** → LLM sinh Vega-Lite schema:
+
+| Chart Type | Khi nào |
+|------------|---------|
+| `bar` | So sánh categories |
+| `grouped_bar` | Sub-categories |
+| `stacked_bar` | Composition |
+| `line` | Trend theo thời gian |
+| `multi_line` | Nhiều metrics |
+| `area` | Volume theo thời gian |
+| `pie` | Tỷ lệ phần trăm |
+
+## 🔌 API Reference
+
+### Core Endpoints
+
+| Method | Path | Mô tả |
+|--------|------|-------|
+| `GET` | `/health` | Health check |
+| `POST` | `/v1/connections/connect` | Kết nối SQL Server |
+| `GET` | `/v1/connections/status` | Trạng thái kết nối |
+| `POST` | `/v1/ask` | Hỏi câu hỏi → SQL |
+| `POST` | `/v1/sql/execute` | Chạy SQL trực tiếp |
+| `POST` | `/v1/charts/generate` | Sinh biểu đồ |
+| `GET` | `/v1/models` | Xem models |
+| `PATCH` | `/v1/models/{name}` | Cập nhật metadata |
+
+### Knowledge Endpoints
+
+| Method | Path | Mô tả |
+|--------|------|-------|
+| `GET` | `/v1/knowledge/glossary` | Xem glossary |
+| `POST` | `/v1/knowledge/glossary` | Thêm term |
+| `PUT` | `/v1/knowledge/glossary/{id}` | Sửa term |
+| `DELETE` | `/v1/knowledge/glossary/{id}` | Xóa term |
+| `GET` | `/v1/knowledge/sql-pairs` | Xem SQL pairs |
+| `POST` | `/v1/knowledge/sql-pairs` | Thêm SQL pair |
+
+### Settings
+
+| Method | Path | Mô tả |
+|--------|------|-------|
+| `GET` | `/v1/settings` | Xem settings |
+| `PUT` | `/v1/settings` | Cập nhật settings |
+| `POST` | `/v1/deploy` | Re-deploy |
+
+### Ví dụ `/v1/ask`
 
 ```bash
 curl -X POST http://localhost:8000/v1/ask \
   -H "Content-Type: application/json" \
-  -d '{
-    "question": "Top 5 khách hàng mua nhiều hàng nhất",
-    "enable_schema_linking": true,
-    "enable_column_pruning": true,
-    "enable_cot_reasoning": true,
-    "enable_voting": true,
-    "enable_glossary": true,
-    "enable_memory": true,
-    "num_candidates": 3
-  }'
+  -d '{"question": "Top 5 sản phẩm có doanh thu cao nhất", "debug": true}'
 ```
 
-Chi tiết đầy đủ: xem [API_DOCS.md](API_DOCS.md)
+Response:
+```json
+{
+  "question": "Top 5 sản phẩm có doanh thu cao nhất",
+  "intent": "TEXT_TO_SQL",
+  "sql": "SELECT TOP 5 ...",
+  "explanation": "Truy vấn lấy 5 sản phẩm...",
+  "columns": ["ProductName", "Revenue"],
+  "rows": [...],
+  "valid": true,
+  "pipeline_info": { ... },
+  "debug_trace": { ... }
+}
+```
 
-## Tech Stack
+## ⚙️ Environment Variables
 
-| Thành phần | Công nghệ |
-|------------|-----------|
-| Database | SQL Server (AdventureWorksDW2025) |
-| LLM | OpenAI-compatible API (GitHub Models / `gpt-4.1-mini`) |
-| Embeddings | HuggingFace `multilingual-e5-large` |
-| Vector Store | ChromaDB |
-| API Server | FastAPI + Uvicorn |
-| Chat UI | Gradio |
+| Variable | Required | Default | Mô tả |
+|----------|----------|---------|-------|
+| `SQL_SERVER_HOST` | ✅ | `localhost` | SQL Server host |
+| `SQL_SERVER_PORT` | ❌ | `1433` | SQL Server port |
+| `SQL_SERVER_DB` | ✅ | - | Database name |
+| `SQL_SERVER_USER` | ✅ | `sa` | Username |
+| `SQL_SERVER_PASS` | ✅ | - | Password |
+| `OPENAI_API_KEY` | ✅ | - | LLM API key |
+| `OPENAI_BASE_URL` | ❌ | `https://api.openai.com/v1` | LLM endpoint |
+| `HUGGINGFACE_API_KEY` | ✅ | - | Embedding model key |
+| `CHROMA_PERSIST_DIR` | ❌ | `./chroma_data` | ChromaDB storage |
+| `GLOSSARY_PATH` | ❌ | `./glossary.yaml` | Business glossary |
+| `MEMORY_PATH` | ❌ | `./semantic_memory.json` | Query memory |
+
+## 🐳 Docker Commands
+
+```bash
+# Build & chạy
+docker compose up -d
+
+# Xem logs
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Rebuild sau khi sửa code
+docker compose up -d --build
+
+# Dừng
+docker compose down
+
+# Xóa toàn bộ data (ChromaDB)
+docker compose down -v
+```
+
+## 📁 Project Structure
+
+```
+mini-wren-ai/
+├── src/
+│   ├── server.py              # FastAPI entry point
+│   ├── config.py              # Environment settings
+│   ├── connectors/            # SQL Server connector
+│   ├── generation/            # LLM-powered stages
+│   │   ├── intent_classifier.py
+│   │   ├── sub_intent.py
+│   │   ├── sql_reasoner.py
+│   │   ├── candidate_generator.py
+│   │   ├── execution_voter.py
+│   │   ├── sql_corrector.py
+│   │   ├── pre_filter.py
+│   │   ├── instruction_matcher.py
+│   │   ├── semantic_memory.py
+│   │   ├── chart_generator.py # Vega-Lite chart gen
+│   │   └── llm_client.py
+│   ├── retrieval/             # Schema retrieval & linking
+│   │   ├── schema_retriever.py
+│   │   ├── schema_linker.py
+│   │   ├── column_pruner.py
+│   │   ├── context_builder.py
+│   │   └── business_glossary.py
+│   ├── security/
+│   │   └── guardian.py        # SQL security guards
+│   └── pipelines/
+│       ├── ask_pipeline.py    # Main 14-stage pipeline
+│       └── deploy_pipeline.py # Model indexing
+├── web/                       # Next.js frontend
+│   ├── src/pages/             # Home, Modeling, Settings
+│   ├── src/components/        # VegaChart, DebugTrace, ERD
+│   └── src/contexts/          # ConnectionContext, ChatContext
+├── Dockerfile                 # Backend Docker
+├── web/Dockerfile             # Frontend Docker
+├── docker-compose.yml         # Orchestration
+├── .env.example               # Environment template
+├── glossary.yaml              # Business glossary
+├── models.yaml                # Model definitions
+└── requirements.txt           # Python deps
+```
+
+## 📝 License
+
+Private project — KhoAI Team.

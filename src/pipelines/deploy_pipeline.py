@@ -82,7 +82,10 @@ class DeployPipeline:
             # 4. Index
             logger.info("Indexing into ChromaDB...")
             store = VectorStore(persist_dir=self._chroma_dir)
-            embedder = HuggingFaceEmbedder(api_key=settings.huggingface_api_key)
+            embedder = HuggingFaceEmbedder(
+                api_key=settings.openai_api_key,
+                base_url=settings.openai_base_url,
+            )
             self._indexer = SchemaIndexer(vector_store=store, embedder=embedder)
             index_result = self._indexer.index(
                 manifest=self._manifest,

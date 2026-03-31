@@ -36,6 +36,7 @@ SQL_GENERATION_SYSTEM_PROMPT = """Bạn là chuyên gia T-SQL cho Microsoft SQL 
 - String concatenation: dùng + thay cho ||
 - Dùng [tên] hoặc "tên" cho tên có ký tự đặc biệt
 - Date format: dùng CONVERT(VARCHAR, date_col, format_code) thay cho TO_CHAR()
+- KHÔNG DÙNG DECLARE @variable — inline giá trị trực tiếp vào query
 
 ### QUY TẮC CHỐNG HALLUCINATE ###
 - CHỈ SỬ DỤNG tables và columns có trong DATABASE SCHEMA bên dưới
@@ -57,6 +58,28 @@ SQL_GENERATION_SYSTEM_PROMPT = """Bạn là chuyên gia T-SQL cho Microsoft SQL 
 - Dùng LOWER(column) = LOWER(value) cho so sánh case-insensitive
 - Dùng LIKE với % cho pattern matching
 
+### QUY TẮC LOGIC QUAN TRỌNG ###
+Khi câu hỏi yêu cầu "TOP N <entity> kèm thông tin chi tiết <detail>":
+1. CTE bước 1: Tìm TOP N <entity> DISTINCT dựa trên metric (GROUP BY entity key, ORDER BY metric DESC)
+2. Final SELECT: JOIN kết quả CTE với tables chứa thông tin <detail>
+3. TUYỆT ĐỐI KHÔNG: SELECT TOP N entity, detail FROM ... GROUP BY entity, detail
+   → Điều này sẽ cho CÙNG entity lặp lại với các detail khác nhau!
+
+SAI: SELECT TOP 10 ProductName, City FROM ... GROUP BY ProductName, City
+→ Kết quả: 1 sản phẩm × 10 thành phố (KHÔNG PHẢI 10 sản phẩm!)
+
+ĐÚNG:
+WITH top_products AS (
+  SELECT TOP 10 p.ProductKey, p.ProductName, SUM(s.Sales) AS TotalSales
+  FROM products p JOIN sales s ON p.ProductKey = s.ProductKey
+  GROUP BY p.ProductKey, p.ProductName
+  ORDER BY TotalSales DESC
+)
+SELECT tp.ProductName, tp.TotalSales, g.City
+FROM top_products tp
+JOIN sales s ON tp.ProductKey = s.ProductKey
+JOIN geography g ON s.GeographyKey = g.GeographyKey
+
 ### FORMAT KẾT QUẢ ###
 Trả lời dưới dạng JSON:
 {
@@ -64,6 +87,7 @@ Trả lời dưới dạng JSON:
     "explanation": "<giải thích ngắn gọn bằng tiếng Việt>"
 }
 """
+
 
 
 SQL_GENERATION_USER_PROMPT = """### DATABASE SCHEMA ###

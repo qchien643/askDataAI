@@ -1,10 +1,13 @@
 """
-Intent Classifier - Phân loại câu hỏi user.
+Intent Classifier — Stage 3 of Multi-Stage Intent Pipeline.
 
-3 intents:
+4 intents (expanded from 3):
 - TEXT_TO_SQL: câu hỏi về data → cần sinh SQL
+- SCHEMA_EXPLORE: câu hỏi về schema → trả lời từ manifest (NEW)
 - GENERAL: câu hỏi không liên quan → trả lời từ chối
 - AMBIGUOUS: câu hỏi mơ hồ → hỏi lại
+
+Prompt nhỏ gọn hơn vì Stage 1 (PreFilter) đã lọc bớt noise.
 
 Tương đương intent classification trong WrenAI gốc
 (wren-ai-service/src/pipelines/generation/intent_validation.py).
@@ -21,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class Intent(str, Enum):
     TEXT_TO_SQL = "TEXT_TO_SQL"
+    SCHEMA_EXPLORE = "SCHEMA_EXPLORE"
     GENERAL = "GENERAL"
     AMBIGUOUS = "AMBIGUOUS"
 
@@ -31,33 +35,28 @@ class IntentResult:
     reason: str
 
 
-INTENT_SYSTEM_PROMPT = """Bạn là hệ thống phân loại câu hỏi cho một ứng dụng Text-to-SQL trên SQL Server.
+# Prompt nhỏ gọn — Stage 1 đã lọc greeting + obvious out-of-scope
+INTENT_SYSTEM_PROMPT = """Phân loại câu hỏi thành 1 trong 4 loại:
 
-Nhiệm vụ: phân loại câu hỏi của user thành 1 trong 3 loại:
+1. TEXT_TO_SQL — Câu hỏi yêu cầu truy vấn/phân tích dữ liệu.
+   Ví dụ: "Tổng doanh thu theo tháng", "Top 5 khách hàng"
 
-1. TEXT_TO_SQL — Câu hỏi yêu cầu truy vấn dữ liệu. Ví dụ:
-   - "Tổng doanh thu theo tháng"
-   - "Top 5 khách hàng mua nhiều nhất"
-   - "Số lượng sản phẩm theo danh mục"
+2. SCHEMA_EXPLORE — Câu hỏi về cấu trúc database, không cần query.
+   Ví dụ: "Có bảng nào?", "Mô tả bảng customers", "Mối quan hệ giữa các bảng"
 
-2. GENERAL — Câu hỏi KHÔNG liên quan đến data. Ví dụ:
-   - "Xin chào"
-   - "Bạn là ai?"
-   - "Thời tiết hôm nay thế nào?"
+3. GENERAL — Câu hỏi không liên quan đến database.
+   Ví dụ: "Thời tiết hôm nay", "Bạn là ai?"
 
-3. AMBIGUOUS — Câu hỏi có liên quan đến data nhưng quá mơ hồ. Ví dụ:
-   - "Cho tôi xem dữ liệu"
-   - "Tôi muốn biết thông tin"
+4. AMBIGUOUS — Câu hỏi liên quan data nhưng quá mơ hồ.
+   Ví dụ: "Cho xem dữ liệu", "Tôi muốn biết thông tin"
 
-Database hiện tại chứa dữ liệu về: {model_names}
+Database chứa: {model_names}
 
-Trả lời dưới dạng JSON:
-{{"intent": "TEXT_TO_SQL" | "GENERAL" | "AMBIGUOUS", "reason": "lý do ngắn gọn"}}
-"""
+Trả lời JSON: {{"intent": "...", "reason": "lý do ngắn gọn"}}"""
 
 
 class IntentClassifier:
-    """Phân loại intent của câu hỏi user."""
+    """Stage 3: Phân loại intent bằng LLM (focused prompt)."""
 
     def __init__(self, llm_client: LLMClient):
         self._llm = llm_client
@@ -71,8 +70,8 @@ class IntentClassifier:
         Phân loại câu hỏi.
 
         Args:
-            question: Câu hỏi user.
-            model_names: Danh sách model names (để LLM biết scope).
+            question: Câu hỏi user (đã qua PreFilter).
+            model_names: Danh sách model names.
 
         Returns:
             IntentResult với intent và reason.

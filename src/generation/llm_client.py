@@ -31,7 +31,7 @@ class LLMClient:
         self,
         api_key: str,
         base_url: str = "https://api.openai.com/v1",
-        model: str = "openai/gpt-4.1-mini",
+        model: str = "gpt-4.1-mini",
         temperature: float = 0.0,
         max_tokens: int = 2048,
     ):

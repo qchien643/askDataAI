@@ -1,0 +1,50 @@
+services:
+  # ── Backend (FastAPI + Python) ──
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: miniwren-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Override: inside Docker, "localhost" = container itself
+      # Use host.docker.internal to reach host machine's SQL Server
+      SQL_SERVER_HOST: host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - chroma_data:/app/chroma_data
+      - ./manifests:/app/manifests
+      - ./semantic_memory.json:/app/semantic_memory.json
+      - ./glossary.yaml:/app/glossary.yaml
+      - ./models.yaml:/app/models.yaml
+    restart: unless-stopped
+    networks:
+      - miniwren
+
+  # ── Frontend (Next.js) ──
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+    container_name: miniwren-frontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - miniwren
+
+volumes:
+  chroma_data:
+
+networks:
+  miniwren:
+    driver: bridge

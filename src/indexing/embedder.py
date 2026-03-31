@@ -1,45 +1,45 @@
 """
-Embedder - Tạo embeddings bằng HuggingFace Inference API.
+Embedder - Tạo embeddings bằng OpenAI API.
 
-Dùng model multilingual-e5-large (1024 dims) qua HuggingFace Hub,
-giống model mà Wren AI gốc sử dụng.
+Dùng model text-embedding-3-small (1536 dims) — nhanh, rẻ, ổn định.
+Tương thích API OpenAI nên hoạt động với cả OpenAI gốc lẫn proxy.
 """
 
 import logging
 import time
-import numpy as np
-
-from huggingface_hub import InferenceClient
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
+# Retry config
+MAX_RETRIES = 3
+INITIAL_BACKOFF = 2  # seconds
 
-class HuggingFaceEmbedder:
+
+class OpenAIEmbedder:
     """
-    Embed text bằng HuggingFace Inference API (huggingface_hub).
+    Embed text bằng OpenAI Embeddings API.
 
-    Model: intfloat/multilingual-e5-large (1024 dimensions)
-    - Multilingual: hỗ trợ tiếng Việt tốt
-    - Giống model Wren AI gốc dùng
+    Model: text-embedding-3-small (1536 dimensions)
+    - Nhanh, ổn định, rẻ ($0.02/1M tokens)
+    - Multilingual tốt
 
     Usage:
-        embedder = HuggingFaceEmbedder(api_key="hf_...")
+        embedder = OpenAIEmbedder(api_key="sk-...", base_url="https://api.openai.com/v1")
         vector = embedder.embed_text("tổng doanh thu")
         vectors = embedder.embed_batch(["doanh thu", "khách hàng"])
     """
 
-    DEFAULT_MODEL = "intfloat/multilingual-e5-large"
+    DEFAULT_MODEL = "text-embedding-3-small"
 
     def __init__(
         self,
         api_key: str,
+        base_url: str = "https://api.openai.com/v1",
         model: str = DEFAULT_MODEL,
     ):
         self._model = model
-        self._client = InferenceClient(
-            provider="hf-inference",
-            api_key=api_key,
-        )
+        self._client = OpenAI(api_key=api_key, base_url=base_url)
         self._dimensions: int | None = None
 
     @property
@@ -54,56 +54,100 @@ class HuggingFaceEmbedder:
         return self._dimensions
 
     def embed_text(self, text: str) -> list[float]:
-        """Embed 1 text thành vector."""
-        result = self._client.feature_extraction(
-            text,
-            model=self._model,
-        )
-        # result là numpy array hoặc nested list: shape (1, seq_len, dim) hoặc (seq_len, dim)
-        # Cần mean pooling để lấy 1 vector duy nhất
-        arr = np.array(result)
-        if arr.ndim == 3:
-            # (1, seq_len, dim) → mean over seq_len
-            vec = arr[0].mean(axis=0)
-        elif arr.ndim == 2:
-            # (seq_len, dim) → mean over seq_len
-            vec = arr.mean(axis=0)
-        elif arr.ndim == 1:
-            # Already a single vector
-            vec = arr
-        else:
-            raise ValueError(f"Unexpected embedding shape: {arr.shape}")
-        return vec.tolist()
+        """Embed 1 text thành vector, với retry khi lỗi."""
+        last_error = None
+
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                response = self._client.embeddings.create(
+                    input=text,
+                    model=self._model,
+                )
+                return response.data[0].embedding
+
+            except Exception as e:
+                last_error = e
+                error_str = str(e)
+
+                is_retryable = any(code in error_str for code in [
+                    "429", "500", "502", "503", "504",
+                    "rate_limit", "timeout", "Timeout",
+                    "overloaded", "capacity",
+                ])
+
+                if is_retryable and attempt < MAX_RETRIES:
+                    backoff = INITIAL_BACKOFF * (2 ** attempt)
+                    logger.warning(
+                        f"  OpenAI Embedding error (attempt {attempt + 1}/{MAX_RETRIES + 1}): "
+                        f"{error_str[:100]}... Retrying in {backoff}s"
+                    )
+                    time.sleep(backoff)
+                else:
+                    raise
+
+        raise last_error  # type: ignore
 
     def embed_query(self, query: str) -> list[float]:
-        """Embed query (thêm prefix 'query: ' cho e5 models)."""
-        return self.embed_text(f"query: {query}")
+        """Embed query (e5 prefix không cần cho OpenAI, giữ interface tương thích)."""
+        return self.embed_text(query)
 
     def embed_document(self, document: str) -> list[float]:
-        """Embed document (thêm prefix 'passage: ' cho e5 models)."""
-        return self.embed_text(f"passage: {document}")
+        """Embed document."""
+        return self.embed_text(document)
 
     def embed_batch(self, texts: list[str], is_query: bool = False) -> list[list[float]]:
         """
-        Embed nhiều texts.
+        Embed nhiều texts bằng batch API (OpenAI hỗ trợ native batch).
 
-        Args:
-            texts: List of texts to embed.
-            is_query: True = thêm prefix "query:", False = thêm prefix "passage:"
+        OpenAI allows up to 2048 inputs per request, mỗi input max 8191 tokens.
+        Gửi batch thay vì từng text → nhanh hơn rất nhiều.
         """
-        prefix = "query: " if is_query else "passage: "
-        results = []
+        if not texts:
+            return []
 
-        for i, text in enumerate(texts):
-            prefixed = f"{prefix}{text}"
-            vec = self.embed_text(prefixed)
-            results.append(vec)
+        BATCH_SIZE = 100  # OpenAI safe batch size
 
-            # Tránh rate limit
-            if i > 0 and i % 5 == 0:
-                time.sleep(0.3)
+        all_embeddings: list[list[float]] = []
 
-            if (i + 1) % 5 == 0 or (i + 1) == len(texts):
-                logger.info(f"  Embedded {i + 1}/{len(texts)} documents")
+        for i in range(0, len(texts), BATCH_SIZE):
+            batch = texts[i : i + BATCH_SIZE]
 
-        return results
+            last_error = None
+            for attempt in range(MAX_RETRIES + 1):
+                try:
+                    response = self._client.embeddings.create(
+                        input=batch,
+                        model=self._model,
+                    )
+                    # Response data is sorted by index
+                    sorted_data = sorted(response.data, key=lambda x: x.index)
+                    batch_embeddings = [d.embedding for d in sorted_data]
+                    all_embeddings.extend(batch_embeddings)
+
+                    logger.info(f"  Embedded {min(i + BATCH_SIZE, len(texts))}/{len(texts)} documents")
+                    break
+
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e)
+                    is_retryable = any(code in error_str for code in [
+                        "429", "500", "502", "503", "504",
+                        "rate_limit", "timeout",
+                    ])
+                    if is_retryable and attempt < MAX_RETRIES:
+                        backoff = INITIAL_BACKOFF * (2 ** attempt)
+                        logger.warning(
+                            f"  Batch embed error (attempt {attempt + 1}): "
+                            f"{error_str[:100]}... Retrying in {backoff}s"
+                        )
+                        time.sleep(backoff)
+                    else:
+                        raise
+            else:
+                raise last_error  # type: ignore
+
+        return all_embeddings
+
+
+# Backward-compatible alias
+HuggingFaceEmbedder = OpenAIEmbedder

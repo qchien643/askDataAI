@@ -52,9 +52,14 @@ class Settings(BaseSettings):
         from urllib.parse import quote_plus
 
         password = quote_plus(self.sql_server_pass)
+        # Inside Docker, localhost refers to the container itself.
+        # Auto-resolve to host.docker.internal to reach the host machine.
+        host = self.sql_server_host
+        if Path("/.dockerenv").exists() and host in ("localhost", "127.0.0.1"):
+            host = "host.docker.internal"
         return (
             f"mssql+pyodbc://{self.sql_server_user}:{password}"
-            f"@{self.sql_server_host},{self.sql_server_port}"
+            f"@{host},{self.sql_server_port}"
             f"/{self.sql_server_db}"
             f"?driver=ODBC+Driver+17+for+SQL+Server"
             f"&TrustServerCertificate=yes"

@@ -1,27 +1,39 @@
-# Python
+# ── Python ──
 __pycache__/
 *.py[cod]
 *.egg-info/
 dist/
 build/
-
-# Virtual environment
 venv/
 
-# Environment variables (KHÔNG push key thật lên GitHub)
+# ── Environment (KHÔNG push key thật lên Git) ──
 .env
 
-# ChromaDB data
+# ── Data (runtime-generated) ──
 chroma_data/
 chroma_test_data/
-
-# Manifests (generated)
 manifests/
+manifest/
+semantic_memory.json
+test_output.txt
 
-# IDE
+# ── Reference code (không thuộc project) ──
+WrenAI/
+
+# ── Legacy / unused ──
+gradio_app.py
+API_DOCS.md
+PIPELINE_ANALYSIS.md
+
+# ── IDE ──
 .vscode/
 .idea/
-
-# Temp files
 *.tmp
-test_output.txt
+
+# ── Node / Frontend ──
+web/node_modules/
+web/.next/
+web/out/
+
+# ── Docker ──
+*.log

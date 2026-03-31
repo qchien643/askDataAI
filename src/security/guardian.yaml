@@ -1,0 +1,37 @@
+# SQL Guardian Configuration
+# Lấy ý tưởng từ WrenAI Data Security (RLS/CLS)
+
+# Guard 2: Read-only mode (chỉ cho phép SELECT)
+read_only: true
+
+# Guard 1: SQL Injection blocked patterns (regex)
+blocked_patterns:
+  - ";\\s*(DROP|DELETE|INSERT|UPDATE|ALTER|EXEC|TRUNCATE)"
+  - "xp_cmdshell"
+  - "sp_executesql"
+  - "UNION\\s+ALL\\s+SELECT"
+  - "INTO\\s+OUTFILE"
+  - "LOAD_FILE"
+  - "BENCHMARK\\s*\\("
+  - "SLEEP\\s*\\("
+  - "WAITFOR\\s+DELAY"
+  - "\\bOR\\b\\s+1\\s*=\\s*1"
+  - "\\bAND\\b\\s+1\\s*=\\s*1"
+
+# Guard 4: Column masking (column_name -> SQL mask expression)
+masked_columns:
+  # Uncomment if your DB has sensitive columns:
+  # password: "'***'"
+  # ssn: "'***-**-' + RIGHT(ssn, 4)"
+  # email: "LEFT(email, 2) + '***@***'"
+  # phone: "'***-***-' + RIGHT(phone, 4)"
+  # salary: "NULL"
+
+# Guard 5: Row-Level Security policies
+rls_policies: []
+  # Example:
+  # - name: "org_isolation"
+  #   type: "rls"
+  #   condition: "org_id = @user_org_id"
+  #   applied_models: ["customers", "orders"]
+  #   enabled: true

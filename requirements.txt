@@ -1,18 +1,25 @@
-# Phase 1: Database Connector
+# Database
 pyodbc>=5.1.0
 sqlalchemy>=2.0.0
+
+# Config
 python-dotenv>=1.0.0
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 pyyaml>=6.0
 
-# Phase 3: Indexing
+# API Server
+fastapi>=0.110.0
+uvicorn>=0.27.0
+
+# LLM
+openai>=1.10.0
+httpx>=0.27.0
+
+# Vector DB & Embeddings
 chromadb>=0.5.0
 huggingface_hub>=0.20.0
 numpy
-# openai
-# fastapi
-# uvicorn
 
-# Gradio UI
-gradio>=4.0.0
+# Security
+sqlparse>=0.5.0

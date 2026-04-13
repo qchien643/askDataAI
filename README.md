@@ -2,7 +2,7 @@
 
 > Hỏi dữ liệu bằng tiếng Việt, nhận câu SQL chính xác và biểu đồ trực quan.
 
-**askDataAI** là nền tảng Text-to-SQL thông minh được xây dựng trên pipeline 14 bước, hỗ trợ SQL Server, tích hợp OpenAI-compatible LLM và giao diện Memphis Design hiện đại với real-time reasoning trace.
+**askDataAI** là nền tảng Text-to-SQL thông minh được xây dựng trên pipeline 14 bước, hỗ trợ SQL Server, tích hợp OpenAI LLM và giao diện Memphis Design hiện đại với real-time reasoning trace.
 
 ---
 
@@ -36,8 +36,8 @@
                  │
     ┌────────────┼────────────┐
     ▼            ▼            ▼
- OpenAI      ChromaDB     SQL Server
- (LLM)    (Vector Store)  (Data)
+  OpenAI      ChromaDB     SQL Server
+  (LLM)    (Vector Store)   (Data)
 ```
 
 ### Pipeline 14 bước
@@ -62,31 +62,69 @@
 
 ---
 
-## 🚀 Cài đặt & Chạy
+## 📋 Yêu cầu hệ thống
 
-### Yêu cầu hệ thống
-
-- **Python** 3.11+
-- **Node.js** 20+
-- **SQL Server** (2019 hoặc mới hơn, có thể là SQL Server Express)
-- **ODBC Driver 17 for SQL Server**
-- **OpenAI API key** hoặc compatible provider (GitHub Models, Groq, v.v.)
+| Thành phần | Phiên bản tối thiểu |
+|---|---|
+| Python | 3.11+ |
+| Node.js | 20+ |
+| SQL Server | 2019+ (bao gồm Express) |
+| ODBC Driver | 17 for SQL Server |
+| OpenAI API Key | Tài khoản OpenAI |
 
 ---
 
-### Phương án 1: Chạy thủ công (Source Mode) — Khuyến nghị cho development
+## 🚀 Cài đặt thủ công (không dùng Docker)
 
-#### 1. Clone repository
+### Bước 1 — Clone repository
 
 ```bash
 git clone https://github.com/qchien643/askDataAI.git
 cd askDataAI
 ```
 
-#### 2. Tạo và kích hoạt Python virtual environment
+---
+
+### Bước 2 — Cài đặt ODBC Driver 17 for SQL Server
+
+**Windows:**
+
+Tải và cài đặt từ Microsoft:
+> https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
+
+Chọn **ODBC Driver 17 for SQL Server** → **Windows x64**.
+
+Sau khi cài xong, kiểm tra trong **Control Panel → ODBC Data Sources**.
+
+**Ubuntu / Debian (Linux):**
 
 ```bash
-# Windows
+sudo apt-get update
+sudo apt-get install -y curl gnupg2
+
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+
+curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list \
+  | sudo tee /etc/apt/sources.list.d/mssql-release.list
+
+sudo apt-get update
+sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
+```
+
+**macOS (Homebrew):**
+
+```bash
+brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
+brew update
+ACCEPT_EULA=Y brew install msodbcsql17
+```
+
+---
+
+### Bước 3 — Tạo Python virtual environment
+
+```bash
+# Windows (PowerShell)
 python -m venv venv
 venv\Scripts\activate
 
@@ -95,63 +133,89 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-#### 3. Cài đặt Python dependencies
+> ⚠️ Luôn activate venv trước khi chạy bất kỳ lệnh nào. Dấu `(venv)` phải xuất hiện ở đầu terminal.
+
+---
+
+### Bước 4 — Cài đặt Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-#### 4. Cấu hình environment variables
+Kiểm tra cài đặt thành công:
 
 ```bash
+python -c "import fastapi, openai, chromadb, pyodbc; print('OK')"
+```
+
+---
+
+### Bước 5 — Cấu hình environment variables
+
+Tạo file `.env` từ template:
+
+```bash
+# Windows
+copy .env.example .env
+
+# Linux / macOS
 cp .env.example .env
 ```
 
-Mở `.env` và điền thông tin:
+Mở `.env` và điền đầy đủ thông tin:
 
 ```env
-# SQL Server
-SQL_SERVER_HOST=localhost       # hoặc IP của SQL Server
-SQL_SERVER_PORT=1433
-SQL_SERVER_DB=YourDatabase
-SQL_SERVER_USER=sa
-SQL_SERVER_PASS=your_password
+# ── SQL Server ──────────────────────────────────────────
+SQL_SERVER_HOST=localhost         # IP hoặc hostname của SQL Server
+SQL_SERVER_PORT=1433              # Port mặc định
+SQL_SERVER_DB=AdventureWorksDW2025  # Tên database của bạn
+SQL_SERVER_USER=sa                # SQL Server username
+SQL_SERVER_PASS=your_password     # SQL Server password
 
-# LLM (chọn 1 trong 3 options bên dưới)
-OPENAI_API_KEY=your_key_here
-OPENAI_BASE_URL=https://models.github.ai/inference
-OPENAI_MODEL=gpt-4.1-mini
+# ── OpenAI ──────────────────────────────────────────────
+OPENAI_API_KEY=sk-proj-...        # API key từ platform.openai.com
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini          # Hoặc gpt-4o, gpt-3.5-turbo
+
+# ── ChromaDB ────────────────────────────────────────────
+CHROMA_PERSIST_DIR=./chroma_data
+
+# ── Knowledge files ─────────────────────────────────────
+GLOSSARY_PATH=./glossary.yaml
+MEMORY_PATH=./semantic_memory.json
 ```
 
-#### 5. Cài đặt ODBC Driver 17 (nếu chưa có)
+> 🔑 **Lấy OpenAI API Key:** Đăng nhập tại [platform.openai.com](https://platform.openai.com) → API Keys → Create new secret key.
 
-**Windows:** Tải từ [Microsoft ODBC Driver](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server)
+---
 
-**Ubuntu/Debian:**
-```bash
-curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list \
-  | sudo tee /etc/apt/sources.list.d/mssql-release.list
-sudo apt-get update
-sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17
-```
-
-**macOS (Homebrew):**
-```bash
-brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
-brew install msodbcsql17
-```
-
-#### 6. Khởi động Backend
+### Bước 6 — Khởi động Backend
 
 ```bash
+# Đảm bảo venv đang active, sau đó chạy từ thư mục gốc project
 python -m uvicorn src.server:app --reload --port 8000
 ```
 
-API sẽ chạy tại: `http://localhost:8000`  
-Swagger UI: `http://localhost:8000/docs`
+Kết quả thành công:
 
-#### 7. Khởi động Frontend
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process
+INFO:     Started server process
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+```
+
+Kiểm tra tại:
+- **API:** http://localhost:8000/health
+- **Swagger UI:** http://localhost:8000/docs
+
+---
+
+### Bước 7 — Cài đặt và khởi động Frontend
+
+Mở **terminal mới** (giữ terminal backend chạy ngầm):
 
 ```bash
 cd web
@@ -159,86 +223,96 @@ npm install
 npm run dev
 ```
 
-Mở trình duyệt: `http://localhost:3000`
+Kết quả thành công:
+
+```
+▲ Next.js 14.x.x
+- Local:        http://localhost:3000
+- Ready in 2.3s
+```
+
+Mở trình duyệt: **http://localhost:3000**
 
 ---
 
-### Phương án 2: Docker Compose — Khuyến nghị cho production
+### Bước 8 — Kết nối database lần đầu
 
-#### Yêu cầu
+1. Vào trang **Setup** (tự động redirect khi lần đầu truy cập)
+2. Điền thông tin SQL Server connection
+3. Nhấn **"Test Connection"** để kiểm tra kết nối
+4. Nhấn **"Connect & Deploy"** — hệ thống sẽ:
+   - Đọc schema từ database
+   - Build vector index cho ChromaDB
+   - Sẵn sàng nhận câu hỏi
+
+> ⏳ Lần deploy đầu tiên mất 1-3 phút tùy kích thước database.
+
+---
+
+### Khởi động lại sau lần đầu
+
+Từ lần thứ hai, chỉ cần chạy:
+
+```bash
+# Terminal 1 — Backend
+cd askDataAI
+venv\Scripts\activate        # Windows
+# hoặc: source venv/bin/activate   # Linux/macOS
+python -m uvicorn src.server:app --reload --port 8000
+
+# Terminal 2 — Frontend
+cd askDataAI/web
+npm run dev
+```
+
+Vào app → nhấn **"Connect"** để kết nối lại database (không cần deploy lại từ đầu).
+
+---
+
+## 🐳 Cài đặt bằng Docker Compose
+
+> Phù hợp cho production hoặc khi không muốn cài Python/Node thủ công.
+
+### Yêu cầu
 
 - Docker Desktop (Windows/macOS) hoặc Docker Engine (Linux)
-- SQL Server đang chạy trên **máy host** (không phải trong Docker)
+- SQL Server đang chạy trên **máy host**
 
-#### 1. Clone và cấu hình
+### Các bước
 
 ```bash
+# 1. Clone và cấu hình
 git clone https://github.com/qchien643/askDataAI.git
 cd askDataAI
-cp .env.example .env
-```
+cp .env.example .env     # Điền thông tin vào .env
 
-Mở `.env` và điền thông tin. Lưu ý:
-- Với Docker, `SQL_SERVER_HOST` sẽ được tự động override thành `host.docker.internal`
-- Đây là địa chỉ đặc biệt để container kết nối về máy host
-
-#### 2. Build và khởi động
-
-```bash
+# 2. Build và khởi động
 docker compose up --build
+
+# App chạy tại:
+# - Frontend: http://localhost:3000
+# - Backend:  http://localhost:8000
 ```
 
-- **Backend API:** `http://localhost:8000`
-- **Frontend:** `http://localhost:3000`
-
-#### 3. Chạy ngầm (detached mode)
+**Chạy ngầm (detached):**
 
 ```bash
 docker compose up --build -d
-docker compose logs -f        # theo dõi logs
-docker compose down           # dừng tất cả
+
+# Xem logs
+docker compose logs -f
+
+# Dừng
+docker compose down
 ```
 
-#### 4. Ghi chú quan trọng với Docker
+**Lưu ý SQL Server với Docker:**
 
-**SQL Server trên Windows host:**
+Khi chạy trong Docker, backend không thể dùng `localhost` để reach SQL Server trên máy host.  
+Docker Compose đã cấu hình sẵn `host.docker.internal` — bạn chỉ cần đặt trong `.env`:
+
 ```env
 SQL_SERVER_HOST=host.docker.internal
-```
-
-**SQL Server trên Linux host** (cần thêm vào docker-compose nếu chưa có):
-```yaml
-extra_hosts:
-  - "host.docker.internal:host-gateway"
-```
-*(Đã được thêm sẵn trong `docker-compose.yml`)*
-
-**Nếu SQL Server yêu cầu Windows Auth:** Dùng SQL Auth (username/password) thay thế.
-
----
-
-## 🔑 Cấu hình LLM Providers
-
-### OpenAI (Trả phí)
-```env
-OPENAI_API_KEY=sk-proj-...
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-4o-mini
-```
-
-### GitHub Models (Miễn phí với GitHub account)
-```env
-OPENAI_API_KEY=ghp_your_github_personal_access_token
-OPENAI_BASE_URL=https://models.github.ai/inference
-OPENAI_MODEL=gpt-4.1-mini
-```
-> Tạo PAT tại: Settings → Developer settings → Personal access tokens
-
-### Groq (Nhanh, miễn phí tier)
-```env
-OPENAI_API_KEY=gsk_...
-OPENAI_BASE_URL=https://api.groq.com/openai/v1
-OPENAI_MODEL=llama-3.3-70b-versatile
 ```
 
 ---
@@ -248,122 +322,110 @@ OPENAI_MODEL=llama-3.3-70b-versatile
 ```
 askDataAI/
 ├── src/
-│   ├── server.py                   # FastAPI app, SSE endpoints
-│   ├── config.py                   # Settings từ .env
+│   ├── server.py                    # FastAPI app, SSE endpoints
+│   ├── config.py                    # Settings từ .env
 │   ├── pipelines/
-│   │   └── ask_pipeline.py         # Pipeline 14 bước chính
+│   │   └── ask_pipeline.py          # Pipeline 14 bước chính
 │   ├── generation/
-│   │   ├── llm_client.py           # OpenAI-compatible client
-│   │   ├── sql_generator.py        # Sinh SQL
-│   │   ├── sql_corrector.py        # Sửa SQL lỗi
-│   │   ├── intent_classifier.py    # Phân loại ý định
-│   │   ├── schema_linker.py        # Liên kết schema
-│   │   └── conversation_context.py # Multi-turn context
+│   │   ├── llm_client.py            # OpenAI client wrapper
+│   │   ├── sql_generator.py         # Sinh SQL
+│   │   ├── sql_corrector.py         # Sửa SQL lỗi
+│   │   ├── intent_classifier.py     # Phân loại ý định
+│   │   ├── schema_linker.py         # Liên kết schema
+│   │   └── conversation_context.py  # Multi-turn context
 │   ├── retrieval/
-│   │   ├── schema_retriever.py     # Tìm bảng liên quan
-│   │   └── memory_retriever.py     # Tìm SQL tương tự
+│   │   ├── schema_retriever.py      # Tìm bảng liên quan
+│   │   └── memory_retriever.py      # Tìm SQL tương tự
 │   └── security/
-│       └── pi_guardrail.py         # Prompt injection guard
-├── web/                            # Next.js frontend
-│   ├── src/pages/home.tsx          # Trang chính + pipeline UI
-│   ├── src/styles/globals.css      # Memphis design system
+│       └── pi_guardrail.py          # Prompt injection guard
+├── web/                             # Next.js frontend
+│   ├── src/pages/home.tsx           # Trang chính + pipeline UI
+│   ├── src/styles/globals.css       # Memphis design system
 │   └── Dockerfile
-├── Dockerfile                      # Backend Docker image
-├── docker-compose.yml              # Multi-service orchestration
-├── .env.example                    # Template biến môi trường
-├── glossary.yaml                   # Từ điển thuật ngữ nghiệp vụ
-├── models.yaml                     # Schema models
-└── requirements.txt                # Python dependencies
+├── Dockerfile                       # Backend Docker image
+├── docker-compose.yml               # Multi-service orchestration
+├── .env.example                     # Template biến môi trường
+├── glossary.yaml                    # Từ điển thuật ngữ nghiệp vụ
+├── models.yaml                      # Schema models
+└── requirements.txt                 # Python dependencies
 ```
 
 ---
 
-## 🛠️ Phát triển & Mở rộng
+## 🛠️ Tuỳ chỉnh
 
 ### Thêm thuật ngữ nghiệp vụ
 
 Chỉnh sửa `glossary.yaml`:
+
 ```yaml
 terms:
   - name: "Doanh thu"
-    description: "Tổng giá trị bán hàng, bao gồm cả Internet và Reseller"
-    aliases: ["revenue", "oanh thu"]
+    description: "Tổng giá trị bán hàng Internet và Reseller"
+    aliases: ["revenue", "oanh thu", "doanh so"]
   - name: "Khách hàng VIP"
-    description: "Khách hàng có tổng mua hàng > 10,000 USD"
+    description: "Khách hàng có tổng mua hàng > 10.000 USD"
 ```
 
-### Thêm SQL memory
+Sau khi sửa, **re-deploy** trong UI (Settings → Re-deploy) để áp dụng.
 
-Sau khi chạy query thành công, hệ thống tự động lưu vào `semantic_memory.json`.  
-Hoặc thêm thủ công qua trang **Knowledge** trong UI.
+### Chỉnh pipeline settings
 
-### Chỉnh sửa pipeline settings
-
-Bật/tắt từng tính năng qua trang **Settings** hoặc qua API:
-- Schema linking
-- Column pruning  
-- CoT reasoning
-- Glossary matching
+Vào trang **Settings** trong UI để bật/tắt:
+- Schema Linking
+- Column Pruning
+- CoT Reasoning
+- Glossary Matching
 
 ---
 
-## 📡 API Reference
+## 📡 API Reference (tóm tắt)
 
-### POST `/v1/ask/stream`
-Stream pipeline execution qua Server-Sent Events.
+| Endpoint | Method | Mô tả |
+|---|---|---|
+| `/health` | GET | Kiểm tra trạng thái |
+| `/v1/connections/connect` | POST | Kết nối database |
+| `/v1/connections/status` | GET | Trạng thái kết nối |
+| `/v1/ask/stream` | POST | Query với SSE stream |
+| `/v1/sql/execute` | POST | Chạy SQL trực tiếp |
+| `/v1/knowledge/glossary` | GET/POST | Quản lý glossary |
 
-**Request:**
-```json
-{
-  "question": "Doanh thu từng tháng năm 2013 là bao nhiêu?",
-  "session_id": "uuid-string",
-  "debug": false
-}
-```
-
-**SSE Events:**
-```
-event: progress
-data: {"stage": "5", "label": "Tìm kiếm bảng dữ liệu...", "detail": ""}
-
-event: result
-data: {"sql": "SELECT ...", "rows": [...], "columns": [...]}
-
-event: error
-data: {"message": "..."}
-```
-
-### POST `/v1/connections/connect`
-Kết nối database và deploy schema index.
-
-### GET `/health`
-Kiểm tra trạng thái backend.
-
-Xem đầy đủ tại Swagger UI: `http://localhost:8000/docs`
+Xem đầy đủ tại: **http://localhost:8000/docs**
 
 ---
 
 ## ❓ Troubleshooting
 
-### Lỗi: `[Microsoft][ODBC Driver 17]` hoặc `ODBC Driver not found`
-→ Cài ODBC Driver 17 theo hướng dẫn ở trên.
+### `pyodbc.Error: ODBC Driver not found`
+→ Cài ODBC Driver 17 theo hướng dẫn Bước 2 phía trên.  
+→ Windows: Kiểm tra trong **Control Panel → ODBC Data Sources → Drivers**.
 
-### Lỗi: `Connection refused` tới SQL Server trong Docker
-→ Đảm bảo SQL Server cho phép TCP/IP connections.  
-→ Kiểm tra `SQL_SERVER_HOST=host.docker.internal` trong `.env`.  
-→ Trên Linux, kiểm tra firewall: `sudo ufw allow 1433`.
+### `Login failed for user 'sa'`
+→ Kiểm tra SQL Server đã bật **SQL Server Authentication** (không chỉ Windows Auth).  
+→ Vào SQL Server Management Studio → Server Properties → Security → **SQL Server and Windows Authentication mode**.
 
-### Lỗi: `ChromaDB import error`
-→ Chạy lại: `pip install chromadb==0.4.24`
+### `Connection refused` khi kết nối SQL Server
+→ Kiểm tra SQL Server đã bật **TCP/IP protocol**:  
+SQL Server Configuration Manager → SQL Server Network Configuration → TCP/IP → Enable.  
+→ Kiểm tra firewall cho phép port **1433**.
 
-### Frontend không kết nối được API
-→ Kiểm tra `NEXT_PUBLIC_API_BASE` trong `web/.env.local`:
+### Frontend báo `Failed to fetch` hoặc không kết nối API
+→ Kiểm tra backend đang chạy tại `http://localhost:8000`.  
+→ Kiểm tra file `web/.env.local` có:
 ```env
 NEXT_PUBLIC_API_BASE=http://localhost:8000
 ```
+Nếu không có file này, tạo mới.
 
-### Lỗi build Docker frontend
-→ Xóa cache: `docker compose build --no-cache frontend`
+### `ModuleNotFoundError` khi chạy backend
+→ Kiểm tra venv đang active (có `(venv)` ở đầu terminal).  
+→ Chạy lại: `pip install -r requirements.txt`.
+
+### ChromaDB lỗi khi deploy
+→ Xóa thư mục cũ và deploy lại:
+```bash
+rm -rf chroma_data/
+```
 
 ---
 
@@ -373,4 +435,4 @@ MIT License — free to use, modify, and distribute.
 
 ---
 
-*Built with ❤️ using FastAPI, Next.js, OpenAI, ChromaDB, and Memphis Design.*
+*Built with FastAPI · Next.js · OpenAI · ChromaDB · Memphis Design*

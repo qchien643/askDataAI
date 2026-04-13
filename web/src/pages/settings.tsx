@@ -12,56 +12,148 @@ import { api } from '@/hooks/useApi';
 /* ── Sidebar ── */
 const SidebarSection = styled.div`padding: 12px 0;`;
 const SidebarLabel = styled.div`
-  font-size: 12px; font-weight: 700; color: #434343;
-  padding: 5px 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 16px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 4px;
 `;
 const MenuItem = styled.button<{ $active?: boolean }>`
-  width: 100%; display: block; text-align: left;
-  padding: 6px 16px; border: none; cursor: pointer;
-  background: ${p => p.$active ? '#d9d9d9' : 'transparent'};
-  color: #65676c; font-size: 13px; font-family: inherit;
-  &:hover { background: ${p => p.$active ? '#d9d9d9' : '#f0f0f0'}; }
+  width: 100%;
+  display: block;
+  text-align: left;
+  padding: 7px 16px;
+  border: none;
+  border-left: ${p => p.$active ? '3px solid var(--m-yellow, #FFE600)' : '3px solid transparent'};
+  cursor: pointer;
+  background: ${p => p.$active ? 'rgba(255,230,0,0.12)' : 'transparent'};
+  color: ${p => p.$active ? '#fff' : 'rgba(255,255,255,0.6)'};
+  font-size: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: ${p => p.$active ? '700' : '500'};
+  transition: all 0.1s;
+  &:hover {
+    background: rgba(255,230,0,0.08);
+    color: #fff;
+    border-left-color: rgba(255,230,0,0.4);
+  }
 `;
 
 /* ── Content ── */
 const PageTitle = styled.h1`
-  font-size: 20px; font-weight: 600; color: #262626; margin-bottom: 24px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0D0D0D;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 const Section = styled.div`margin-bottom: 32px;`;
 const SectionTitle = styled.h3`
-  font-size: 14px; font-weight: 700; color: #434343; margin-bottom: 4px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0D0D0D;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #0D0D0D;
 `;
 const SectionDesc = styled.p`
-  font-size: 13px; color: #8c8c8c; margin-bottom: 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 16px;
+  margin-top: 6px;
 `;
 const Divider = styled.hr`
-  border: none; border-top: 1px solid #f0f0f0; margin: 24px 0;
+  border: none;
+  border-top: 2px solid #E2E0D8;
+  margin: 28px 0;
 `;
 const InfoRow = styled.div`
-  display: flex; padding: 8px 0; font-size: 14px;
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid #F0EFE9;
+  font-size: 13px;
+  font-family: 'Space Grotesk', sans-serif;
 `;
 const InfoLabel = styled.div`
-  width: 140px; color: #8c8c8c; flex-shrink: 0;
+  width: 140px;
+  color: #888;
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: flex;
+  align-items: center;
 `;
-const InfoValue = styled.div`color: #262626;`;
+const InfoValue = styled.div`
+  color: #0D0D0D;
+  font-weight: 600;
+`;
 const StatusBadge = styled.span<{ $ok: boolean }>`
-  display: inline-flex; align-items: center; gap: 6px;
-  color: ${p => p.$ok ? '#52c41a' : '#ff4d4f'};
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: ${p => p.$ok ? '#00A854' : '#FF3366'};
 `;
 
 const FeatureRow = styled.div`
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 0; border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid #E2E0D8;
+  border-bottom: none;
+  background: #fff;
+  &:first-of-type { border-top: 2px solid #0D0D0D; }
+  &:last-of-type { border-bottom: 2px solid #0D0D0D; }
+  &:hover { background: rgba(255,230,0,0.06); }
 `;
 const FeatureInfo = styled.div``;
-const FeatureName = styled.div`font-size: 14px; color: #262626;`;
-const FeatureDesc = styled.div`font-size: 12px; color: #8c8c8c; margin-top: 2px;`;
+const FeatureName = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0D0D0D;
+`;
+const FeatureDesc = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+`;
 
 const SliderRow = styled.div`
-  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 8px 0;
 `;
 const SliderLabel = styled.div`
-  width: 120px; font-size: 14px; color: #262626; flex-shrink: 0;
+  width: 120px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0D0D0D;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 `;
 
 export default function SettingsPage() {
@@ -137,13 +229,13 @@ export default function SettingsPage() {
 
   return (
     <RequireConnection>
-      <Head><title>Settings — Mini Wren AI</title></Head>
+      <Head><title>Settings — askDataAI</title></Head>
       <SiderLayout sidebar={sidebar}>
         <Spin spinning={loading}>
-          <div style={{ padding: '24px 32px', maxWidth: 720 }}>
+          <div style={{ padding: '28px 36px', maxWidth: 720 }}>
             <PageTitle>
-              <SettingOutlined style={{ marginRight: 8, color: '#65676c' }} />
-              Data Source Settings
+              <span style={{ display: 'inline-block', width: 28, height: 28, background: 'var(--m-yellow,#FFE600)', border: '2px solid #0D0D0D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⚙</span>
+              Settings
             </PageTitle>
 
             <Section>
@@ -172,7 +264,7 @@ export default function SettingsPage() {
                 <InfoLabel>Status</InfoLabel>
                 <InfoValue>
                   <StatusBadge $ok={info.connected}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: info.connected ? '#52c41a' : '#ff4d4f', display: 'inline-block' }} />
+                    <span style={{ width: 8, height: 8, background: info.connected ? '#00A854' : '#FF3366', display: 'inline-block', border: '1.5px solid #0D0D0D' }} />
                     {info.connected ? 'Connected' : 'Disconnected'}
                   </StatusBadge>
                 </InfoValue>
@@ -221,7 +313,7 @@ export default function SettingsPage() {
                   onChangeComplete={v => saveGeneration('num_candidates', v)}
                   style={{ flex: 1 }}
                 />
-                <span style={{ width: 24, textAlign: 'center', color: '#262626' }}>{generation.num_candidates ?? 3}</span>
+                <span style={{ width: 28, textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: '#0D0D0D', fontSize: 14 }}>{generation.num_candidates ?? 3}</span>
               </SliderRow>
               <SliderRow>
                 <SliderLabel>Temperature</SliderLabel>
@@ -230,7 +322,7 @@ export default function SettingsPage() {
                   onChangeComplete={v => saveGeneration('temperature', v)}
                   style={{ flex: 1 }}
                 />
-                <span style={{ width: 24, textAlign: 'center', color: '#262626' }}>{generation.temperature ?? 0.1}</span>
+                <span style={{ width: 28, textAlign: 'center', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, color: '#0D0D0D', fontSize: 14 }}>{generation.temperature ?? 0.1}</span>
               </SliderRow>
             </Section>
           </div>

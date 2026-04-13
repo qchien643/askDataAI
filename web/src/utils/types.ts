@@ -99,7 +99,13 @@ export interface AskResponse {
     instructions_matched: number;
     guardian_passed: boolean;
     pre_filter_result: string;
-
+    // Stage 0: PIGuardrail
+    pi_guard_blocked: boolean;
+    pi_guard_confidence: number;
+    // Stage 0.5: Conversation Context (mem0)
+    session_id: string;
+    enriched_question: string;
+    was_enriched: boolean;
   };
   debug_trace?: DebugTrace;
 }

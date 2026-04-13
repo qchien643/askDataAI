@@ -8,12 +8,45 @@ import { useConnection } from '@/contexts/ConnectionContext';
 
 const Page = styled.div`
   min-height: 100vh;
-  background: #fff;
+  background: var(--m-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
+  position: relative;
+  overflow: hidden;
+
+  /* Memphis multi-dot background */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(255,51,102,0.08) 1.5px, transparent 1.5px),
+      radial-gradient(circle, rgba(0,212,255,0.06) 1.5px, transparent 1.5px);
+    background-size:   28px 28px, 28px 28px;
+    background-position: 0 0, 14px 14px;
+    pointer-events: none;
+  }
+
+  /* Memphis top color bar */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(
+      90deg,
+      var(--m-pink)   0%,
+      var(--m-yellow) 20%,
+      var(--m-cyan)   40%,
+      var(--m-orange) 60%,
+      var(--m-purple) 80%,
+      var(--m-green)  100%
+    );
+    pointer-events: none;
+  }
 `;
 
 const LogoArea = styled.div`
@@ -22,29 +55,38 @@ const LogoArea = styled.div`
 `;
 
 const LogoIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  background: #4B6BFB;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  background: var(--m-yellow);
+  border: 3px solid var(--m-black);
+  box-shadow: 5px 5px 0 var(--m-black);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 20px;
-  margin: 0 auto 12px;
+  color: var(--m-black);
+  font-weight: 900;
+  font-size: 24px;
+  margin: 0 auto 14px;
+  font-family: 'Space Grotesk', sans-serif;
 `;
 
 const Title = styled.h1`
-  font-size: 28px;
-  font-weight: 600;
-  color: #262626;
+  font-size: 26px;
+  font-weight: 900;
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--m-black);
   margin-bottom: 8px;
 `;
 
 const Subtitle = styled.p`
-  font-size: 14px;
-  color: #8c8c8c;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const Steps = styled.div`
@@ -56,40 +98,57 @@ const Steps = styled.div`
 `;
 
 const StepCircle = styled.div<{ $active: boolean }>`
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: ${p => p.$active ? '#4B6BFB' : '#d9d9d9'};
-  color: ${p => p.$active ? 'white' : '#8c8c8c'};
+  width: 26px;
+  height: 26px;
+  background: ${p => p.$active ? 'var(--m-yellow)' : 'rgba(0,0,0,0.06)'};
+  color: ${p => p.$active ? 'var(--m-black)' : '#aaa'};
+  border: 2px solid ${p => p.$active ? 'var(--m-black)' : '#ccc'};
+  box-shadow: ${p => p.$active ? '2px 2px 0 var(--m-black)' : 'none'};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: 'Space Grotesk', sans-serif;
 `;
 
 const StepLine = styled.div`
   width: 60px;
-  height: 2px;
-  background: #d9d9d9;
-  margin: 0 8px;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(13,13,13,0.1), rgba(13,13,13,0.05));
+  margin: 0 6px;
 `;
 
 const StepLabel = styled.span<{ $active: boolean }>`
-  font-size: 12px;
-  color: ${p => p.$active ? '#262626' : '#8c8c8c'};
+  font-size: 11px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: ${p => p.$active ? 800 : 500};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: ${p => p.$active ? 'var(--m-black)' : '#aaa'};
   margin-left: 6px;
-  font-weight: ${p => p.$active ? 500 : 400};
 `;
 
 const Card = styled.div`
   width: 100%;
   max-width: 560px;
   background: white;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  border: 2.5px solid var(--m-black);
+  box-shadow: 6px 6px 0 var(--m-black);
   padding: 32px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+
+  /* Memphis colored top stripe */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--m-yellow), var(--m-pink), var(--m-cyan));
+    pointer-events: none;
+  }
 `;
 
 const CardTitle = styled.h2`
@@ -227,12 +286,12 @@ export default function SetupPage() {
   return (
     <>
       <Head>
-        <title>Setup — Mini Wren AI</title>
+        <title>Setup — askDataAI</title>
       </Head>
       <Page>
         <LogoArea>
-          <LogoIcon>W</LogoIcon>
-          <Title>Mini Wren AI</Title>
+          <LogoIcon>A</LogoIcon>
+          <Title>askDataAI</Title>
           <Subtitle>Connect your data source to get started</Subtitle>
         </LogoArea>
 

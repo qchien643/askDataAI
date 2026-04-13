@@ -18,44 +18,81 @@ import type { Model, Relationship } from '@/utils/types';
 const { Text } = Typography;
 const { TextArea } = Input;
 
-/* ── Custom Node ── */
+/* ── Custom Node — Memphis ── */
 const NodeWrapper = styled.div`
   width: 300px;
-  border-radius: 4px;
+  border: 2px solid var(--m-black, #0D0D0D);
+  border-radius: 0;
   overflow: visible;
-  box-shadow: 0 3px 6px -4px rgba(0,0,0,0.12), 0 6px 16px rgba(0,0,0,0.08), 0 9px 28px 8px rgba(0,0,0,0.05);
+  box-shadow: 4px 4px 0 var(--m-black, #0D0D0D);
   cursor: pointer;
-  font-family: 'Outfit', sans-serif;
-  &:hover { outline: 2px solid #4B6BFB; }
+  font-family: 'Space Grotesk', sans-serif;
+  background: #fff;
+  transition: transform 0.08s, box-shadow 0.08s;
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--m-black, #0D0D0D);
+    outline: none;
+  }
 `;
 const NodeHeader = styled.div<{ $color?: string }>`
-  background: ${p => p.$color || '#4B6BFB'};
-  color: white; padding: 6px 10px; font-size: 13px;
-  font-weight: 600; display: flex; align-items: center; gap: 6px;
+  background: ${p => p.$color || 'var(--m-black, #0D0D0D)'};
+  color: ${p => p.$color && p.$color !== 'var(--m-black, #0D0D0D)' ? '#0D0D0D' : 'var(--m-yellow, #FFE600)'};
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   height: 34px;
+  border-bottom: 2px solid var(--m-black, #0D0D0D);
 `;
 const NodeBody = styled.div`
-  background: white; padding: 4px 0; max-height: 320px; overflow-y: auto;
+  background: white;
+  padding: 4px 0;
+  max-height: 320px;
+  overflow-y: auto;
 `;
 const NodeSection = styled.div`
-  font-size: 10px; color: #8c8c8c; padding: 4px 10px 2px;
-  font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 9px;
+  color: #999;
+  padding: 4px 10px 2px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-family: 'Space Grotesk', sans-serif;
 `;
 const NodeCol = styled.div<{ $isFk?: boolean }>`
-  padding: 4px 10px; font-size: 12px;
-  color: ${p => p.$isFk ? '#4B6BFB' : '#434343'};
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: ${p => p.$isFk ? '700' : '500'};
+  color: ${p => p.$isFk ? 'var(--m-blue, #2979FF)' : '#0D0D0D'};
   position: relative;
-  &:hover { background: #f5f5f5; }
+  &:hover { background: rgba(255,230,0,0.15); }
 `;
 const ColRow = styled.div`
   display: flex; align-items: center; gap: 4px;
 `;
 const ColDesc = styled.div`
-  font-size: 10px; color: #bfbfbf; margin-top: 1px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
 `;
 const ColType = styled.span`
-  font-size: 10px; color: #bfbfbf; margin-left: auto; flex-shrink: 0;
+  font-size: 9px;
+  color: #999;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  text-transform: uppercase;
 `;
 
 /* PK icon */
@@ -82,12 +119,12 @@ function ModelNodeComponent({ data }: { data: any }) {
       <Handle
         type="target"
         position={Position.Left}
-        style={{ background: '#d9d9d9', border: '2px solid #4B6BFB', width: 8, height: 8 }}
+        style={{ background: 'var(--m-yellow, #FFE600)', border: '2px solid #0D0D0D', borderRadius: 0, width: 10, height: 10 }}
       />
       <Handle
         type="source"
         position={Position.Right}
-        style={{ background: '#d9d9d9', border: '2px solid #4B6BFB', width: 8, height: 8 }}
+        style={{ background: 'var(--m-yellow, #FFE600)', border: '2px solid #0D0D0D', borderRadius: 0, width: 10, height: 10 }}
       />
       <NodeHeader>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -129,27 +166,65 @@ function ModelNodeComponent({ data }: { data: any }) {
 
 const nodeTypes = { modelNode: ModelNodeComponent };
 
-/* ── Sidebar ── */
+/* ── Sidebar — Memphis ── */
 const SidebarSection = styled.div`padding: 12px 0;`;
 const SidebarLabel = styled.div`
-  font-size: 12px; font-weight: 700; color: #434343;
-  padding: 5px 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 16px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 4px;
 `;
 const ModelItem = styled.button<{ $active?: boolean }>`
-  width: 100%; display: flex; align-items: center; gap: 6px;
-  padding: 6px 16px; border: none; cursor: pointer;
-  background: ${p => p.$active ? '#d9d9d9' : 'transparent'};
-  color: #434343; font-size: 13px; font-family: inherit;
-  &:hover { background: ${p => p.$active ? '#d9d9d9' : '#f0f0f0'}; }
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: none;
+  border-left: ${p => p.$active ? '3px solid var(--m-yellow, #FFE600)' : '3px solid transparent'};
+  cursor: pointer;
+  background: ${p => p.$active ? 'rgba(255,230,0,0.12)' : 'transparent'};
+  color: ${p => p.$active ? '#fff' : 'rgba(255,255,255,0.6)'};
+  font-size: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: ${p => p.$active ? '700' : '500'};
+  text-align: left;
+  transition: all 0.1s;
+  &:hover {
+    background: rgba(255,230,0,0.08);
+    color: #fff;
+    border-left-color: rgba(255,230,0,0.4);
+  }
 `;
 
-/* ── Metadata Drawer Content ── */
+/* ── Metadata Drawer Content — Memphis ── */
 const MetaRow = styled.div`
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
 `;
 const MetaField = styled.div``;
-const MetaLabel = styled.div`font-size: 13px; color: #8c8c8c; margin-bottom: 4px;`;
-const MetaValue = styled.div`font-size: 14px; color: #262626;`;
+const MetaLabel = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+`;
+const MetaValue = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0D0D0D;
+`;
 
 /* ── Helper: extract FK columns from relationship conditions ── */
 function extractFkColumns(rels: Relationship[], modelName: string): string[] {
@@ -276,19 +351,19 @@ export default function ModelingPage() {
       source: r.model_from,
       target: r.model_to,
       type: 'smoothstep',
-      style: { stroke: '#4B6BFB', strokeWidth: 1.5 },
+      style: { stroke: '#0D0D0D', strokeWidth: 2 },
       animated: false,
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: '#4B6BFB',
+        color: '#0D0D0D',
         width: 16,
         height: 16,
       },
-      label: `${r.join_type}\n${r.condition || ''}`,
-      labelStyle: { fontSize: 9, fill: '#8c8c8c', fontFamily: 'Outfit, sans-serif' },
-      labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
+      label: r.join_type,
+      labelStyle: { fontSize: 9, fill: '#0D0D0D', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700 },
+      labelBgStyle: { fill: '#FFE600', fillOpacity: 1, stroke: '#0D0D0D', strokeWidth: 1 },
       labelBgPadding: [4, 2] as [number, number],
-      labelBgBorderRadius: 3,
+      labelBgBorderRadius: 0,
     }));
 
     setNodes(newNodes);
@@ -372,7 +447,7 @@ export default function ModelingPage() {
 
   return (
     <RequireConnection>
-      <Head><title>Modeling — Mini Wren AI</title></Head>
+      <Head><title>Modeling — askDataAI</title></Head>
       <SiderLayout sidebar={sidebar}>
         <div style={{ width: '100%', height: '100%' }}>
           <ReactFlow
@@ -389,9 +464,31 @@ export default function ModelingPage() {
               type: 'smoothstep',
             }}
           >
-            <MiniMap style={{ height: 100 }} zoomable pannable />
-            <Controls showInteractive={false} />
-            <Background gap={16} />
+            <MiniMap
+              style={{
+                height: 100,
+                border: '2px solid #0D0D0D',
+                boxShadow: '3px 3px 0 #0D0D0D',
+                background: '#F7F6F2',
+              }}
+              maskColor="rgba(255,230,0,0.12)"
+              zoomable
+              pannable
+            />
+            <Controls
+              showInteractive={false}
+              style={{
+                border: '2px solid #0D0D0D',
+                boxShadow: '3px 3px 0 #0D0D0D',
+                borderRadius: 0,
+              }}
+            />
+            <Background
+              gap={28}
+              size={1.5}
+              color="#0D0D0D"
+              style={{ opacity: 0.08 }}
+            />
           </ReactFlow>
         </div>
 

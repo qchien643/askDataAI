@@ -19,6 +19,13 @@ import type {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
+// Progress event emitted by /v1/ask/stream
+export interface ProgressEvent {
+  stage: string;
+  label: string;
+  detail?: string;
+}
+
 // ── Base helpers ──
 
 class ApiError extends Error {
@@ -137,8 +144,75 @@ export const api = {
     apiPost<{ success: boolean; message: string }>('/v1/connections/disconnect'),
 
   // Ask & Execute
-  ask: (question: string, overrides?: Record<string, any>, debug = false) =>
-    apiPost<AskResponse>('/v1/ask', { question, debug, ...overrides }),
+  ask: (question: string, overrides?: Record<string, any>, debug = false, session_id = '') =>
+    apiPost<AskResponse>('/v1/ask', { question, debug, session_id, ...overrides }),
+
+  /**
+   * Streaming ask via SSE — calls onProgress for each pipeline stage,
+   * then resolves the Promise with the final AskResponse.
+   */
+  askStream: (
+    question: string,
+    session_id: string,
+    debug: boolean,
+    overrides: Record<string, any>,
+    onProgress: (evt: ProgressEvent) => void,
+  ): Promise<AskResponse> =>
+    new Promise<AskResponse>(async (resolve, reject) => {
+      let res: Response;
+      try {
+        res = await fetch(`${API_BASE}/v1/ask/stream`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, debug, session_id, ...overrides }),
+        });
+      } catch {
+        return reject(new ApiError('Backend không phản hồi. Kiểm tra server đang chạy.', 0));
+      }
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+        return reject(new ApiError(err.detail || `API error: ${res.status}`, res.status));
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const parseAndDispatch = (chunk: string) => {
+        buffer += chunk;
+        const blocks = buffer.split('\n\n');
+        buffer = blocks.pop() ?? ''; // retain incomplete block
+        for (const block of blocks) {
+          if (!block.trim()) continue;
+          let eventType = 'message';
+          let dataLine = '';
+          for (const line of block.split('\n')) {
+            if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+            if (line.startsWith('data: ')) dataLine = line.slice(6).trim();
+          }
+          if (!dataLine) continue;
+          try {
+            const payload = JSON.parse(dataLine);
+            if (eventType === 'progress') {
+              onProgress(payload as ProgressEvent);
+            } else if (eventType === 'result') {
+              resolve(payload as AskResponse);
+            } else if (eventType === 'error') {
+              reject(new ApiError(payload.message || 'Server error', 500));
+            }
+          } catch {
+            // ignore malformed SSE blocks
+          }
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parseAndDispatch(decoder.decode(value, { stream: true }));
+      }
+    }),
+
   executeSql: (sql: string, limit = 100) =>
     apiPost<SQLExecuteResponse>('/v1/sql/execute', { sql, limit }),
   getModels: () =>

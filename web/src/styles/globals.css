@@ -1,113 +1,542 @@
-/* Mini Wren AI — Global Styles (WrenAI-faithful) */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* ═══════════════════════════════════════════════════════
+   Mini Wren AI — MEMPHIS DESIGN SYSTEM v2
+   Inspired by the 1980s Memphis Group postmodern aesthetic
+   ═══════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  /* Gray scale */
-  --gray-1: #ffffff;
-  --gray-2: #fafafa;
-  --gray-3: #f5f5f5;
-  --gray-4: #f0f0f0;
-  --gray-5: #d9d9d9;
-  --gray-6: #bfbfbf;
-  --gray-7: #8c8c8c;
-  --gray-8: #65676c;
-  --gray-9: #434343;
-  --gray-10: #262626;
-  --gray-11: #1f1f1f;
-  --gray-12: #141414;
+  /* ── Memphis Color Palette ── */
+  --m-black:    #0D0D0D;
+  --m-white:    #FAFAF5;
+  --m-yellow:   #FFE600;
+  --m-pink:     #FF3366;
+  --m-cyan:     #00D4FF;
+  --m-orange:   #FF6B35;
+  --m-purple:   #7B2FFF;
+  --m-green:    #00E676;
+  --m-red:      #FF1744;
+  --m-blue:     #2979FF;
+  --m-teal:     #00BFA5;
+  --m-lime:     #C6FF00;
 
-  /* Brand */
-  --geekblue-6: #4B6BFB;
-  --geekblue-1: #F0F5FF;
-  --green-6: #52c41a;
-  --red-5: #ff4d4f;
-  --gold-6: #faad14;
+  /* ── Background — warm white, not cream ── */
+  --m-bg:       #F7F6F2;
+  --m-bg-2:     #EDECE6;
+  --m-bg-3:     #E2E0D8;
+  --m-border:   #0D0D0D;
 
-  /* Semantic */
-  --primary: var(--geekblue-6);
-  --header-bg: var(--gray-10);
-  --sidebar-bg: var(--gray-2);
-  --content-bg: var(--gray-1);
-  --border: var(--gray-5);
-  --divider: var(--gray-4);
+  /* ── Hard-offset Memphis Shadows ── */
+  --shadow-sm:  3px 3px 0px var(--m-black);
+  --shadow-md:  4px 4px 0px var(--m-black);
+  --shadow-lg:  6px 6px 0px var(--m-black);
+  --shadow-xl:  8px 8px 0px var(--m-black);
 
-  /* Layout */
-  --header-height: 48px;
-  --sidebar-width: 280px;
-  --drawer-width: 760px;
-  --node-width: 200px;
-  --radius: 4px;
+  /* ── Layout ── */
+  --header-h:      56px;
+  --sidebar-w:     260px;
+  --radius:        0px;
+  --radius-sm:     2px;
+
+  /* Legacy alias */
+  --header-height: 56px;
+  --sidebar-width: 260px;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
-  color: var(--gray-10);
-  background: var(--content-bg);
+  color: var(--m-black);
+  background: var(--m-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════════════════
+   MEMPHIS BACKGROUND — multi-color geometric pattern
+   ══════════════════════════════════════════════ */
+
+/* Layer 1: colored thick diagonal stripes on sides */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  /* Dot grid — small, multi-tone */
+  background-image:
+    radial-gradient(circle, rgba(255, 51, 102, 0.08) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(0, 212, 255, 0.08)  1.5px, transparent 1.5px);
+  background-size:   32px 32px, 32px 32px;
+  background-position: 0 0, 16px 16px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Layer 2: bold colored left + right vertical accent strips */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    /* Left strip — yellow */
+    linear-gradient(to right, rgba(255,230,0,0.10) 0px, rgba(255,230,0,0.10) 4px, transparent 4px),
+    /* Left strip offset 2 — pink */
+    linear-gradient(to right, transparent 260px, rgba(255,51,102,0.08) 260px, rgba(255,51,102,0.08) 263px, transparent 263px),
+    /* Diagonal thin lines */
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 40px,
+      rgba(0, 212, 255, 0.04) 40px,
+      rgba(0, 212, 255, 0.04) 41px
+    ),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 60px,
+      rgba(255,107,53,0.04) 60px,
+      rgba(255,107,53,0.04) 61px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Memphis floating color corners ── (decorative pseudo-blocks) */
+#__next::before {
+  content: '';
+  position: fixed;
+  top: var(--header-h);
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: var(--m-yellow);
+  opacity: 0.05;
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+  pointer-events: none;
+  z-index: 0;
+}
+#__next::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-w);
+  width: 200px;
+  height: 200px;
+  background: var(--m-pink);
+  opacity: 0.04;
+  clip-path: polygon(0 100%, 100% 100%, 0 0);
+  pointer-events: none;
+  z-index: 0;
 }
 
 code, pre, .mono {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Ant Design overrides */
-.ant-layout-header {
-  height: var(--header-height) !important;
-  line-height: var(--header-height) !important;
-}
-
-.ant-table-thead > tr > th {
-  background: var(--gray-2) !important;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.ant-table-tbody > tr > td {
-  border-bottom: 1px solid var(--gray-4) !important;
-}
-
-.ant-drawer-header {
-  border-bottom: 1px solid var(--gray-4);
-}
-
-/* SQL code block */
-.sql-code-block {
-  background: var(--gray-11);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  overflow-x: auto;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #e6e6e6;
-}
-
-.sql-code-block .keyword {
-  color: #7c9deb;
-}
-.sql-code-block .string {
-  color: #a5d6a7;
-}
-.sql-code-block .number {
-  color: #f0c674;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+/* ── Memphis Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb {
-  background: var(--gray-5);
-  border-radius: 3px;
+  background: var(--m-black);
+  border-radius: 0;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+::-webkit-scrollbar-track { background: var(--m-bg-2); }
+
+/* ══════════════════════════════════════════════
+   ANT DESIGN OVERRIDES — Memphis style
+   ══════════════════════════════════════════════ */
+
+/* ── Tables ── */
+.ant-table {
+  border: 2px solid var(--m-black) !important;
+  border-radius: 0 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
 }
+.ant-table-thead > tr > th {
+  background: var(--m-yellow) !important;
+  border-bottom: 2px solid var(--m-black) !important;
+  border-right: 1px solid var(--m-black) !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  color: var(--m-black) !important;
+  padding: 10px 12px !important;
+}
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--m-bg-3) !important;
+  border-right: 1px solid var(--m-bg-3) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+.ant-table-tbody > tr:hover > td {
+  background: rgba(255,230,0,0.12) !important;
+}
+.ant-pagination {
+  font-family: 'Space Grotesk', sans-serif !important;
+}
+.ant-pagination-item-active {
+  border: 2px solid var(--m-black) !important;
+  background: var(--m-yellow) !important;
+  border-radius: 0 !important;
+}
+.ant-pagination-item-active a { color: var(--m-black) !important; }
+.ant-pagination-item {
+  border-radius: 0 !important;
+  border: 1.5px solid var(--m-black) !important;
+}
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  border-radius: 0 !important;
+  border: 1.5px solid var(--m-black) !important;
+}
+
+/* ── Buttons ── */
+.ant-btn {
+  border-radius: 0 !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  border: 2px solid var(--m-black) !important;
+  box-shadow: 3px 3px 0 var(--m-black) !important;
+  transition: transform 0.08s, box-shadow 0.08s !important;
+  text-transform: uppercase !important;
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+}
+.ant-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 4px 4px 0 var(--m-black) !important;
+}
+.ant-btn:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: none !important;
+}
+.ant-btn-primary {
+  background: var(--m-pink) !important;
+  color: white !important;
+  border-color: var(--m-black) !important;
+}
+.ant-btn-primary:hover {
+  background: #e0002c !important;
+  color: white !important;
+}
+
+/* ── Inputs ── */
+.ant-input, .ant-input-affix-wrapper, .ant-select-selector,
+.ant-input-number, .ant-picker {
+  border-radius: 0 !important;
+  border: 2px solid var(--m-black) !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+.ant-input:focus, .ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--m-pink) !important;
+  box-shadow: 3px 3px 0 var(--m-pink) !important;
+}
+.ant-input-group-addon {
+  border-radius: 0 !important;
+  border: 2px solid var(--m-black) !important;
+  background: var(--m-yellow) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Message / Notification ── */
+.ant-message-notice-content {
+  border-radius: 0 !important;
+  border: 2px solid var(--m-black) !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 600 !important;
+  box-shadow: 4px 4px 0 var(--m-black) !important;
+}
+
+/* ── Select / Dropdown ── */
+.ant-select-selector { border-radius: 0 !important; }
+.ant-select-dropdown {
+  border-radius: 0 !important;
+  border: 2px solid var(--m-black) !important;
+  box-shadow: 4px 4px 0 var(--m-black) !important;
+}
+.ant-select-item-option-selected {
+  background: var(--m-yellow) !important;
+  font-weight: 700 !important;
+}
+
+/* ── Tooltip ── */
+.ant-tooltip-inner {
+  border-radius: 0 !important;
+  border: 2px solid var(--m-black) !important;
+  background: var(--m-black) !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 500 !important;
+}
+.ant-tooltip-arrow-content { background-color: var(--m-black) !important; }
+
+/* ── Switch — Memphis style ── */
+.ant-switch {
+  border-radius: 0 !important;        /* no pill — full square */
+  background: #333 !important;
+  border: 2px solid var(--m-black) !important;
+  box-shadow: 2px 2px 0 var(--m-black) !important;
+  min-width: 40px !important;
+  height: 22px !important;
+  transition: background 0.12s, box-shadow 0.08s !important;
+}
+.ant-switch:hover {
+  box-shadow: 3px 3px 0 var(--m-black) !important;
+}
+.ant-switch-checked {
+  background: var(--m-pink) !important;
+  box-shadow: 2px 2px 0 var(--m-black) !important;
+}
+.ant-switch-handle {
+  border-radius: 0 !important;        /* square knob */
+  width: 16px !important;
+  height: 16px !important;
+  top: 1px !important;
+}
+.ant-switch-handle::before {
+  border-radius: 0 !important;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.5) !important;
+  background: var(--m-yellow) !important;
+}
+.ant-switch-checked .ant-switch-handle::before {
+  background: #fff !important;
+}
+
+/* ── Tabs ── */
+.ant-tabs-tab {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  font-size: 11px !important;
+}
+.ant-tabs-ink-bar {
+  background: var(--m-pink) !important;
+  height: 3px !important;
+}
+.ant-tabs-tab-active .ant-tabs-tab-btn { color: var(--m-pink) !important; }
+
+/* ── Drawer ── */
+.ant-drawer-content-wrapper {
+  box-shadow: -8px 0 0 var(--m-black) !important;
+}
+.ant-drawer-header {
+  border-bottom: 2px solid var(--m-black) !important;
+  background: var(--m-yellow) !important;
+  border-radius: 0 !important;
+}
+.ant-drawer-title {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+
+/* ── Modal ── */
+.ant-modal-content {
+  border-radius: 0 !important;
+  border: 3px solid var(--m-black) !important;
+  box-shadow: 8px 8px 0 var(--m-black) !important;
+}
+.ant-modal-header {
+  border-bottom: 2px solid var(--m-black) !important;
+  background: var(--m-cyan) !important;
+  border-radius: 0 !important;
+}
+.ant-modal-title {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+}
+
+/* ── Form labels ── */
+.ant-form-item-label > label {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* ── Slider ── */
+.ant-slider-rail {
+  background: var(--m-bg-3) !important;
+  border: 1px solid var(--m-black) !important;
+  border-radius: 0 !important;
+  height: 6px !important;
+}
+.ant-slider-track {
+  background: var(--m-yellow) !important;
+  border-radius: 0 !important;
+  height: 6px !important;
+}
+.ant-slider-handle {
+  border-radius: 0 !important;
+  border: 2px solid var(--m-black) !important;
+  background: var(--m-yellow) !important;
+  box-shadow: 2px 2px 0 var(--m-black) !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-top: -4px !important;
+}
+.ant-slider-handle:hover,
+.ant-slider-handle:focus {
+  border-color: var(--m-pink) !important;
+  box-shadow: 2px 2px 0 var(--m-pink) !important;
+}
+
+/* ── Spin (loader) ── */
+.ant-spin-dot-item {
+  background: var(--m-black) !important;
+  border-radius: 0 !important;
+}
+
+/* ── Tags ── */
+.ant-tag {
+  border-radius: 0 !important;
+  border: 1.5px solid var(--m-black) !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}
+
+/* ── Cards ── */
+.ant-card {
+  border-radius: 0 !important;
+  border: 2px solid var(--m-black) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.ant-card-head {
+  border-bottom: 2px solid var(--m-black) !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  font-size: 12px !important;
+  letter-spacing: 0.5px !important;
+  background: var(--m-bg-2) !important;
+}
+
+/* ── Typography ── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ══════════════════════════════════════
+   MEMPHIS UTILITY CLASSES
+   ══════════════════════════════════════ */
+.memphis-card {
+  border: 2px solid var(--m-black);
+  box-shadow: var(--shadow-md);
+  background: white;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.memphis-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--m-black);
+}
+.memphis-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1.5px solid var(--m-black);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 2px 2px 0 var(--m-black);
+}
+.memphis-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 12px;
+  border-bottom: 2px solid var(--m-black);
+  margin-bottom: 16px;
+}
+
+/* ══════════════════════════════════════
+   KEYFRAMES
+   ══════════════════════════════════════ */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-4deg); }
+  50%       { transform: rotate(4deg); }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
+}
+@keyframes blinkDot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════
+   MEMPHIS CUSTOM CURSORS — geometric SVG cursors
+   ══════════════════════════════════════════════ */
+
+/* ── Default arrow — geometric bold outline ── */
+:root {
+  --cur-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M4 2 L4 18 L9 13 L13 21 L16 20 L12 12 L19 12 Z' fill='%23F7F6F2' stroke='%230D0D0D' stroke-width='2' stroke-linejoin='miter'/%3E%3C/svg%3E") 4 2, auto;
+  --cur-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='28' viewBox='0 0 24 28'%3E%3Crect x='1' y='1' width='22' height='22' rx='0' fill='%23FFE600' stroke='%230D0D0D' stroke-width='2'/%3E%3Cpath d='M7 8 L7 4 M17 8 L17 4 M12 6 L12 2' stroke='%230D0D0D' stroke-width='2' stroke-linecap='square'/%3E%3Cline x1='7' y1='8' x2='17' y2='8' stroke='%230D0D0D' stroke-width='2'/%3E%3Cline x1='7' y1='8' x2='7' y2='20' stroke='%230D0D0D' stroke-width='2'/%3E%3Cline x1='17' y1='8' x2='17' y2='20' stroke='%230D0D0D' stroke-width='2'/%3E%3Cline x1='7' y1='20' x2='17' y2='20' stroke='%230D0D0D' stroke-width='2'/%3E%3C/svg%3E") 12 4, pointer;
+  --cur-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='24' viewBox='0 0 20 24'%3E%3Cline x1='4' y1='2' x2='16' y2='2' stroke='%230D0D0D' stroke-width='2.5' stroke-linecap='square'/%3E%3Cline x1='10' y1='2' x2='10' y2='22' stroke='%230D0D0D' stroke-width='2.5' stroke-linecap='square'/%3E%3Cline x1='4' y1='22' x2='16' y2='22' stroke='%230D0D0D' stroke-width='2.5' stroke-linecap='square'/%3E%3C/svg%3E") 10 12, text;
+  --cur-crosshair: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='5' fill='none' stroke='%230D0D0D' stroke-width='2'/%3E%3Cline x1='12' y1='0' x2='12' y2='7' stroke='%230D0D0D' stroke-width='2.5' stroke-linecap='square'/%3E%3Cline x1='12' y1='17' x2='12' y2='24' stroke='%230D0D0D' stroke-width='2.5' stroke-linecap='square'/%3E%3Cline x1='0' y1='12' x2='7' y2='12' stroke='%230D0D0D' stroke-width='2.5' stroke-linecap='square'/%3E%3Cline x1='17' y1='12' x2='24' y2='12' stroke='%230D0D0D' stroke-width='2.5' stroke-linecap='square'/%3E%3Crect x='10' y='10' width='4' height='4' fill='%23FF3366'/%3E%3C/svg%3E") 12 12, crosshair;
+  --cur-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect x='2' y='10' width='20' height='12' rx='0' fill='%2300D4FF' stroke='%230D0D0D' stroke-width='2'/%3E%3Crect x='6' y='4' width='4' height='8' rx='0' fill='%23F7F6F2' stroke='%230D0D0D' stroke-width='2'/%3E%3Crect x='11' y='2' width='4' height='10' rx='0' fill='%23F7F6F2' stroke='%230D0D0D' stroke-width='2'/%3E%3Crect x='16' y='4' width='4' height='8' rx='0' fill='%23F7F6F2' stroke='%230D0D0D' stroke-width='2'/%3E%3C/svg%3E") 12 8, grab;
+}
+
+/* Apply default geometric cursor globally */
+* { cursor: var(--cur-default); }
+
+/* Text cursor — inputs, paragraphs, textareas */
+input, textarea, [contenteditable],
+p, span, td, th, li, h1, h2, h3, h4, h5, h6, label,
+.ant-typography, .sql-block, code {
+  cursor: var(--cur-text);
+}
+
+/* Pointer cursor — all interactive elements */
+button, a, [role="button"],
+.ant-btn, .ant-switch, .ant-pagination-item,
+.ant-pagination-prev, .ant-pagination-next,
+.ant-menu-item, .ant-tabs-tab,
+[class*="ThreadItem"], [class*="SendBtn"],
+[class*="CloseBtn"], [class*="ThoughtBtn"],
+[class*="DrawerClose"], [class*="DebugToggle"] {
+  cursor: var(--cur-pointer) !important;
+}
+
+/* Switch uses pointer */
+.ant-switch { cursor: var(--cur-pointer) !important; }
+
+/* Table crosshair */
+.ant-table-tbody > tr > td,
+.ant-table-thead > tr > th {
+  cursor: var(--cur-crosshair) !important;
+}
+
+/* Sort/filter columns get pointer */
+.ant-table-column-sorter,
+.ant-table-filter-trigger {
+  cursor: var(--cur-pointer) !important;
+}
+
+/* Tooltip targets */
+[class*="Tooltip"] { cursor: var(--cur-pointer); }

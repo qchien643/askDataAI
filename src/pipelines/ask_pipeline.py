@@ -1,14 +1,27 @@
-﻿"""
+"""
 Ask Pipeline - Full pipeline từ câu hỏi → SQL → kết quả.
 
-UPGRADED ARCHITECTURE (Multi-Stage Intent + Guardian):
-  question → pre-filter → instruction match → intent classify
-    → sub-intent → retrieve → schema link → column prune
-    → context build → glossary inject → CoT reason
-    → multi-candidate generate → execution vote → correct
-    → guardian validate → memory save → result
+UPGRADED ARCHITECTURE (PIGuardrail + Multi-Stage Intent + Guardian):
+  question
+    → [Stage 0] PIGuardrail (leolee99/PIGuard — Prompt Injection detection)
+    → [Stage 1] PreFilter (regex/keyword, NO LLM)
+    → [Stage 2] InstructionMatcher (business rules, NO LLM)
+    → [Stage 3] IntentClassifier (LLM)
+    → [Stage 4] SubIntentDetector
+    → [Stage 5–11] Schema retrieve → link → prune → context → glossary → memory → CoT
+    → [Stage 12] Multi-candidate generate + Execution voting
+    → [Stage 13] SQL Correction
+    → [Stage 13.5] SQLGuardian (5-layer SQL security)
+    → [Stage 14] Memory Save
+    → result
+
+Security Layers:
+  - PIGuardrail (Stage 0): Prompt Injection detection (leolee99/PIGuard, ACL 2025)
+  - PreFilter (Stage 1): Destructive/OOS/Greeting regex filter
+  - SQLGuardian (Stage 13.5): SQL injection + read-only + table ACL + masking + RLS
 
 New Components (Multi-Stage Intent + Security):
+  - PIGuardrail: ML-based prompt injection guard (DeBERTa-v3-base fine-tuned)
   - PreFilter: regex/keyword pre-filter (NO LLM, instant)
   - InstructionMatcher: business rules injection (NO LLM)
   - SubIntentDetector: RETRIEVAL/AGGREGATION/TREND/RANKING/etc.
@@ -53,6 +66,10 @@ from src.generation.instruction_matcher import InstructionMatcher
 from src.generation.sub_intent import SubIntentDetector, SubIntent
 from src.generation.schema_explorer import SchemaExplorer
 from src.security.guardian import SQLGuardian
+# Stage 0: Prompt Injection Guardrail (leolee99/PIGuard — ACL 2025)
+from src.security.pi_guardrail import PIGuardrail, PIGuardResult
+# Stage 0.5: Conversation Context Engine (Rolling Summary + 7 Recent Turns)
+from src.generation.conversation_context import ConversationContextEngine, EnrichResult
 
 # Debug Tracer
 from src.pipelines.tracer import PipelineTracer
@@ -90,6 +107,14 @@ class AskResult:
     instructions_matched: int = 0
     guardian_passed: bool = True
     pre_filter_result: str = ""
+    # Stage 0: PIGuardrail metadata
+    pi_guard_blocked: bool = False
+    pi_guard_confidence: float = 0.0
+    # Stage 0.5: Conversation Context metadata
+    enriched_question: str = ""       # Câu hỏi sau khi LLM enrich (= question nếu không đổi)
+    was_enriched: bool = False         # True nếu LLM thực sự thay đổi câu hỏi
+    memories_used: list[str] = field(default_factory=list)
+    session_id: str = ""
 
     # Debug trace
     debug_trace: dict = field(default_factory=dict)
@@ -118,6 +143,11 @@ class AskPipeline:
         enable_memory: bool = True,
         glossary_path: str = "",
         memory_path: str = "semantic_memory.json",
+        # Stage 0: PIGuardrail (Prompt Injection detection)
+        enable_pi_guard: bool = True,
+        pi_guard_threshold: float = 0.5,
+        # Stage 0.5: Conversation Context (mem0 rolling memory)
+        enable_conversation_context: bool = True,
     ):
         self._manifest = manifest
         self._indexer = indexer
@@ -161,27 +191,49 @@ class AskPipeline:
         self._guardian = SQLGuardian.from_config("src/security/guardian.yaml")
         self._guardian.config.set_allowed_tables_from_manifest(manifest)
 
+        # Stage 0: PIGuardrail — Prompt Injection detection (leolee99/PIGuard)
+        self._pi_guard = PIGuardrail(
+            enabled=enable_pi_guard,
+            threshold=pi_guard_threshold,
+        )
 
+        # Stage 0.5: Conversation Context Engine (mem0)
+        self._conv_ctx = ConversationContextEngine(
+            llm_client=self._llm,
+            enabled=enable_conversation_context,
+        )
 
         logger.info(
-            f"AskPipeline initialized (upgraded + guardian): "
+            f"AskPipeline initialized (upgraded + guardian + PIGuardrail + ConvCtx): "
             f"candidates={num_candidates}, "
             f"pruning={enable_column_pruning}, "
             f"cot={enable_cot_reasoning}, "
             f"schema_link={enable_schema_linking}, "
             f"voting={enable_voting}, "
             f"glossary={enable_glossary} ({self._glossary.term_count} terms), "
-            f"memory={enable_memory} ({self._memory.trace_count} traces)"
+            f"memory={enable_memory} ({self._memory.trace_count} traces), "
+            f"pi_guard={enable_pi_guard} (threshold={pi_guard_threshold}), "
+            f"conv_context={enable_conversation_context}"
         )
 
-    def ask(self, question: str, overrides: dict | None = None, debug: bool = False) -> AskResult:
+    def ask(
+        self,
+        question: str,
+        overrides: dict | None = None,
+        debug: bool = False,
+        session_id: str = "",
+        user_id: str = "default",
+        on_progress: "Callable[[str, str], None] | None" = None,
+    ) -> AskResult:
         """
         Chạy full upgraded pipeline.
 
         Args:
-            question: Câu hỏi user.
-            overrides: Per-request feature toggles (override config defaults).
-            debug: Bật debug trace để xem input/output từng stage.
+            question    : Câu hỏi user.
+            overrides   : Per-request feature toggles (override config defaults).
+            debug       : Bật debug trace để xem input/output từng stage.
+            on_progress : Callback(stage_id, label) — gọi tại đầu mỗi stage để
+                          SSE endpoint stream tiến độ về client.
         """
         # Debug tracer
         tracer = PipelineTracer(enabled=debug)
@@ -210,13 +262,71 @@ class AskPipeline:
         model_names = [m.name for m in self._manifest.models]
 
         try:
+            # ── Stage 0: PIGuardrail — Prompt Injection Detection ──
+            if on_progress: on_progress("0", "🛡 Kiểm tra bảo mật đầu vào...")
+            tracer.start("Stage 0: PIGuardrail")
+            tracer.log_input({"question": question[:100]})
+            logger.info(f"[0/14] PIGuardrail checking for prompt injection...")
+            pi_result = self._pi_guard.check(question)
+            tracer.log_output({
+                "result": pi_result.result.value,
+                "confidence": pi_result.confidence,
+                "label": pi_result.label,
+                "model_loaded": pi_result.model_loaded,
+            })
+            tracer.end()
+            if on_progress:
+                detail = f"✅ An toàn (confidence={pi_result.confidence:.2f})" if pi_result.result.value != "injection" else f"⚠️ Tấn công bị chặn (confidence={pi_result.confidence:.2f})"
+                on_progress("0", "🛡 Kiểm tra bảo mật đầu vào", detail)
+
+            if pi_result.result == PIGuardResult.INJECTION_DETECTED:
+                logger.warning(
+                    f"[0/14] PIGuardrail: INJECTION BLOCKED "
+                    f"(confidence={pi_result.confidence:.3f})"
+                )
+                return AskResult(
+                    question=question,
+                    intent="INJECTION",
+                    error=pi_result.response,
+                    pi_guard_blocked=True,
+                    pi_guard_confidence=pi_result.confidence,
+                    guardian_passed=False,
+                    active_features=active_features,
+                    debug_trace=tracer.to_dict(),
+                )
+
+            # ── Stage 0.5: Conversation Context Enrichment ──
+            if on_progress: on_progress("0.5", "💬 Giải quyết ngữ cảnh hội thoại...")
+            tracer.start("Stage 0.5: ConversationContext")
+            tracer.log_input({"question": question, "session_id": session_id})
+            logger.info(f"[0.5/14] ConversationContext enriching question (session={session_id or 'none'})...")
+            ctx_result: EnrichResult = self._conv_ctx.enrich(
+                question=question,
+                session_id=session_id or "default_session",
+                user_id=user_id,
+            )
+            working_question = ctx_result.enriched_question
+            tracer.log_output({
+                "enriched_question": working_question,
+                "was_enriched": ctx_result.was_enriched,
+                "memories_count": len(ctx_result.memories_used),
+            })
+            tracer.end()
+            if on_progress:
+                if ctx_result.was_enriched:
+                    on_progress("0.5", "💬 Giải quyết ngữ cảnh hội thoại", f"✅ Làm giàu câu hỏi: “{working_question[:80]}”")
+                else:
+                    on_progress("0.5", "💬 Giải quyết ngữ cảnh hội thoại", "ℹ️ Câu hỏi độc lập, không cần làm giàu ngữ cảnh")
+
             # ── Stage 1: Pre-Filter (NO LLM — instant) ──
+            if on_progress: on_progress("1", "🔍 Phân loại sơ bộ câu hỏi...")
             tracer.start("Stage 1: PreFilter")
-            tracer.log_input({"question": question})
-            logger.info(f"[1/14] Pre-filtering: {question}")
-            pre_filter = self._pre_filter.filter(question)
+            tracer.log_input({"question": working_question})
+            logger.info(f"[1/14] Pre-filtering: {working_question}")
+            pre_filter = self._pre_filter.filter(working_question)
             tracer.log_output({"result": pre_filter.result.value, "response": pre_filter.response})
             tracer.end()
+            if on_progress: on_progress("1", "🔍 Phân loại sơ bộ câu hỏi", f"✅ Loại: {pre_filter.result.value.upper()}")
 
             if pre_filter.result == PreFilterResult.GREETING:
                 r = AskResult(question=question, intent="GREETING", explanation=pre_filter.response, valid=True, pre_filter_result="GREETING", active_features=active_features, debug_trace=tracer.to_dict())
@@ -238,20 +348,28 @@ class AskPipeline:
                 return r
 
             # ── Stage 2: Instruction Match (NO LLM) ──
+            if on_progress: on_progress("2", "📋 Tra cứu quy tắc nghiệp vụ...")
             tracer.start("Stage 2: InstructionMatch")
             logger.info("[2/14] Matching instructions...")
-            instr_result = self._instruction_matcher.match(question)
+            instr_result = self._instruction_matcher.match(working_question)
             instructions_matched = len(instr_result.matched_instructions)
             tracer.log_output({"matched": instructions_matched, "context": instr_result.context_text[:200] if instr_result.context_text else ""})
             tracer.end()
+            if on_progress:
+                if instructions_matched > 0:
+                    on_progress("2", "📋 Tra cứu quy tắc nghiệp vụ", f"✅ Tìm thấy {instructions_matched} quy tắc áp dụng")
+                else:
+                    on_progress("2", "📋 Tra cứu quy tắc nghiệp vụ", "ℹ️ Không có quy tắc nào khớp")
 
             # ── Stage 3: Intent Classification (LLM) ──
+            if on_progress: on_progress("3", "🧠 Phân tích ý định câu hỏi...")
             tracer.start("Stage 3: IntentClassifier")
-            tracer.log_input({"question": question, "models": model_names})
-            logger.info(f"[3/14] Classifying intent: {question}")
-            intent_result = self._classifier.classify(question, model_names)
+            tracer.log_input({"question": working_question, "models": model_names})
+            logger.info(f"[3/14] Classifying intent: {working_question}")
+            intent_result = self._classifier.classify(working_question, model_names)
             tracer.log_output({"intent": intent_result.intent.value, "reason": intent_result.reason})
             tracer.end()
+            if on_progress: on_progress("3", "🧠 Phân tích ý định câu hỏi", f"✅ Intent: {intent_result.intent.value.upper()} — {intent_result.reason[:80]}")
 
             if intent_result.intent == Intent.SCHEMA_EXPLORE:
                 schema_answer = self._schema_explorer.explore(question)
@@ -267,34 +385,40 @@ class AskPipeline:
                 return r
 
             # ── Stage 4: Sub-Intent Detection ──
+            if on_progress: on_progress("4", "🎯 Xác định loại phân tích...")
             tracer.start("Stage 4: SubIntentDetect")
             logger.info("[4/16] Detecting sub-intent...")
-            sub_intent_result = self._sub_intent_detector.detect(question)
+            sub_intent_result = self._sub_intent_detector.detect(working_question)
             tracer.log_output({"sub_intent": sub_intent_result.sub_intent.value, "confidence": sub_intent_result.confidence, "sql_hints": sub_intent_result.sql_hints})
             tracer.end()
+            if on_progress: on_progress("4", "🎯 Xác định loại phân tích", f"✅ Sub-intent: {sub_intent_result.sub_intent.value.upper()} (confidence={sub_intent_result.confidence:.2f})")
 
             # ── Step 5: Schema Retrieval ──
+            if on_progress: on_progress("5", "📊 Tìm kiếm bảng dữ liệu liên quan...")
             tracer.start("Stage 5: SchemaRetrieval")
-            tracer.log_input({"question": question})
+            tracer.log_input({"question": working_question})
             logger.info("[5/16] Retrieving schema context...")
-            retrieval = self._retriever.retrieve(question)
+            retrieval = self._retriever.retrieve(working_question)
             tracer.log_output({
                 "models_found": retrieval.model_names,
                 "schemas_count": len(retrieval.db_schemas),
                 "total_columns": sum(len(s.get("columns", [])) for s in retrieval.db_schemas),
             })
             tracer.end()
+            total_cols = sum(len(s.get("columns", [])) for s in retrieval.db_schemas)
+            if on_progress: on_progress("5", "📊 Tìm kiếm bảng dữ liệu liên quan", f"✅ Tìm thấy {len(retrieval.model_names)} bảng, {total_cols} cột: {', '.join(retrieval.model_names[:4])}")
 
             # ── Step 6: Schema Linking ──
             schema_hints = ""
             schema_links_info = {}
             if use_schema_linking:
+                if on_progress: on_progress("6", "🔗 Liên kết thực thể với schema...")
                 tracer.start("Stage 6: SchemaLinking")
                 logger.info("[6/14] Schema linking...")
                 prelim_ddl = self._context_builder.build(
                     retrieval.db_schemas, retrieval.model_names
                 )
-                link_result = self._schema_linker.link(question, prelim_ddl)
+                link_result = self._schema_linker.link(working_question, prelim_ddl)
                 schema_hints = link_result.context_hints
                 schema_links_info = {
                     "entity_links": [{"mention": e.mention, "table": e.table, "column": e.column} for e in link_result.entity_links],
@@ -303,6 +427,9 @@ class AskPipeline:
                 }
                 tracer.log_output({"entity_links": len(link_result.entity_links), "value_links": len(link_result.value_links), "hints": schema_hints[:150]})
                 tracer.end()
+                if on_progress:
+                    el = len(link_result.entity_links); vl = len(link_result.value_links)
+                    on_progress("6", "🔗 Liên kết thực thể với schema", f"✅ {el} entity links, {vl} value links" + (f" | {schema_hints[:60]}" if schema_hints else ""))
             else:
                 tracer.skip("Stage 6: SchemaLinking", "disabled")
                 logger.info("[6/14] Schema linking SKIPPED")
@@ -310,37 +437,48 @@ class AskPipeline:
             # ── Step 7: Column Pruning ──
             columns_pruned = 0
             if use_column_pruning:
+                if on_progress: on_progress("7", "✂️ Lọc cột không liên quan...")
                 tracer.start("Stage 7: ColumnPruning")
                 logger.info("[7/14] Column pruning...")
                 total_before = sum(len(s.get("columns", [])) for s in retrieval.db_schemas)
-                pruned_schemas = self._column_pruner.prune(question, retrieval.db_schemas)
+                pruned_schemas = self._column_pruner.prune(working_question, retrieval.db_schemas)
                 total_after = sum(len(s.get("columns", [])) for s in pruned_schemas)
                 columns_pruned = total_before - total_after
                 tracer.log_output({"before": total_before, "after": total_after, "pruned": columns_pruned})
                 tracer.end()
+                if on_progress: on_progress("7", "✂️ Lọc cột không liên quan", f"✅ Lược bỏ {columns_pruned} cột ({total_before} → {total_after} cột)")
             else:
                 tracer.skip("Stage 7: ColumnPruning", "disabled")
                 logger.info("[7/14] Column pruning SKIPPED")
                 pruned_schemas = retrieval.db_schemas
 
             # ── Step 8: Context Building ──
+            if on_progress: on_progress("8", "📝 Xây dựng ngữ cảnh DDL...")
             tracer.start("Stage 8: ContextBuilder")
             logger.info("[8/14] Building DDL context...")
             ddl = self._context_builder.build(pruned_schemas, retrieval.model_names)
             tracer.log_output({"ddl_length": len(ddl)})
             tracer.end()
+            if on_progress: on_progress("8", "📝 Xây dựng ngữ cảnh DDL", f"✅ DDL context: {len(ddl)} ký tự, {len(retrieval.model_names)} bảng")
 
             # ── Step 9: Business Glossary Injection ──
             glossary_context = ""
             glossary_match_count = 0
             if use_glossary:
+                if on_progress: on_progress("9", "📖 Tra cứu từ điển nghiệp vụ...")
                 tracer.start("Stage 9: GlossaryLookup")
                 logger.info("[9/14] Glossary lookup...")
-                matches = self._glossary.lookup(question)
+                matches = self._glossary.lookup(working_question)
                 glossary_match_count = len(matches)
                 glossary_context = self._glossary.build_context(matches)
                 tracer.log_output({"matches": glossary_match_count, "context": glossary_context[:100]})
                 tracer.end()
+                if on_progress:
+                    if glossary_match_count > 0:
+                        terms = ", ".join(m.term.name for m in matches[:3])
+                        on_progress("9", "📖 Tra cứu từ điển nghiệp vụ", f"✅ Tìm thấy {glossary_match_count} thuật ngữ: {terms}")
+                    else:
+                        on_progress("9", "📖 Tra cứu từ điển nghiệp vụ", "ℹ️ Không tìm thấy thuật ngữ phù hợp")
             else:
                 tracer.skip("Stage 9: GlossaryLookup", "disabled")
                 logger.info("[9/14] Glossary SKIPPED")
@@ -349,13 +487,19 @@ class AskPipeline:
             memory_context = ""
             similar_trace_count = 0
             if use_memory:
+                if on_progress: on_progress("10", "🧩 Tìm kiếm SQL tương tự trong memory...")
                 tracer.start("Stage 10: SemanticMemory")
                 logger.info("[10/14] Semantic memory lookup...")
-                similar = self._memory.find_similar(question)
+                similar = self._memory.find_similar(working_question)
                 similar_trace_count = len(similar)
                 memory_context = self._memory.build_context(similar)
                 tracer.log_output({"similar_traces": similar_trace_count, "context": memory_context[:100]})
                 tracer.end()
+                if on_progress:
+                    if similar_trace_count > 0:
+                        on_progress("10", "🧩 Tìm kiếm SQL tương tự trong memory", f"✅ Tìm thấy {similar_trace_count} câu SQL tương tự trong lịch sử")
+                    else:
+                        on_progress("10", "🧩 Tìm kiếm SQL tương tự trong memory", "ℹ️ Không tìm thấy SQL nào tương tự")
             else:
                 tracer.skip("Stage 10: SemanticMemory", "disabled")
                 logger.info("[10/14] Semantic memory SKIPPED")
@@ -364,13 +508,15 @@ class AskPipeline:
             reasoning_plan = ""
             reasoning_steps = []
             if use_cot_reasoning:
+                if on_progress: on_progress("11", "🤔 Lập kế hoạch truy vấn CoT...")
                 tracer.start("Stage 11: CoTReasoning")
                 logger.info("[11/14] CoT reasoning...")
-                reasoning = self._reasoner.reason(question, ddl)
+                reasoning = self._reasoner.reason(working_question, ddl)
                 reasoning_plan = reasoning.reasoning_text
                 reasoning_steps = reasoning.steps
                 tracer.log_output({"steps": reasoning_steps, "plan_length": len(reasoning_plan)})
                 tracer.end()
+                if on_progress: on_progress("11", "🤔 Lập kế hoạch truy vấn CoT", f"✅ {len(reasoning_steps)} bước suy luận: {'; '.join(str(s)[:40] for s in reasoning_steps[:2])}")
             else:
                 tracer.skip("Stage 11: CoTReasoning", "disabled")
                 logger.info("[11/14] CoT reasoning SKIPPED")
@@ -387,12 +533,13 @@ class AskPipeline:
                 enriched_ddl = f"{memory_context}\n\n{enriched_ddl}"
 
             # ── Step 12: Multi-Candidate Generation + Voting ──
+            if on_progress: on_progress("12", "⚡ Sinh câu lệnh SQL...")
             tracer.start("Stage 12: SQLGeneration")
             if use_voting and num_candidates > 1:
                 logger.info(f"[12/14] Multi-candidate generation ({num_candidates} candidates) + voting...")
                 self._candidate_gen._num_candidates = num_candidates
                 candidate_set = self._candidate_gen.generate(
-                    question=question, ddl_context=enriched_ddl,
+                    question=working_question, ddl_context=enriched_ddl,
                     reasoning_plan=reasoning_plan, schema_hints=schema_hints,
                 )
                 candidates_generated = len(candidate_set.candidates)
@@ -447,12 +594,15 @@ class AskPipeline:
             else:
                 logger.info("[12/14] Single-pass generation (voting disabled)...")
                 tracer.log_input({"mode": "single-pass"})
-                gen_result = self._generator.generate(question, enriched_ddl)
+                gen_result = self._generator.generate(working_question, enriched_ddl)
                 best_sql = gen_result.sql
                 best_explanation = gen_result.explanation
                 voting_method = "single"; candidates_generated = 1
                 tracer.log_output({"sql": best_sql, "explanation": best_explanation})
                 tracer.end()
+                if on_progress:
+                    sql_preview = best_sql[:80].replace('\n', ' ') if best_sql else "(trống)"
+                    on_progress("12", "⚡ Sinh câu lệnh SQL", f"✅ SQL: {sql_preview}...")
 
             if not best_sql:
                 return AskResult(
@@ -465,6 +615,7 @@ class AskPipeline:
                 )
 
             # ── Step 13: SQL Correction ──
+            if on_progress: on_progress("13", "🔧 Kiểm tra và sửa lỗi SQL...")
             tracer.start("Stage 13: SQLCorrection")
             tracer.log_input({"input_sql": best_sql[:200], "explanation": best_explanation[:100]})
             logger.info("[13/14] Validating and correcting SQL...")
@@ -483,8 +634,17 @@ class AskPipeline:
                 "row_count": correction.result.get("row_count", 0) if correction.result else 0,
             })
             tracer.end()
+            if on_progress:
+                if correction.valid:
+                    row_count = correction.result.get("row_count", 0) if correction.result else 0
+                    msg = f"✅ SQL hợp lệ ({correction.retries} lần thử lại), trả về {row_count} dòng"
+                else:
+                    err = correction.errors[0][:80] if correction.errors else "Lỗi không xác định"
+                    msg = f"❌ Không hợp lệ sau {correction.retries} lần sửa: {err}"
+                on_progress("13", "🔧 Kiểm tra và sửa lỗi SQL", msg)
 
             # ── Step 13.5: SQL Guardian Validation ──
+            if on_progress: on_progress("13.5", "🛡 Kiểm duyệt bảo mật SQL...")
             tracer.start("Stage 13.5: Guardian")
             guardian_passed = True
             if correction.valid and correction.sql:
@@ -493,6 +653,11 @@ class AskPipeline:
                 guardian_passed = guardian_result.safe
                 tracer.log_output({"safe": guardian_result.safe, "reason": guardian_result.reason, "blocked_by": guardian_result.blocked_by})
                 tracer.end()
+                if on_progress:
+                    if guardian_result.safe:
+                        on_progress("13.5", "🛡 Kiểm duyệt bảo mật SQL", "✅ SQL an toàn, được phép thực thi")
+                    else:
+                        on_progress("13.5", "🛡 Kiểm duyệt bảo mật SQL", f"🚫 Bị chặn: {guardian_result.reason[:80]}")
                 if not guardian_result.safe:
                     logger.warning(f"Guardian BLOCKED: {guardian_result.reason} (blocked_by={guardian_result.blocked_by})")
                     r = AskResult(question=question, intent=intent_result.intent.value, error=f"SQL blocked by security guardian: {guardian_result.reason}", sql=correction.sql, original_sql=best_sql, models_used=retrieval.model_names, guardian_passed=False, active_features=active_features, debug_trace=tracer.to_dict())
@@ -504,7 +669,8 @@ class AskPipeline:
                 tracer.log_output({"skipped": True, "reason": "correction invalid"})
                 tracer.end()
 
-            # ── Step 14: Semantic Memory Save ──
+            # ── Step 14: Semantic Memory Save + Execute ──
+            if on_progress: on_progress("14", "🗄 Thực thi truy vấn & lưu kết quả...")
             tracer.start("Stage 14: MemorySave")
             result_hash = ""
             if correction.valid and correction.result:
@@ -535,6 +701,11 @@ class AskPipeline:
                 instructions_matched=instructions_matched,
                 guardian_passed=guardian_passed,
                 debug_trace=tracer.to_dict(),
+                # Stage 0.5: Conversation context metadata
+                enriched_question=ctx_result.enriched_question,
+                was_enriched=ctx_result.was_enriched,
+                memories_used=ctx_result.memories_used,
+                session_id=session_id,
             )
 
             if correction.valid and correction.result:
@@ -544,6 +715,20 @@ class AskPipeline:
             elif not correction.valid:
                 errors = "; ".join(correction.errors) if correction.errors else "Unknown"
                 result.error = f"SQL validation failed after {correction.retries} retries: {errors}"
+
+            # ── Post-pipeline: save turn to mem0 (background, non-blocking) ──
+            if session_id and correction.valid:
+                row_count = result.row_count
+                sample = str(result.rows[0])[:100] if result.rows else ""
+                result_summary = f"{row_count} rows" + (f" — Sample: {sample}" if sample else "")
+                self._conv_ctx.save_turn_background(
+                    question=question,
+                    enriched_question=ctx_result.enriched_question,
+                    sql=correction.sql or "",
+                    result_summary=result_summary,
+                    session_id=session_id,
+                    user_id=user_id,
+                )
 
             return result
 

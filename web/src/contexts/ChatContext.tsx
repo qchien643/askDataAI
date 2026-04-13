@@ -24,8 +24,15 @@ export interface Msg {
     glossary_matches?: number;
     guardian_passed?: boolean;
     sub_intent?: string;
+    // Stage 0.5: Conversation Context metadata
+    session_id?: string;
+    enriched_question?: string;
+    was_enriched?: boolean;
   };
   debugTrace?: DebugTrace;
+  // Thought panel — pipeline stage trace saved per message
+  thoughtSteps?: { stage: string; label: string; detail?: string }[];
+  thoughtSeconds?: number;
   // Chart data
   chartSpec?: Record<string, any>;
   chartData?: Record<string, any>[];
@@ -40,6 +47,7 @@ export interface Thread {
   id: string;
   title: string;
   messages: Msg[];
+  session_id?: string;  // mem0 session ID — persisted across turns for context
 }
 
 interface ChatContextType {

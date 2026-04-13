@@ -23,3 +23,12 @@ numpy
 
 # Security
 sqlparse>=0.5.0
+
+# Stage 0 Guardrail: PIGuard (leolee99/PIGuard — Prompt Injection detection, ACL 2025)
+# Model: DeBERTa-v3-base fine-tuned for prompt injection classification
+transformers>=4.40.0
+torch>=2.0.0
+sentencepiece>=0.1.99
+
+# Stage 0.5 Conversation Context: mem0 (open-source, ChromaDB local)
+mem0ai>=0.1.0

@@ -14,8 +14,11 @@ Endpoints:
   Deploy:      re-deploy (chỉ khi đã connected)
 """
 
+import asyncio
 import logging
+import queue
 import shutil
+import threading
 import uuid
 import json
 from contextlib import asynccontextmanager
@@ -23,13 +26,14 @@ from dataclasses import asdict
 from decimal import Decimal
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncGenerator
 from urllib.parse import quote_plus
 
 import yaml
 import sqlalchemy
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from src.config import settings
@@ -128,6 +132,7 @@ class ConnectionRequest(BaseModel):
 
 class AskRequest(BaseModel):
     question: str
+    session_id: str = ""   # Multi-turn context: client giữ session_id qua các turns
     enable_schema_linking: bool | None = None
     enable_column_pruning: bool | None = None
     enable_cot_reasoning: bool | None = None
@@ -405,7 +410,10 @@ def ask(request: AskRequest):
             overrides["num_candidates"] = request.num_candidates
 
         result = _state["ask_pipeline"].ask(
-            request.question, overrides=overrides, debug=request.debug
+            request.question,
+            overrides=overrides,
+            debug=request.debug,
+            session_id=request.session_id or str(uuid.uuid4()),
         )
 
         response = {
@@ -436,6 +444,13 @@ def ask(request: AskRequest):
                 "instructions_matched": result.instructions_matched,
                 "guardian_passed": result.guardian_passed,
                 "pre_filter_result": result.pre_filter_result,
+                # Stage 0: PIGuardrail metadata
+                "pi_guard_blocked": result.pi_guard_blocked,
+                "pi_guard_confidence": result.pi_guard_confidence,
+                # Stage 0.5: Conversation Context metadata
+                "session_id": result.session_id,
+                "enriched_question": result.enriched_question,
+                "was_enriched": result.was_enriched,
 
             },
         }
@@ -449,6 +464,143 @@ def ask(request: AskRequest):
     except Exception as e:
         logger.error(f"Ask error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────
+# ── 2b. Ask Stream (SSE) ──
+# ─────────────────────────────────────────────
+
+def _sse(event: str, data: Any) -> str:
+    """Format một Server-Sent Event string."""
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, default=str)}\n\n"
+
+
+@app.post("/v1/ask/stream")
+async def ask_stream(request: AskRequest):
+    """
+    Streaming version của /v1/ask — dùng Server-Sent Events.
+
+    Client nhận từng event:
+      event: progress  \u2192  {"stage": "3", "label": "🧠 Phân tích ý định..."}
+      event: result    \u2192  {full AskResponse JSON}
+      event: error     \u2192  {"message": "..."}
+    """
+    _ensure_deployed()
+
+    async def generator() -> AsyncGenerator[str, None]:
+        # Yield initial ack ngay lập tức — tránh timeout trênconnect
+        yield _sse("progress", {"stage": "start", "label": "⏳ Đang khởi động pipeline..."})
+
+        # Thread-safe queue: pipeline thread push, async generator pull
+        q: queue.Queue = queue.Queue()
+        DONE = object()  # sentinel
+
+        def on_progress(stage: str, label: str, detail: str = "") -> None:
+            q.put_nowait(("progress", {"stage": stage, "label": label, "detail": detail}))
+
+        def run_pipeline() -> None:
+            try:
+                overrides = {}
+                if request.enable_schema_linking is not None:
+                    overrides["enable_schema_linking"] = request.enable_schema_linking
+                if request.enable_column_pruning is not None:
+                    overrides["enable_column_pruning"] = request.enable_column_pruning
+                if request.enable_cot_reasoning is not None:
+                    overrides["enable_cot_reasoning"] = request.enable_cot_reasoning
+                if request.enable_voting is not None:
+                    overrides["enable_voting"] = False  # voting permanently disabled
+                if request.enable_glossary is not None:
+                    overrides["enable_glossary"] = request.enable_glossary
+                if request.enable_memory is not None:
+                    overrides["enable_memory"] = request.enable_memory
+                if request.num_candidates is not None:
+                    overrides["num_candidates"] = request.num_candidates
+
+                result = _state["ask_pipeline"].ask(
+                    request.question,
+                    overrides=overrides,
+                    debug=request.debug,
+                    session_id=request.session_id or str(uuid.uuid4()),
+                    on_progress=on_progress,
+                )
+
+                # Build response dict (giống /v1/ask)
+                response = {
+                    "question": result.question,
+                    "intent": result.intent,
+                    "sql": result.sql,
+                    "original_sql": result.original_sql,
+                    "explanation": result.explanation,
+                    "columns": result.columns,
+                    "rows": result.rows,
+                    "row_count": result.row_count,
+                    "valid": result.valid,
+                    "retries": result.retries,
+                    "error": result.error,
+                    "models_used": result.models_used,
+                    "pipeline_info": {
+                        "reasoning_steps": result.reasoning_steps,
+                        "schema_links": result.schema_links,
+                        "columns_pruned": result.columns_pruned,
+                        "candidates_generated": result.candidates_generated,
+                        "voting_method": result.voting_method,
+                        "glossary_matches": result.glossary_matches,
+                        "similar_traces": result.similar_traces,
+                        "active_features": result.active_features,
+                        "sub_intent": result.sub_intent,
+                        "sub_intent_hints": result.sub_intent_hints,
+                        "instructions_matched": result.instructions_matched,
+                        "guardian_passed": result.guardian_passed,
+                        "pre_filter_result": result.pre_filter_result,
+                        "pi_guard_blocked": result.pi_guard_blocked,
+                        "pi_guard_confidence": result.pi_guard_confidence,
+                        "session_id": result.session_id,
+                        "enriched_question": result.enriched_question,
+                        "was_enriched": result.was_enriched,
+                    },
+                }
+                if request.debug and result.debug_trace:
+                    response["debug_trace"] = result.debug_trace
+
+                q.put_nowait(("result", _serialize(response)))
+            except Exception as exc:
+                logger.error(f"ask_stream pipeline error: {exc}", exc_info=True)
+                q.put_nowait(("error", {"message": str(exc)}))
+            finally:
+                q.put_nowait(DONE)
+
+        # Start pipeline in background thread (pipeline is sync/blocking)
+        t = threading.Thread(target=run_pipeline, daemon=True)
+        t.start()
+
+        loop = asyncio.get_event_loop()
+
+        # Pull events from queue and yield as SSE
+        while True:
+            try:
+                item = await loop.run_in_executor(None, lambda: q.get(timeout=120))
+            except Exception:
+                yield _sse("error", {"message": "Pipeline timeout"})
+                break
+
+            if item is DONE:
+                break
+
+            event_type, data = item
+            yield _sse(event_type, data)
+
+            if event_type in ("result", "error"):
+                break
+
+    return StreamingResponse(
+        generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",   # disable nginx buffering
+            "Connection": "keep-alive",
+        },
+    )
 
 
 @app.post("/v1/sql/execute")

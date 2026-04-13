@@ -5,18 +5,25 @@
 read_only: true
 
 # Guard 1: SQL Injection blocked patterns (regex)
+# NGUYÊN TẮC: chỉ block những pattern THỰC SỰ là injection attack.
+# UNION ALL SELECT là SQL hợp lệ khi AI tự sinh — KHÔNG được block.
+# Chỉ block khi có dấu hiệu context injection (dấu nháy, comment markers).
 blocked_patterns:
+  # DML chained sau dấu chấm phẩy (injection: '; DROP TABLE ...)
   - ";\\s*(DROP|DELETE|INSERT|UPDATE|ALTER|EXEC|TRUNCATE)"
+  # Stored procs nguy hiểm của SQL Server
   - "xp_cmdshell"
   - "sp_executesql"
-  - "UNION\\s+ALL\\s+SELECT"
+  # File I/O exploit (MySQL)
   - "INTO\\s+OUTFILE"
-  - "LOAD_FILE"
+  - "LOAD_FILE\\s*\\("
+  # Time-based blind injection
   - "BENCHMARK\\s*\\("
   - "SLEEP\\s*\\("
   - "WAITFOR\\s+DELAY"
-  - "\\bOR\\b\\s+1\\s*=\\s*1"
-  - "\\bAND\\b\\s+1\\s*=\\s*1"
+  # Boolean-based injection (classic) — chỉ match khi có dấu nháy string
+  - "'\\s*OR\\s+'?1'?\\s*=\\s*'?1"
+  - "'\\s*AND\\s+'?1'?\\s*=\\s*'?1"
 
 # Guard 4: Column masking (column_name -> SQL mask expression)
 masked_columns:

@@ -11,6 +11,7 @@ from src.generation.sql_reasoner import SQLReasoner, ReasoningResult
 from src.generation.candidate_generator import CandidateGenerator, CandidateSet, Candidate
 from src.generation.execution_voter import ExecutionVoter, VotingResult
 from src.generation.semantic_memory import SemanticMemory, ExecutionTrace
+from src.generation.conversation_context import ConversationContextEngine, EnrichResult
 
 __all__ = [
     "LLMClient",
@@ -32,4 +33,7 @@ __all__ = [
     "VotingResult",
     "SemanticMemory",
     "ExecutionTrace",
+    # Stage 0.5
+    "ConversationContextEngine",
+    "EnrichResult",
 ]

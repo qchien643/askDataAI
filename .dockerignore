@@ -1,17 +1,45 @@
-venv/
+# Python
 __pycache__/
 *.py[cod]
-.git/
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Environment & secrets
 .env
+.env.local
+.env.*.local
+
+# Runtime data (use volumes instead)
 chroma_data/
 chroma_test_data/
 manifests/
+semantic_memory.json
+test_output.txt
+*.log
+
+# Node / Frontend
+web/node_modules/
+web/.next/
+web/out/
+
+# Reference & docs
 WrenAI/
-web/
-tests/
-*.md
-.gitignore
+docs/
+gradio_app.py
+
+# IDE
 .vscode/
 .idea/
-test_output.txt
-gradio_app.py
+*.tmp
+*.swp
+mini-wren-ai.code-workspace
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db

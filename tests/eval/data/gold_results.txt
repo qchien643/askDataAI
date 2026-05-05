@@ -1,0 +1,2378 @@
+======================================================================
+ID: easy_001 | difficulty: easy
+Q (VI): Có bao nhiêu khách hàng trong hệ thống?
+Q (EN): How many customers are in the system?
+Tags: ['aggregation']
+
+SQL:
+  SELECT COUNT(*) AS total_customers
+  FROM dbo.DimCustomer
+
+Result: 1 rows, columns=['total_customers']
+  Row 1: total_customers=18484
+
+======================================================================
+ID: easy_002 | difficulty: easy
+Q (VI): Liệt kê 10 sản phẩm có giá niêm yết cao nhất
+Q (EN): List the top 10 products by list price
+Tags: ['ranking']
+
+SQL:
+  SELECT TOP 10 EnglishProductName, ListPrice
+  FROM dbo.DimProduct
+  ORDER BY ListPrice DESC
+
+Result: 10 rows, columns=['EnglishProductName', 'ListPrice']
+  Row 1: EnglishProductName=Road-150 Red, 62, ListPrice=3578.27
+  Row 2: EnglishProductName=Road-150 Red, 44, ListPrice=3578.27
+  Row 3: EnglishProductName=Road-150 Red, 48, ListPrice=3578.27
+  Row 4: EnglishProductName=Road-150 Red, 52, ListPrice=3578.27
+  Row 5: EnglishProductName=Road-150 Red, 56, ListPrice=3578.27
+  ... (5 more rows)
+
+======================================================================
+ID: easy_003 | difficulty: easy
+Q (VI): Sản phẩm màu đỏ có những mẫu nào?
+Q (EN): Which products come in red color?
+Tags: ['filtering']
+
+SQL:
+  SELECT EnglishProductName, ListPrice, Color
+  FROM dbo.DimProduct
+  WHERE Color = 'Red'
+  ORDER BY EnglishProductName
+
+Result: 63 rows, columns=['EnglishProductName', 'ListPrice', 'Color']
+  Row 1: EnglishProductName=HL Road Frame - Red, 44, ListPrice=1263.46, Color=Red
+  Row 2: EnglishProductName=HL Road Frame - Red, 44, ListPrice=1301.36, Color=Red
+  Row 3: EnglishProductName=HL Road Frame - Red, 44, ListPrice=1431.50, Color=Red
+  Row 4: EnglishProductName=HL Road Frame - Red, 48, ListPrice=1263.46, Color=Red
+  Row 5: EnglishProductName=HL Road Frame - Red, 48, ListPrice=1301.36, Color=Red
+  ... (58 more rows)
+
+======================================================================
+ID: easy_004 | difficulty: easy
+Q (VI): Tổng doanh thu từ kênh bán online là bao nhiêu?
+Q (EN): What is the total revenue from internet sales?
+Tags: ['aggregation', 'glossary_term']
+Notes: Uses 'doanh thu' from glossary -> SUM(SalesAmount)
+
+SQL:
+  SELECT SUM(SalesAmount) AS total_revenue
+  FROM dbo.FactInternetSales
+
+Result: 1 rows, columns=['total_revenue']
+  Row 1: total_revenue=29358677.22
+
+======================================================================
+ID: easy_005 | difficulty: easy
+Q (VI): Khách hàng nữ có thu nhập trên 100000 USD
+Q (EN): Female customers with yearly income above 100000 USD
+Tags: ['filtering']
+
+SQL:
+  SELECT FirstName, LastName, YearlyIncome
+  FROM dbo.DimCustomer
+  WHERE Gender = 'F' AND YearlyIncome > 100000
+  ORDER BY YearlyIncome DESC
+
+Result: 781 rows, columns=['FirstName', 'LastName', 'YearlyIncome']
+  Row 1: FirstName=Alexis, LastName=Coleman, YearlyIncome=170000.00
+  Row 2: FirstName=Shannon, LastName=Liu, YearlyIncome=170000.00
+  Row 3: FirstName=Kristina, LastName=Schmidt, YearlyIncome=170000.00
+  Row 4: FirstName=Bonnie, LastName=Shan, YearlyIncome=170000.00
+  Row 5: FirstName=Audrey, LastName=Ruiz, YearlyIncome=170000.00
+  ... (776 more rows)
+
+======================================================================
+ID: easy_006 | difficulty: easy
+Q (VI): Số lượng đơn hàng theo từng năm
+Q (EN): Number of orders per year
+Tags: ['aggregation', 'trend', 'glossary_term']
+Notes: Uses 'số lượng đơn hàng' from glossary -> COUNT(DISTINCT SalesOrderNumber)
+
+SQL:
+  SELECT
+    YEAR(OrderDate) AS order_year,
+    COUNT(DISTINCT SalesOrderNumber) AS order_count
+  FROM dbo.FactInternetSales
+  GROUP BY YEAR(OrderDate)
+  ORDER BY order_year
+
+Result: 5 rows, columns=['order_year', 'order_count']
+  Row 1: order_year=2010, order_count=14
+  Row 2: order_year=2011, order_count=2216
+  Row 3: order_year=2012, order_count=3269
+  Row 4: order_year=2013, order_count=21289
+  Row 5: order_year=2014, order_count=871
+
+======================================================================
+ID: easy_007 | difficulty: easy
+Q (VI): Tổng số sản phẩm trong catalog?
+Q (EN): How many products in catalog?
+Tags: ['aggregation']
+
+SQL:
+  SELECT COUNT(*) AS total_products
+  FROM dbo.DimProduct
+
+Result: 1 rows, columns=['total_products']
+  Row 1: total_products=606
+
+======================================================================
+ID: easy_008 | difficulty: easy
+Q (VI): Có bao nhiêu đại lý trong hệ thống?
+Q (EN): How many resellers in the system?
+Tags: ['aggregation']
+
+SQL:
+  SELECT COUNT(*) AS total_resellers
+  FROM dbo.DimReseller
+
+Result: 1 rows, columns=['total_resellers']
+  Row 1: total_resellers=701
+
+======================================================================
+ID: easy_009 | difficulty: easy
+Q (VI): Liệt kê 5 sản phẩm có giá thấp nhất, loại trừ giá 0
+Q (EN): Top 5 cheapest products, excluding price 0
+Tags: ['ranking', 'filtering']
+
+SQL:
+  SELECT TOP 5 EnglishProductName, ListPrice
+  FROM dbo.DimProduct
+  WHERE ListPrice > 0
+  ORDER BY ListPrice ASC
+
+Result: 5 rows, columns=['EnglishProductName', 'ListPrice']
+  Row 1: EnglishProductName=Patch Kit/8 Patches, ListPrice=2.29
+  Row 2: EnglishProductName=Road Tire Tube, ListPrice=3.99
+  Row 3: EnglishProductName=Water Bottle - 30 oz., ListPrice=4.99
+  Row 4: EnglishProductName=Mountain Tire Tube, ListPrice=4.99
+  Row 5: EnglishProductName=Touring Tire Tube, ListPrice=4.99
+
+======================================================================
+ID: easy_010 | difficulty: easy
+Q (VI): Sản phẩm có chi phí sản xuất cao nhất là gì?
+Q (EN): Which product has the highest manufacturing cost?
+Tags: ['ranking']
+
+SQL:
+  SELECT TOP 1 EnglishProductName, StandardCost
+  FROM dbo.DimProduct
+  ORDER BY StandardCost DESC
+
+Result: 1 rows, columns=['EnglishProductName', 'StandardCost']
+  Row 1: EnglishProductName=Road-150 Red, 62, StandardCost=2171.29
+
+======================================================================
+ID: easy_011 | difficulty: easy
+Q (VI): Số con tối đa của một khách hàng là bao nhiêu?
+Q (EN): What is the maximum number of children for a customer?
+Tags: ['aggregation']
+
+SQL:
+  SELECT MAX(TotalChildren) AS max_children
+  FROM dbo.DimCustomer
+
+Result: 1 rows, columns=['max_children']
+  Row 1: max_children=5
+
+======================================================================
+ID: easy_012 | difficulty: easy
+Q (VI): Liệt kê các khách hàng có 5 con trở lên
+Q (EN): List customers with 5 or more children
+Tags: ['filtering']
+
+SQL:
+  SELECT FirstName, LastName, TotalChildren
+  FROM dbo.DimCustomer
+  WHERE TotalChildren >= 5
+  ORDER BY TotalChildren DESC
+
+Result: 1005 rows, columns=['FirstName', 'LastName', 'TotalChildren']
+  Row 1: FirstName=Elizabeth, LastName=Johnson, TotalChildren=5
+  Row 2: FirstName=Julia, LastName=Nelson, TotalChildren=5
+  Row 3: FirstName=Micheal, LastName=Blanco, TotalChildren=5
+  Row 4: FirstName=Leslie, LastName=Moreno, TotalChildren=5
+  Row 5: FirstName=Alvin, LastName=Cai, TotalChildren=5
+  ... (1000 more rows)
+
+======================================================================
+ID: easy_013 | difficulty: easy
+Q (VI): Đếm số khách hàng theo giới tính
+Q (EN): Count customers by gender
+Tags: ['aggregation']
+
+SQL:
+  SELECT Gender, COUNT(*) AS customer_count
+  FROM dbo.DimCustomer
+  GROUP BY Gender
+  ORDER BY Gender
+
+Result: 2 rows, columns=['Gender', 'customer_count']
+  Row 1: Gender=F, customer_count=9133
+  Row 2: Gender=M, customer_count=9351
+
+======================================================================
+ID: easy_014 | difficulty: easy
+Q (VI): Đếm số khách hàng theo trình độ học vấn
+Q (EN): Count customers by education level
+Tags: ['aggregation']
+
+SQL:
+  SELECT EnglishEducation, COUNT(*) AS customer_count
+  FROM dbo.DimCustomer
+  WHERE EnglishEducation IS NOT NULL
+  GROUP BY EnglishEducation
+  ORDER BY customer_count DESC
+
+Result: 5 rows, columns=['EnglishEducation', 'customer_count']
+  Row 1: EnglishEducation=Bachelors, customer_count=5356
+  Row 2: EnglishEducation=Partial College, customer_count=5064
+  Row 3: EnglishEducation=High School, customer_count=3294
+  Row 4: EnglishEducation=Graduate Degree, customer_count=3189
+  Row 5: EnglishEducation=Partial High School, customer_count=1581
+
+======================================================================
+ID: easy_015 | difficulty: easy
+Q (VI): Sản phẩm có size 'L' có những loại nào?
+Q (EN): Which products come in size L?
+Tags: ['filtering']
+
+SQL:
+  SELECT EnglishProductName, Size, Color
+  FROM dbo.DimProduct
+  WHERE Size = 'L'
+  ORDER BY EnglishProductName
+
+Result: 14 rows, columns=['EnglishProductName', 'Size', 'Color']
+  Row 1: EnglishProductName=Classic Vest, L, Size=L, Color=Blue
+  Row 2: EnglishProductName=Full-Finger Gloves, L, Size=L, Color=Black
+  Row 3: EnglishProductName=Half-Finger Gloves, L, Size=L, Color=Black
+  Row 4: EnglishProductName=Half-Finger Gloves, L, Size=L, Color=Black
+  Row 5: EnglishProductName=Long-Sleeve Logo Jersey, L, Size=L, Color=Multi
+  ... (9 more rows)
+
+======================================================================
+ID: easy_016 | difficulty: easy
+Q (VI): Giá niêm yết trung bình của tất cả sản phẩm là bao nhiêu?
+Q (EN): What is the average list price of all products?
+Tags: ['aggregation']
+
+SQL:
+  SELECT AVG(ListPrice) AS avg_list_price
+  FROM dbo.DimProduct
+  WHERE ListPrice > 0
+
+Result: 1 rows, columns=['avg_list_price']
+  Row 1: avg_list_price=747.66
+
+======================================================================
+ID: easy_017 | difficulty: easy
+Q (VI): Đại lý nào có nhiều nhân viên nhất?
+Q (EN): Which reseller has the most employees?
+Tags: ['ranking']
+
+SQL:
+  SELECT TOP 1 ResellerName, NumberEmployees
+  FROM dbo.DimReseller
+  ORDER BY NumberEmployees DESC
+
+Result: 1 rows, columns=['ResellerName', 'NumberEmployees']
+  Row 1: ResellerName=Volume Bike Sellers, NumberEmployees=100
+
+======================================================================
+ID: easy_018 | difficulty: easy
+Q (VI): Tổng số đơn hàng online là bao nhiêu?
+Q (EN): What is the total number of internet orders?
+Tags: ['aggregation', 'glossary_term']
+
+SQL:
+  SELECT COUNT(DISTINCT SalesOrderNumber) AS total_orders
+  FROM dbo.FactInternetSales
+
+Result: 1 rows, columns=['total_orders']
+  Row 1: total_orders=27659
+
+======================================================================
+ID: easy_019 | difficulty: easy
+Q (VI): Có bao nhiêu sản phẩm đã được bán online (đếm distinct)?
+Q (EN): How many distinct products have been sold online?
+Tags: ['aggregation']
+
+SQL:
+  SELECT COUNT(DISTINCT ProductKey) AS products_sold
+  FROM dbo.FactInternetSales
+
+Result: 1 rows, columns=['products_sold']
+  Row 1: products_sold=158
+
+======================================================================
+ID: easy_020 | difficulty: easy
+Q (VI): Doanh thu trung bình mỗi đơn hàng là bao nhiêu?
+Q (EN): What is the average revenue per order line?
+Tags: ['aggregation', 'glossary_term']
+
+SQL:
+  SELECT AVG(SalesAmount) AS avg_order_amount
+  FROM dbo.FactInternetSales
+
+Result: 1 rows, columns=['avg_order_amount']
+  Row 1: avg_order_amount=486.09
+
+======================================================================
+ID: easy_021 | difficulty: easy
+Q (VI): Tổng số tiền thuế đã thu là bao nhiêu?
+Q (EN): What is the total tax amount collected?
+Tags: ['aggregation']
+
+SQL:
+  SELECT SUM(TaxAmt) AS total_tax
+  FROM dbo.FactInternetSales
+
+Result: 1 rows, columns=['total_tax']
+  Row 1: total_tax=2348694.23
+
+======================================================================
+ID: easy_022 | difficulty: easy
+Q (VI): Có bao nhiêu khu vực bán hàng trong hệ thống?
+Q (EN): How many sales territories?
+Tags: ['aggregation']
+
+SQL:
+  SELECT COUNT(*) AS total_territories
+  FROM dbo.DimSalesTerritory
+
+Result: 1 rows, columns=['total_territories']
+  Row 1: total_territories=11
+
+======================================================================
+ID: easy_023 | difficulty: easy
+Q (VI): Liệt kê tất cả các quốc gia trong bảng địa lý
+Q (EN): List all distinct countries in the geography table
+Tags: ['filtering']
+
+SQL:
+  SELECT DISTINCT EnglishCountryRegionName
+  FROM dbo.DimGeography
+  ORDER BY EnglishCountryRegionName
+
+Result: 6 rows, columns=['EnglishCountryRegionName']
+  Row 1: EnglishCountryRegionName=Australia
+  Row 2: EnglishCountryRegionName=Canada
+  Row 3: EnglishCountryRegionName=France
+  Row 4: EnglishCountryRegionName=Germany
+  Row 5: EnglishCountryRegionName=United Kingdom
+  ... (1 more rows)
+
+======================================================================
+ID: easy_024 | difficulty: easy
+Q (VI): Khách hàng nào sinh năm 1970?
+Q (EN): Customers born in 1970
+Tags: ['filtering']
+
+SQL:
+  SELECT FirstName, LastName, BirthDate
+  FROM dbo.DimCustomer
+  WHERE YEAR(BirthDate) = 1970
+  ORDER BY BirthDate
+
+Result: 518 rows, columns=['FirstName', 'LastName', 'BirthDate']
+  Row 1: FirstName=Carl, LastName=Chander, BirthDate=1970-01-01
+  Row 2: FirstName=Dylan, LastName=Jones, BirthDate=1970-01-01
+  Row 3: FirstName=Sabrina, LastName=Ruiz, BirthDate=1970-01-01
+  Row 4: FirstName=Lucas, LastName=Turner, BirthDate=1970-01-01
+  Row 5: FirstName=Robyn, LastName=Ortega, BirthDate=1970-01-01
+  ... (513 more rows)
+
+======================================================================
+ID: easy_025 | difficulty: easy
+Q (VI): Đếm số đơn hàng theo từng tháng năm 2013
+Q (EN): Count orders by month in 2013
+Tags: ['aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    MONTH(OrderDate) AS month,
+    COUNT(DISTINCT SalesOrderNumber) AS orders
+  FROM dbo.FactInternetSales
+  WHERE YEAR(OrderDate) = 2013
+  GROUP BY MONTH(OrderDate)
+  ORDER BY month
+
+Result: 12 rows, columns=['month', 'orders']
+  Row 1: month=1, orders=632
+  Row 2: month=2, orders=1421
+  Row 3: month=3, orders=1690
+  Row 4: month=4, orders=1612
+  Row 5: month=5, orders=1792
+  ... (7 more rows)
+
+======================================================================
+ID: easy_026 | difficulty: easy
+Q (VI): Loại promotion nào có nhiều chương trình nhất?
+Q (EN): Which promotion type has the most programs?
+Tags: ['aggregation', 'ranking']
+
+SQL:
+  SELECT EnglishPromotionType, COUNT(*) AS promotion_count
+  FROM dbo.DimPromotion
+  GROUP BY EnglishPromotionType
+  ORDER BY promotion_count DESC
+
+Result: 6 rows, columns=['EnglishPromotionType', 'promotion_count']
+  Row 1: EnglishPromotionType=Volume Discount, promotion_count=5
+  Row 2: EnglishPromotionType=Excess Inventory, promotion_count=3
+  Row 3: EnglishPromotionType=Seasonal Discount, promotion_count=3
+  Row 4: EnglishPromotionType=Discontinued Product, promotion_count=2
+  Row 5: EnglishPromotionType=New Product, promotion_count=2
+  ... (1 more rows)
+
+======================================================================
+ID: easy_027 | difficulty: easy
+Q (VI): Liệt kê các loại business của đại lý
+Q (EN): List distinct reseller business types
+Tags: ['filtering']
+
+SQL:
+  SELECT DISTINCT BusinessType
+  FROM dbo.DimReseller
+  WHERE BusinessType IS NOT NULL
+  ORDER BY BusinessType
+
+Result: 3 rows, columns=['BusinessType']
+  Row 1: BusinessType=Specialty Bike Shop
+  Row 2: BusinessType=Value Added Reseller
+  Row 3: BusinessType=Warehouse
+
+======================================================================
+ID: easy_028 | difficulty: easy
+Q (VI): Liệt kê tên các subcategory sản phẩm
+Q (EN): List all product subcategory names
+Tags: ['filtering']
+
+SQL:
+  SELECT DISTINCT EnglishProductSubcategoryName
+  FROM dbo.DimProductSubcategory
+  ORDER BY EnglishProductSubcategoryName
+
+Result: 37 rows, columns=['EnglishProductSubcategoryName']
+  Row 1: EnglishProductSubcategoryName=Bib-Shorts
+  Row 2: EnglishProductSubcategoryName=Bike Racks
+  Row 3: EnglishProductSubcategoryName=Bike Stands
+  Row 4: EnglishProductSubcategoryName=Bottles and Cages
+  Row 5: EnglishProductSubcategoryName=Bottom Brackets
+  ... (32 more rows)
+
+======================================================================
+ID: easy_029 | difficulty: easy
+Q (VI): Loại tiền tệ nào được hệ thống hỗ trợ?
+Q (EN): Which currencies does the system support?
+Tags: ['filtering']
+
+SQL:
+  SELECT DISTINCT CurrencyName
+  FROM dbo.DimCurrency
+  ORDER BY CurrencyName
+
+Result: 105 rows, columns=['CurrencyName']
+  Row 1: CurrencyName=Afghani
+  Row 2: CurrencyName=Algerian Dinar
+  Row 3: CurrencyName=Argentine Peso
+  Row 4: CurrencyName=Armenian Dram
+  Row 5: CurrencyName=Aruban Guilder
+  ... (100 more rows)
+
+======================================================================
+ID: easy_030 | difficulty: easy
+Q (VI): Tổng số đơn hàng đại lý là bao nhiêu?
+Q (EN): What is the total number of reseller orders?
+Tags: ['aggregation', 'glossary_term']
+
+SQL:
+  SELECT COUNT(DISTINCT SalesOrderNumber) AS total_reseller_orders
+  FROM dbo.FactResellerSales
+
+Result: 1 rows, columns=['total_reseller_orders']
+  Row 1: total_reseller_orders=3796
+
+======================================================================
+ID: medium_001 | difficulty: medium
+Q (VI): Top 5 sản phẩm có doanh thu cao nhất quý 1 năm 2013
+Q (EN): Top 5 products by revenue in Q1 2013
+Tags: ['ranking', 'aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT TOP 5
+    p.EnglishProductName,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  WHERE YEAR(s.OrderDate) = 2013
+    AND MONTH(s.OrderDate) BETWEEN 1 AND 3
+  GROUP BY p.EnglishProductName
+  ORDER BY revenue DESC
+
+Result: 5 rows, columns=['EnglishProductName', 'revenue']
+  Row 1: EnglishProductName=Mountain-200 Black, 46, revenue=183599.20
+  Row 2: EnglishProductName=Mountain-200 Silver, 38, revenue=173999.25
+  Row 3: EnglishProductName=Mountain-200 Silver, 42, revenue=162399.30
+  Row 4: EnglishProductName=Mountain-200 Black, 38, revenue=160649.30
+  Row 5: EnglishProductName=Mountain-200 Black, 42, revenue=151469.34
+
+======================================================================
+ID: medium_002 | difficulty: medium
+Q (VI): Doanh thu theo từng tháng trong năm 2013
+Q (EN): Monthly revenue in 2013
+Tags: ['aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    MONTH(OrderDate) AS month,
+    SUM(SalesAmount) AS revenue
+  FROM dbo.FactInternetSales
+  WHERE YEAR(OrderDate) = 2013
+  GROUP BY MONTH(OrderDate)
+  ORDER BY month
+
+Result: 12 rows, columns=['month', 'revenue']
+  Row 1: month=1, revenue=857689.91
+  Row 2: month=2, revenue=771348.74
+  Row 3: month=3, revenue=1049907.39
+  Row 4: month=4, revenue=1046022.77
+  Row 5: month=5, revenue=1284592.93
+  ... (7 more rows)
+
+======================================================================
+ID: medium_003 | difficulty: medium
+Q (VI): Số đơn hàng theo từng khu vực bán hàng, sắp xếp giảm dần
+Q (EN): Order count by sales territory, sorted descending
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    t.SalesTerritoryRegion AS region,
+    COUNT(DISTINCT s.SalesOrderNumber) AS order_count
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  JOIN dbo.DimSalesTerritory t ON g.SalesTerritoryKey = t.SalesTerritoryKey
+  GROUP BY t.SalesTerritoryRegion
+  ORDER BY order_count DESC
+
+Result: 10 rows, columns=['region', 'order_count']
+  Row 1: region=Australia, order_count=6718
+  Row 2: region=Southwest, order_count=5473
+  Row 3: region=Northwest, order_count=4058
+  Row 4: region=Canada, order_count=3375
+  Row 5: region=United Kingdom, order_count=3031
+  ... (5 more rows)
+
+======================================================================
+ID: medium_004 | difficulty: medium
+Q (VI): Thu nhập trung bình của khách hàng theo nghề nghiệp
+Q (EN): Average customer income by occupation
+Tags: ['aggregation', 'ranking']
+
+SQL:
+  SELECT
+    EnglishOccupation AS occupation,
+    AVG(YearlyIncome) AS avg_income,
+    COUNT(*) AS customer_count
+  FROM dbo.DimCustomer
+  WHERE EnglishOccupation IS NOT NULL
+  GROUP BY EnglishOccupation
+  ORDER BY avg_income DESC
+
+Result: 5 rows, columns=['occupation', 'avg_income', 'customer_count']
+  Row 1: occupation=Management, avg_income=92325.20, customer_count=3075
+  Row 2: occupation=Professional, avg_income=74184.78, customer_count=5520
+  Row 3: occupation=Skilled Manual, avg_income=51715.10, customer_count=4577
+  Row 4: occupation=Clerical, avg_income=30710.38, customer_count=2928
+  Row 5: occupation=Manual, avg_income=16451.34, customer_count=2384
+
+======================================================================
+ID: medium_005 | difficulty: medium
+Q (VI): Doanh thu theo từng danh mục sản phẩm
+Q (EN): Revenue by product category
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    pc.EnglishProductCategoryName AS category,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+  JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+  GROUP BY pc.EnglishProductCategoryName
+  ORDER BY revenue DESC
+
+Result: 3 rows, columns=['category', 'revenue']
+  Row 1: category=Bikes, revenue=28318144.65
+  Row 2: category=Accessories, revenue=700759.96
+  Row 3: category=Clothing, revenue=339772.61
+
+======================================================================
+ID: medium_006 | difficulty: medium
+Q (VI): Quốc gia nào có nhiều hơn 1000 khách hàng?
+Q (EN): Which countries have more than 1000 customers?
+Tags: ['aggregation', 'filtering', 'multi_hop']
+
+SQL:
+  SELECT
+    g.EnglishCountryRegionName AS country,
+    COUNT(*) AS customer_count
+  FROM dbo.DimCustomer c
+  JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  GROUP BY g.EnglishCountryRegionName
+  HAVING COUNT(*) > 1000
+  ORDER BY customer_count DESC
+
+Result: 6 rows, columns=['country', 'customer_count']
+  Row 1: country=United States, customer_count=7819
+  Row 2: country=Australia, customer_count=3591
+  Row 3: country=United Kingdom, customer_count=1913
+  Row 4: country=France, customer_count=1810
+  Row 5: country=Germany, customer_count=1780
+  ... (1 more rows)
+
+======================================================================
+ID: medium_007 | difficulty: medium
+Q (VI): Top 5 đại lý có doanh thu cao nhất
+Q (EN): Top 5 resellers by revenue
+Tags: ['ranking', 'aggregation', 'glossary_term']
+
+SQL:
+  SELECT TOP 5
+    r.ResellerName,
+    SUM(rs.SalesAmount) AS revenue
+  FROM dbo.FactResellerSales rs
+  JOIN dbo.DimReseller r ON rs.ResellerKey = r.ResellerKey
+  GROUP BY r.ResellerName
+  ORDER BY revenue DESC
+
+Result: 5 rows, columns=['ResellerName', 'revenue']
+  Row 1: ResellerName=Brakes and Gears, revenue=877107.19
+  Row 2: ResellerName=Excellent Riding Supplies, revenue=853849.18
+  Row 3: ResellerName=Vigorous Exercise Company, revenue=841908.77
+  Row 4: ResellerName=Totes & Baskets Company, revenue=816755.58
+  Row 5: ResellerName=Retail Mall, revenue=799277.90
+
+======================================================================
+ID: medium_008 | difficulty: medium
+Q (VI): Sản phẩm có giá niêm yết cao hơn giá trung bình
+Q (EN): Products with list price above the average
+Tags: ['filtering', 'nested']
+
+SQL:
+  SELECT EnglishProductName, ListPrice
+  FROM dbo.DimProduct
+  WHERE ListPrice > (
+    SELECT AVG(ListPrice)
+    FROM dbo.DimProduct
+    WHERE ListPrice > 0
+  )
+  ORDER BY ListPrice DESC
+
+Result: 142 rows, columns=['EnglishProductName', 'ListPrice']
+  Row 1: EnglishProductName=Road-150 Red, 62, ListPrice=3578.27
+  Row 2: EnglishProductName=Road-150 Red, 44, ListPrice=3578.27
+  Row 3: EnglishProductName=Road-150 Red, 48, ListPrice=3578.27
+  Row 4: EnglishProductName=Road-150 Red, 52, ListPrice=3578.27
+  Row 5: EnglishProductName=Road-150 Red, 56, ListPrice=3578.27
+  ... (137 more rows)
+
+======================================================================
+ID: medium_009 | difficulty: medium
+Q (VI): Top 10 khách hàng có tổng doanh thu cao nhất năm 2013
+Q (EN): Top 10 customers by revenue in 2013
+Tags: ['ranking', 'aggregation', 'trend', 'glossary_term', 'multi_hop']
+
+SQL:
+  SELECT TOP 10
+    c.FirstName + ' ' + c.LastName AS customer_name,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  WHERE YEAR(s.OrderDate) = 2013
+  GROUP BY c.CustomerKey, c.FirstName, c.LastName
+  ORDER BY revenue DESC
+
+Result: 10 rows, columns=['customer_name', 'revenue']
+  Row 1: customer_name=Maurice Shan, revenue=10860.57
+  Row 2: customer_name=Janet Munoz, revenue=10417.75
+  Row 3: customer_name=Nichole Nara, revenue=9717.11
+  Row 4: customer_name=Margaret He, revenue=9691.00
+  Row 5: customer_name=Randall Dominguez, revenue=9687.72
+  ... (5 more rows)
+
+======================================================================
+ID: medium_010 | difficulty: medium
+Q (VI): Doanh thu theo từng quý của năm 2013
+Q (EN): Quarterly revenue in 2013
+Tags: ['aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    DATEPART(QUARTER, OrderDate) AS quarter,
+    SUM(SalesAmount) AS revenue
+  FROM dbo.FactInternetSales
+  WHERE YEAR(OrderDate) = 2013
+  GROUP BY DATEPART(QUARTER, OrderDate)
+  ORDER BY quarter
+
+Result: 4 rows, columns=['quarter', 'revenue']
+  Row 1: quarter=1, revenue=2678946.04
+  Row 2: quarter=2, revenue=3973793.48
+  Row 3: quarter=3, revenue=4370237.06
+  Row 4: quarter=4, revenue=5328573.76
+
+======================================================================
+ID: medium_011 | difficulty: medium
+Q (VI): Sản phẩm thuộc danh mục Bikes có doanh thu cao nhất
+Q (EN): Top-revenue product in Bikes category
+Tags: ['ranking', 'aggregation', 'multi_hop', 'filtering', 'glossary_term']
+
+SQL:
+  SELECT TOP 1
+    p.EnglishProductName,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+  JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+  WHERE pc.EnglishProductCategoryName = 'Bikes'
+  GROUP BY p.EnglishProductName
+  ORDER BY revenue DESC
+
+Result: 1 rows, columns=['EnglishProductName', 'revenue']
+  Row 1: EnglishProductName=Mountain-200 Black, 46, revenue=1373469.55
+
+======================================================================
+ID: medium_012 | difficulty: medium
+Q (VI): Số đơn hàng theo từng promotion
+Q (EN): Order count by promotion
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    pr.EnglishPromotionName AS promotion,
+    COUNT(DISTINCT s.SalesOrderNumber) AS order_count
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimPromotion pr ON s.PromotionKey = pr.PromotionKey
+  GROUP BY pr.EnglishPromotionName
+  ORDER BY order_count DESC
+
+Result: 4 rows, columns=['promotion', 'order_count']
+  Row 1: promotion=No Discount, order_count=27119
+  Row 2: promotion=Volume Discount 11 to 14, order_count=2075
+  Row 3: promotion=Touring-3000 Promotion, order_count=20
+  Row 4: promotion=Touring-1000 Promotion, order_count=13
+
+======================================================================
+ID: medium_013 | difficulty: medium
+Q (VI): Top 5 thành phố có nhiều khách hàng nhất
+Q (EN): Top 5 cities by customer count
+Tags: ['ranking', 'aggregation', 'multi_hop']
+
+SQL:
+  SELECT TOP 5
+    g.City,
+    COUNT(*) AS customer_count
+  FROM dbo.DimCustomer c
+  JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  GROUP BY g.City
+  ORDER BY customer_count DESC
+
+Result: 5 rows, columns=['City', 'customer_count']
+  Row 1: City=London, customer_count=420
+  Row 2: City=Paris, customer_count=386
+  Row 3: City=Burien, customer_count=212
+  Row 4: City=Concord, customer_count=212
+  Row 5: City=Beaverton, customer_count=210
+
+======================================================================
+ID: medium_014 | difficulty: medium
+Q (VI): Doanh thu theo giới tính của khách hàng
+Q (EN): Revenue by customer gender
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    c.Gender,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  GROUP BY c.Gender
+  ORDER BY revenue DESC
+
+Result: 2 rows, columns=['Gender', 'revenue']
+  Row 1: Gender=F, revenue=14813618.68
+  Row 2: Gender=M, revenue=14545058.55
+
+======================================================================
+ID: medium_015 | difficulty: medium
+Q (VI): Khách hàng có thu nhập trên trung bình toàn hệ thống
+Q (EN): Customers with income above the system average
+Tags: ['filtering', 'nested', 'comparison']
+
+SQL:
+  SELECT FirstName, LastName, YearlyIncome
+  FROM dbo.DimCustomer
+  WHERE YearlyIncome > (SELECT AVG(YearlyIncome) FROM dbo.DimCustomer)
+  ORDER BY YearlyIncome DESC
+
+Result: 1005 rows, columns=['FirstName', 'LastName', 'YearlyIncome']
+  Row 1: FirstName=Damien, LastName=Chander, YearlyIncome=170000.00
+  Row 2: FirstName=Devin, LastName=Martin, YearlyIncome=170000.00
+  Row 3: FirstName=Alexis, LastName=Coleman, YearlyIncome=170000.00
+  Row 4: FirstName=Shannon, LastName=Liu, YearlyIncome=170000.00
+  Row 5: FirstName=Hunter, LastName=Griffin, YearlyIncome=170000.00
+  ... (1000 more rows)
+
+======================================================================
+ID: medium_016 | difficulty: medium
+Q (VI): Đại lý kiểu Warehouse có hơn 50 nhân viên
+Q (EN): Warehouse-type resellers with more than 50 employees
+Tags: ['filtering']
+
+SQL:
+  SELECT ResellerName, NumberEmployees, BusinessType
+  FROM dbo.DimReseller
+  WHERE NumberEmployees > 50 AND BusinessType = 'Warehouse'
+  ORDER BY NumberEmployees DESC
+
+Result: 204 rows, columns=['ResellerName', 'NumberEmployees', 'BusinessType']
+  Row 1: ResellerName=Volume Bike Sellers, NumberEmployees=100, BusinessType=Warehouse
+  Row 2: ResellerName=Exclusive Bicycle Mart, NumberEmployees=100, BusinessType=Warehouse
+  Row 3: ResellerName=Metro Bike Works, NumberEmployees=100, BusinessType=Warehouse
+  Row 4: ResellerName=Super Sports Store, NumberEmployees=100, BusinessType=Warehouse
+  Row 5: ResellerName=Nonskid Tire Company, NumberEmployees=100, BusinessType=Warehouse
+  ... (199 more rows)
+
+======================================================================
+ID: medium_017 | difficulty: medium
+Q (VI): Tổng doanh thu theo từng quốc gia
+Q (EN): Total revenue by country
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    g.EnglishCountryRegionName AS country,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  GROUP BY g.EnglishCountryRegionName
+  ORDER BY revenue DESC
+
+Result: 6 rows, columns=['country', 'revenue']
+  Row 1: country=United States, revenue=9389789.51
+  Row 2: country=Australia, revenue=9061000.58
+  Row 3: country=United Kingdom, revenue=3391712.21
+  Row 4: country=Germany, revenue=2894312.34
+  Row 5: country=France, revenue=2644017.71
+  ... (1 more rows)
+
+======================================================================
+ID: medium_018 | difficulty: medium
+Q (VI): Tháng nào năm 2013 có doanh thu cao nhất?
+Q (EN): Which month in 2013 had the highest revenue?
+Tags: ['ranking', 'aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT TOP 1
+    MONTH(OrderDate) AS month,
+    SUM(SalesAmount) AS revenue
+  FROM dbo.FactInternetSales
+  WHERE YEAR(OrderDate) = 2013
+  GROUP BY MONTH(OrderDate)
+  ORDER BY revenue DESC
+
+Result: 1 rows, columns=['month', 'revenue']
+  Row 1: month=12, revenue=1874360.29
+
+======================================================================
+ID: medium_019 | difficulty: medium
+Q (VI): Số đại lý theo từng nhóm vùng
+Q (EN): Reseller count by territory group
+Tags: ['aggregation', 'multi_hop']
+
+SQL:
+  SELECT
+    t.SalesTerritoryGroup AS region_group,
+    COUNT(*) AS reseller_count
+  FROM dbo.DimReseller r
+  JOIN dbo.DimGeography g ON r.GeographyKey = g.GeographyKey
+  JOIN dbo.DimSalesTerritory t ON g.SalesTerritoryKey = t.SalesTerritoryKey
+  GROUP BY t.SalesTerritoryGroup
+  ORDER BY reseller_count DESC
+
+Result: 3 rows, columns=['region_group', 'reseller_count']
+  Row 1: region_group=North America, reseller_count=541
+  Row 2: region_group=Europe, reseller_count=120
+  Row 3: region_group=Pacific, reseller_count=40
+
+======================================================================
+ID: medium_020 | difficulty: medium
+Q (VI): Top 5 sản phẩm bán nhiều số lượng nhất
+Q (EN): Top 5 products by order quantity
+Tags: ['ranking', 'aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT TOP 5
+    p.EnglishProductName,
+    SUM(s.OrderQuantity) AS quantity_sold
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  GROUP BY p.EnglishProductName
+  ORDER BY quantity_sold DESC
+
+Result: 5 rows, columns=['EnglishProductName', 'quantity_sold']
+  Row 1: EnglishProductName=Water Bottle - 30 oz., quantity_sold=4244
+  Row 2: EnglishProductName=Patch Kit/8 Patches, quantity_sold=3191
+  Row 3: EnglishProductName=Mountain Tire Tube, quantity_sold=3095
+  Row 4: EnglishProductName=Road Tire Tube, quantity_sold=2376
+  Row 5: EnglishProductName=Sport-100 Helmet, Red, quantity_sold=2230
+
+======================================================================
+ID: medium_021 | difficulty: medium
+Q (VI): Doanh thu reseller theo từng năm
+Q (EN): Reseller revenue by year
+Tags: ['aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    YEAR(OrderDate) AS year,
+    SUM(SalesAmount) AS revenue
+  FROM dbo.FactResellerSales
+  GROUP BY YEAR(OrderDate)
+  ORDER BY year
+
+Result: 4 rows, columns=['year', 'revenue']
+  Row 1: year=2010, revenue=489328.58
+  Row 2: year=2011, revenue=18192802.71
+  Row 3: year=2012, revenue=28193631.53
+  Row 4: year=2013, revenue=33574834.16
+
+======================================================================
+ID: medium_022 | difficulty: medium
+Q (VI): Khách hàng có tổng doanh thu trên 10000 USD
+Q (EN): Customers with total revenue above 10000 USD
+Tags: ['aggregation', 'filtering', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    c.FirstName + ' ' + c.LastName AS customer_name,
+    SUM(s.SalesAmount) AS total_revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  GROUP BY c.CustomerKey, c.FirstName, c.LastName
+  HAVING SUM(s.SalesAmount) > 10000
+  ORDER BY total_revenue DESC
+
+Result: 29 rows, columns=['customer_name', 'total_revenue']
+  Row 1: customer_name=Nichole Nara, total_revenue=13295.38
+  Row 2: customer_name=Kaitlyn Henderson, total_revenue=13294.27
+  Row 3: customer_name=Margaret He, total_revenue=13269.27
+  Row 4: customer_name=Randall Dominguez, total_revenue=13265.99
+  Row 5: customer_name=Adriana Gonzalez, total_revenue=13242.70
+  ... (24 more rows)
+
+======================================================================
+ID: medium_023 | difficulty: medium
+Q (VI): Lợi nhuận theo từng danh mục sản phẩm
+Q (EN): Profit by product category
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    pc.EnglishProductCategoryName AS category,
+    SUM(s.SalesAmount) - SUM(s.TotalProductCost) AS profit
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+  JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+  GROUP BY pc.EnglishProductCategoryName
+  ORDER BY profit DESC
+
+Result: 3 rows, columns=['category', 'profit']
+  Row 1: category=Bikes, profit=11505796.50
+  Row 2: category=Accessories, profit=438674.57
+  Row 3: category=Clothing, profit=136412.58
+
+======================================================================
+ID: medium_024 | difficulty: medium
+Q (VI): Top 10 đại lý theo doanh thu năm 2013
+Q (EN): Top 10 resellers by revenue in 2013
+Tags: ['ranking', 'aggregation', 'trend', 'glossary_term', 'multi_hop']
+
+SQL:
+  SELECT TOP 10
+    r.ResellerName,
+    SUM(rs.SalesAmount) AS revenue
+  FROM dbo.FactResellerSales rs
+  JOIN dbo.DimReseller r ON rs.ResellerKey = r.ResellerKey
+  WHERE YEAR(rs.OrderDate) = 2013
+  GROUP BY r.ResellerName
+  ORDER BY revenue DESC
+
+Result: 10 rows, columns=['ResellerName', 'revenue']
+  Row 1: ResellerName=Roadway Bicycle Supply, revenue=436921.66
+  Row 2: ResellerName=Field Trip Store, revenue=427305.59
+  Row 3: ResellerName=Brakes and Gears, revenue=397237.24
+  Row 4: ResellerName=Perfect Toys, revenue=391040.59
+  Row 5: ResellerName=Thorough Parts and Repair Services, revenue=386958.19
+  ... (5 more rows)
+
+======================================================================
+ID: medium_025 | difficulty: medium
+Q (VI): Khu vực nào có giá trị đơn hàng trung bình cao nhất?
+Q (EN): Which territory has the highest average order value?
+Tags: ['ranking', 'aggregation', 'multi_hop']
+
+SQL:
+  SELECT TOP 1
+    t.SalesTerritoryRegion AS region,
+    AVG(s.SalesAmount) AS avg_order_value
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimSalesTerritory t ON s.SalesTerritoryKey = t.SalesTerritoryKey
+  GROUP BY t.SalesTerritoryRegion
+  ORDER BY avg_order_value DESC
+
+Result: 1 rows, columns=['region', 'avg_order_value']
+  Row 1: region=Australia, avg_order_value=678.98
+
+======================================================================
+ID: medium_026 | difficulty: medium
+Q (VI): Số khách hàng theo nghề nghiệp và giới tính
+Q (EN): Customer count by occupation and gender
+Tags: ['aggregation']
+
+SQL:
+  SELECT
+    EnglishOccupation AS occupation,
+    Gender,
+    COUNT(*) AS customer_count
+  FROM dbo.DimCustomer
+  WHERE EnglishOccupation IS NOT NULL
+  GROUP BY EnglishOccupation, Gender
+  ORDER BY EnglishOccupation, Gender
+
+Result: 10 rows, columns=['occupation', 'Gender', 'customer_count']
+  Row 1: occupation=Clerical, Gender=F, customer_count=1440
+  Row 2: occupation=Clerical, Gender=M, customer_count=1488
+  Row 3: occupation=Management, Gender=F, customer_count=1483
+  Row 4: occupation=Management, Gender=M, customer_count=1592
+  Row 5: occupation=Manual, Gender=F, customer_count=1133
+  ... (5 more rows)
+
+======================================================================
+ID: medium_027 | difficulty: medium
+Q (VI): Sản phẩm có giá trên 1000 USD
+Q (EN): Products with list price over 1000 USD
+Tags: ['filtering']
+
+SQL:
+  SELECT EnglishProductName, ListPrice, Color
+  FROM dbo.DimProduct
+  WHERE ListPrice > 1000
+  ORDER BY ListPrice DESC
+
+Result: 126 rows, columns=['EnglishProductName', 'ListPrice', 'Color']
+  Row 1: EnglishProductName=Road-150 Red, 62, ListPrice=3578.27, Color=Red
+  Row 2: EnglishProductName=Road-150 Red, 44, ListPrice=3578.27, Color=Red
+  Row 3: EnglishProductName=Road-150 Red, 48, ListPrice=3578.27, Color=Red
+  Row 4: EnglishProductName=Road-150 Red, 52, ListPrice=3578.27, Color=Red
+  Row 5: EnglishProductName=Road-150 Red, 56, ListPrice=3578.27, Color=Red
+  ... (121 more rows)
+
+======================================================================
+ID: medium_028 | difficulty: medium
+Q (VI): Đếm số đơn hàng theo ngày trong tuần năm 2013
+Q (EN): Order count by day-of-week in 2013
+Tags: ['aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    DATENAME(WEEKDAY, OrderDate) AS day_of_week,
+    COUNT(DISTINCT SalesOrderNumber) AS orders
+  FROM dbo.FactInternetSales
+  WHERE YEAR(OrderDate) = 2013
+  GROUP BY DATENAME(WEEKDAY, OrderDate)
+  ORDER BY orders DESC
+
+Result: 7 rows, columns=['day_of_week', 'orders']
+  Row 1: day_of_week=Tuesday, orders=3151
+  Row 2: day_of_week=Monday, orders=3088
+  Row 3: day_of_week=Wednesday, orders=3056
+  Row 4: day_of_week=Thursday, orders=3044
+  Row 5: day_of_week=Friday, orders=2997
+  ... (2 more rows)
+
+======================================================================
+ID: medium_029 | difficulty: medium
+Q (VI): Doanh thu trung bình theo trình độ học vấn của khách hàng
+Q (EN): Average revenue per order by customer education
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    c.EnglishEducation AS education,
+    AVG(s.SalesAmount) AS avg_revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  WHERE c.EnglishEducation IS NOT NULL
+  GROUP BY c.EnglishEducation
+  ORDER BY avg_revenue DESC
+
+Result: 5 rows, columns=['education', 'avg_revenue']
+  Row 1: education=Bachelors, avg_revenue=545.64
+  Row 2: education=Graduate Degree, avg_revenue=515.00
+  Row 3: education=Partial College, avg_revenue=464.63
+  Row 4: education=High School, avg_revenue=449.42
+  Row 5: education=Partial High School, avg_revenue=347.58
+
+======================================================================
+ID: medium_030 | difficulty: medium
+Q (VI): Sản phẩm chưa từng được bán online
+Q (EN): Products never sold online
+Tags: ['filtering', 'nested']
+
+SQL:
+  SELECT p.EnglishProductName, p.ListPrice
+  FROM dbo.DimProduct p
+  WHERE p.ProductKey NOT IN (
+    SELECT DISTINCT ProductKey FROM dbo.FactInternetSales
+  )
+  AND p.ListPrice > 0
+  ORDER BY p.ListPrice DESC
+
+Result: 237 rows, columns=['EnglishProductName', 'ListPrice']
+  Row 1: EnglishProductName=Road-450 Red, 58, ListPrice=1457.99
+  Row 2: EnglishProductName=Road-450 Red, 60, ListPrice=1457.99
+  Row 3: EnglishProductName=Road-450 Red, 44, ListPrice=1457.99
+  Row 4: EnglishProductName=Road-450 Red, 48, ListPrice=1457.99
+  Row 5: EnglishProductName=Road-450 Red, 52, ListPrice=1457.99
+  ... (232 more rows)
+
+======================================================================
+ID: medium_031 | difficulty: medium
+Q (VI): Top 5 đại lý có nhiều đơn hàng nhất
+Q (EN): Top 5 resellers by order count
+Tags: ['ranking', 'aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT TOP 5
+    r.ResellerName,
+    COUNT(DISTINCT rs.SalesOrderNumber) AS order_count
+  FROM dbo.FactResellerSales rs
+  JOIN dbo.DimReseller r ON rs.ResellerKey = r.ResellerKey
+  GROUP BY r.ResellerName
+  ORDER BY order_count DESC
+
+Result: 5 rows, columns=['ResellerName', 'order_count']
+  Row 1: ResellerName=Friendly Bike Shop, order_count=15
+  Row 2: ResellerName=Advanced Bike Components, order_count=12
+  Row 3: ResellerName=Area Bike Accessories, order_count=12
+  Row 4: ResellerName=Basic Sports Equipment, order_count=12
+  Row 5: ResellerName=Better Bike Shop, order_count=12
+
+======================================================================
+ID: medium_032 | difficulty: medium
+Q (VI): Phân bố khách hàng theo nhóm thu nhập
+Q (EN): Customer distribution by income bracket
+Tags: ['aggregation', 'filtering']
+
+SQL:
+  SELECT
+    CASE
+      WHEN YearlyIncome < 30000 THEN 'Low (<30K)'
+      WHEN YearlyIncome < 70000 THEN 'Medium (30-70K)'
+      WHEN YearlyIncome < 100000 THEN 'High (70-100K)'
+      ELSE 'Very High (>=100K)'
+    END AS income_bracket,
+    COUNT(*) AS customer_count
+  FROM dbo.DimCustomer
+  GROUP BY
+    CASE
+      WHEN YearlyIncome < 30000 THEN 'Low (<30K)'
+      WHEN YearlyIncome < 70000 THEN 'Medium (30-70K)'
+      WHEN YearlyIncome < 100000 THEN 'High (70-100K)'
+      ELSE 'Very High (>=100K)'
+    END
+  ORDER BY customer_count DESC
+
+Result: 4 rows, columns=['income_bracket', 'customer_count']
+  Row 1: income_bracket=Medium (30-70K), customer_count=8831
+  Row 2: income_bracket=High (70-100K), customer_count=4533
+  Row 3: income_bracket=Low (<30K), customer_count=2922
+  Row 4: income_bracket=Very High (>=100K), customer_count=2198
+
+======================================================================
+ID: medium_033 | difficulty: medium
+Q (VI): Số đơn hàng có giá trị trên 1000 USD
+Q (EN): Number of order lines with amount above 1000 USD
+Tags: ['aggregation', 'filtering', 'glossary_term']
+
+SQL:
+  SELECT COUNT(DISTINCT SalesOrderNumber) AS large_orders
+  FROM dbo.FactInternetSales
+  WHERE SalesAmount > 1000
+
+Result: 1 rows, columns=['large_orders']
+  Row 1: large_orders=11348
+
+======================================================================
+ID: medium_034 | difficulty: medium
+Q (VI): Khách hàng đã mua từ 5 sản phẩm khác nhau trở lên
+Q (EN): Customers who bought 5 or more distinct products
+Tags: ['aggregation', 'filtering', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    c.FirstName + ' ' + c.LastName AS customer_name,
+    COUNT(DISTINCT s.ProductKey) AS distinct_products
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  GROUP BY c.CustomerKey, c.FirstName, c.LastName
+  HAVING COUNT(DISTINCT s.ProductKey) >= 5
+  ORDER BY distinct_products DESC
+
+Result: 1005 rows, columns=['customer_name', 'distinct_products']
+  Row 1: customer_name=Ashley Henderson, distinct_products=29
+  Row 2: customer_name=Fernando Barnes, distinct_products=28
+  Row 3: customer_name=Mason Roberts, distinct_products=27
+  Row 4: customer_name=Daniel Davis, distinct_products=27
+  Row 5: customer_name=Jason Griffin, distinct_products=26
+  ... (1000 more rows)
+
+======================================================================
+ID: medium_035 | difficulty: medium
+Q (VI): Số sản phẩm theo từng màu sắc
+Q (EN): Product count by color
+Tags: ['aggregation']
+
+SQL:
+  SELECT Color, COUNT(*) AS product_count
+  FROM dbo.DimProduct
+  WHERE Color IS NOT NULL
+  GROUP BY Color
+  ORDER BY product_count DESC
+
+Result: 10 rows, columns=['Color', 'product_count']
+  Row 1: Color=NA, product_count=254
+  Row 2: Color=Black, product_count=133
+  Row 3: Color=Red, product_count=63
+  Row 4: Color=Silver, product_count=52
+  Row 5: Color=Yellow, product_count=46
+  ... (5 more rows)
+
+======================================================================
+ID: medium_036 | difficulty: medium
+Q (VI): Top 3 quốc gia có nhiều đơn hàng nhất
+Q (EN): Top 3 countries by order count
+Tags: ['ranking', 'aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT TOP 3
+    g.EnglishCountryRegionName AS country,
+    COUNT(DISTINCT s.SalesOrderNumber) AS orders
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  GROUP BY g.EnglishCountryRegionName
+  ORDER BY orders DESC
+
+Result: 3 rows, columns=['country', 'orders']
+  Row 1: country=United States, orders=9567
+  Row 2: country=Australia, orders=6718
+  Row 3: country=Canada, orders=3375
+
+======================================================================
+ID: medium_037 | difficulty: medium
+Q (VI): Sản phẩm có doanh thu trong khoảng 5000 đến 10000 USD
+Q (EN): Products with total revenue between 5000 and 10000 USD
+Tags: ['aggregation', 'filtering', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    p.EnglishProductName,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  GROUP BY p.EnglishProductName
+  HAVING SUM(s.SalesAmount) BETWEEN 5000 AND 10000
+  ORDER BY revenue DESC
+
+Result: 4 rows, columns=['EnglishProductName', 'revenue']
+  Row 1: EnglishProductName=Road Tire Tube, revenue=9480.24
+  Row 2: EnglishProductName=Touring Tire Tube, revenue=7425.12
+  Row 3: EnglishProductName=Patch Kit/8 Patches, revenue=7307.39
+  Row 4: EnglishProductName=Bike Wash - Dissolver, revenue=7218.60
+
+======================================================================
+ID: medium_038 | difficulty: medium
+Q (VI): Số khách hàng theo trạng thái sở hữu nhà
+Q (EN): Customer count by house ownership
+Tags: ['aggregation', 'filtering']
+
+SQL:
+  SELECT
+    CASE WHEN HouseOwnerFlag = '1' THEN 'Owner' ELSE 'Renter' END AS ownership,
+    COUNT(*) AS customer_count
+  FROM dbo.DimCustomer
+  GROUP BY HouseOwnerFlag
+  ORDER BY customer_count DESC
+
+Result: 2 rows, columns=['ownership', 'customer_count']
+  Row 1: ownership=Owner, customer_count=12502
+  Row 2: ownership=Renter, customer_count=5982
+
+======================================================================
+ID: medium_039 | difficulty: medium
+Q (VI): Doanh thu từng tháng năm 2013, sắp xếp giảm dần
+Q (EN): Monthly revenue in 2013 sorted descending
+Tags: ['aggregation', 'ranking', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    MONTH(OrderDate) AS month,
+    SUM(SalesAmount) AS revenue
+  FROM dbo.FactInternetSales
+  WHERE YEAR(OrderDate) = 2013
+  GROUP BY MONTH(OrderDate)
+  ORDER BY revenue DESC
+
+Result: 12 rows, columns=['month', 'revenue']
+  Row 1: month=12, revenue=1874360.29
+  Row 2: month=11, revenue=1780920.06
+  Row 3: month=10, revenue=1673293.41
+  Row 4: month=6, revenue=1643177.78
+  Row 5: month=8, revenue=1551065.56
+  ... (7 more rows)
+
+======================================================================
+ID: medium_040 | difficulty: medium
+Q (VI): Số khách hàng đã mua hàng theo từng năm
+Q (EN): Active buyer count per year
+Tags: ['aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    YEAR(OrderDate) AS year,
+    COUNT(DISTINCT CustomerKey) AS active_customers
+  FROM dbo.FactInternetSales
+  GROUP BY YEAR(OrderDate)
+  ORDER BY year
+
+Result: 5 rows, columns=['year', 'active_customers']
+  Row 1: year=2010, active_customers=14
+  Row 2: year=2011, active_customers=2216
+  Row 3: year=2012, active_customers=3255
+  Row 4: year=2013, active_customers=17429
+  Row 5: year=2014, active_customers=834
+
+======================================================================
+ID: hard_001 | difficulty: hard
+Q (VI): Khách hàng có tổng doanh thu trong quý 1 năm 2013 cao hơn doanh thu trung bình của khu vực họ
+Q (EN): Customers whose Q1 2013 revenue exceeds the average revenue in their territory
+Tags: ['cte', 'multi_hop', 'comparison', 'aggregation', 'glossary_term']
+
+SQL:
+  WITH cust_territory AS (
+    SELECT c.CustomerKey, g.SalesTerritoryKey
+    FROM dbo.DimCustomer c
+    JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  ),
+  cust_revenue AS (
+    SELECT
+      ct.CustomerKey,
+      ct.SalesTerritoryKey,
+      SUM(s.SalesAmount) AS revenue
+    FROM dbo.FactInternetSales s
+    JOIN cust_territory ct ON s.CustomerKey = ct.CustomerKey
+    WHERE YEAR(s.OrderDate) = 2013
+      AND MONTH(s.OrderDate) BETWEEN 1 AND 3
+    GROUP BY ct.CustomerKey, ct.SalesTerritoryKey
+  ),
+  region_avg AS (
+    SELECT
+      SalesTerritoryKey,
+      AVG(revenue) AS avg_revenue
+    FROM cust_revenue
+    GROUP BY SalesTerritoryKey
+  )
+  SELECT
+    cr.CustomerKey,
+    cr.revenue,
+    ra.avg_revenue
+  FROM cust_revenue cr
+  JOIN region_avg ra ON cr.SalesTerritoryKey = ra.SalesTerritoryKey
+  WHERE cr.revenue > ra.avg_revenue
+  ORDER BY cr.revenue DESC
+
+Result: 1005 rows, columns=['CustomerKey', 'revenue', 'avg_revenue']
+  Row 1: CustomerKey=11439, revenue=7998.69, avg_revenue=815.81
+  Row 2: CustomerKey=11433, revenue=7207.66, avg_revenue=815.81
+  Row 3: CustomerKey=12300, revenue=4891.40, avg_revenue=815.81
+  Row 4: CustomerKey=12296, revenue=4884.34, avg_revenue=815.81
+  Row 5: CustomerKey=12131, revenue=4863.69, avg_revenue=815.81
+  ... (1000 more rows)
+
+======================================================================
+ID: hard_002 | difficulty: hard
+Q (VI): Xếp hạng các sản phẩm theo doanh thu trong từng danh mục
+Q (EN): Rank products by revenue within each category
+Tags: ['window', 'multi_hop', 'aggregation', 'glossary_term']
+
+SQL:
+  SELECT
+    pc.EnglishProductCategoryName AS category,
+    p.EnglishProductName AS product,
+    SUM(s.SalesAmount) AS revenue,
+    ROW_NUMBER() OVER (
+      PARTITION BY pc.ProductCategoryKey
+      ORDER BY SUM(s.SalesAmount) DESC
+    ) AS rank_in_category
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+  JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+  GROUP BY pc.ProductCategoryKey, pc.EnglishProductCategoryName, p.EnglishProductName
+
+Result: 130 rows, columns=['category', 'product', 'revenue', 'rank_in_category']
+  Row 1: category=Bikes, product=Mountain-200 Black, 46, revenue=1373469.55, rank_in_category=1
+  Row 2: category=Bikes, product=Mountain-200 Black, 42, revenue=1363142.09, rank_in_category=2
+  Row 3: category=Bikes, product=Mountain-200 Silver, 38, revenue=1339462.79, rank_in_category=3
+  Row 4: category=Bikes, product=Mountain-200 Silver, 46, revenue=1301100.10, rank_in_category=4
+  Row 5: category=Bikes, product=Mountain-200 Black, 38, revenue=1294866.14, rank_in_category=5
+  ... (125 more rows)
+
+======================================================================
+ID: hard_003 | difficulty: hard
+Q (VI): Top 3 sản phẩm có doanh thu cao nhất trong mỗi danh mục
+Q (EN): Top 3 products by revenue within each category
+Tags: ['cte', 'window', 'multi_hop', 'ranking', 'glossary_term']
+
+SQL:
+  WITH ranked_products AS (
+    SELECT
+      pc.EnglishProductCategoryName AS category,
+      p.EnglishProductName AS product,
+      SUM(s.SalesAmount) AS revenue,
+      ROW_NUMBER() OVER (
+        PARTITION BY pc.ProductCategoryKey
+        ORDER BY SUM(s.SalesAmount) DESC
+      ) AS rn
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+    JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+    GROUP BY pc.ProductCategoryKey, pc.EnglishProductCategoryName, p.EnglishProductName
+  )
+  SELECT category, product, revenue
+  FROM ranked_products
+  WHERE rn <= 3
+  ORDER BY category, revenue DESC
+
+Result: 9 rows, columns=['category', 'product', 'revenue']
+  Row 1: category=Accessories, product=Sport-100 Helmet, Red, revenue=78027.70
+  Row 2: category=Accessories, product=Sport-100 Helmet, Blue, revenue=74353.75
+  Row 3: category=Accessories, product=Sport-100 Helmet, Black, revenue=72954.15
+  Row 4: category=Bikes, product=Mountain-200 Black, 46, revenue=1373469.55
+  Row 5: category=Bikes, product=Mountain-200 Black, 42, revenue=1363142.09
+  ... (4 more rows)
+
+======================================================================
+ID: hard_004 | difficulty: hard
+Q (VI): Khách hàng đã mua hàng năm 2012 nhưng không mua năm 2013
+Q (EN): Customers who bought in 2012 but not in 2013
+Tags: ['nested', 'comparison', 'filtering']
+
+SQL:
+  SELECT
+    c.CustomerKey,
+    c.FirstName,
+    c.LastName,
+    c.EmailAddress
+  FROM dbo.DimCustomer c
+  WHERE EXISTS (
+    SELECT 1
+    FROM dbo.FactInternetSales s
+    WHERE s.CustomerKey = c.CustomerKey
+      AND YEAR(s.OrderDate) = 2012
+  )
+  AND NOT EXISTS (
+    SELECT 1
+    FROM dbo.FactInternetSales s
+    WHERE s.CustomerKey = c.CustomerKey
+      AND YEAR(s.OrderDate) = 2013
+  )
+  ORDER BY c.CustomerKey
+
+Result: 287 rows, columns=['CustomerKey', 'FirstName', 'LastName', 'EmailAddress']
+  Row 1: CustomerKey=11020, FirstName=Jordan, LastName=King, EmailAddress=jordan73@adventure-works.com
+  Row 2: CustomerKey=11292, FirstName=Seth, LastName=Phillips, EmailAddress=seth42@adventure-works.com
+  Row 3: CustomerKey=11338, FirstName=Frank, LastName=Navarro, EmailAddress=frank17@adventure-works.com
+  Row 4: CustomerKey=11345, FirstName=Robin, LastName=Ramos, EmailAddress=robin13@adventure-works.com
+  Row 5: CustomerKey=13059, FirstName=Keith, LastName=Deng, EmailAddress=keith3@adventure-works.com
+  ... (282 more rows)
+
+======================================================================
+ID: hard_005 | difficulty: hard
+Q (VI): Tăng trưởng doanh thu từng tháng so với tháng trước trong năm 2013
+Q (EN): Month-over-month revenue growth in 2013
+Tags: ['cte', 'window', 'trend', 'comparison', 'glossary_term']
+
+SQL:
+  WITH monthly AS (
+    SELECT
+      MONTH(OrderDate) AS month,
+      SUM(SalesAmount) AS revenue
+    FROM dbo.FactInternetSales
+    WHERE YEAR(OrderDate) = 2013
+    GROUP BY MONTH(OrderDate)
+  )
+  SELECT
+    month,
+    revenue,
+    LAG(revenue) OVER (ORDER BY month) AS prev_month_revenue,
+    revenue - LAG(revenue) OVER (ORDER BY month) AS mom_growth
+  FROM monthly
+  ORDER BY month
+
+Result: 12 rows, columns=['month', 'revenue', 'prev_month_revenue', 'mom_growth']
+  Row 1: month=1, revenue=857689.91, prev_month_revenue=NULL, mom_growth=NULL
+  Row 2: month=2, revenue=771348.74, prev_month_revenue=857689.91, mom_growth=-86341.17
+  Row 3: month=3, revenue=1049907.39, prev_month_revenue=771348.74, mom_growth=278558.65
+  Row 4: month=4, revenue=1046022.77, prev_month_revenue=1049907.39, mom_growth=-3884.62
+  Row 5: month=5, revenue=1284592.93, prev_month_revenue=1046022.77, mom_growth=238570.16
+  ... (7 more rows)
+
+======================================================================
+ID: hard_006 | difficulty: hard
+Q (VI): Top 5 khách hàng có doanh thu cao nhất trong mỗi quốc gia
+Q (EN): Top 5 customers by revenue within each country
+Tags: ['cte', 'window', 'multi_hop', 'ranking', 'glossary_term']
+
+SQL:
+  WITH cust_revenue AS (
+    SELECT
+      c.CustomerKey,
+      c.FirstName + ' ' + c.LastName AS customer_name,
+      g.EnglishCountryRegionName AS country,
+      SUM(s.SalesAmount) AS revenue,
+      ROW_NUMBER() OVER (
+        PARTITION BY g.EnglishCountryRegionName
+        ORDER BY SUM(s.SalesAmount) DESC
+      ) AS rn
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+    JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+    GROUP BY c.CustomerKey, c.FirstName, c.LastName, g.EnglishCountryRegionName
+  )
+  SELECT country, customer_name, revenue
+  FROM cust_revenue
+  WHERE rn <= 5
+  ORDER BY country, revenue DESC
+
+Result: 30 rows, columns=['country', 'customer_name', 'revenue']
+  Row 1: country=Australia, customer_name=Meagan Madan, revenue=8319.51
+  Row 2: country=Australia, customer_name=Crystal Wang, revenue=8295.02
+  Row 3: country=Australia, customer_name=Candace Raman, revenue=8280.48
+  Row 4: country=Australia, customer_name=Monica Vance, revenue=8265.00
+  Row 5: country=Australia, customer_name=Abby Sai, revenue=8262.52
+  ... (25 more rows)
+
+======================================================================
+ID: hard_007 | difficulty: hard
+Q (VI): Khách hàng có doanh thu cao nhất trong từng quốc gia
+Q (EN): Top-revenue customer in each country
+Tags: ['cte', 'window', 'multi_hop', 'ranking', 'glossary_term']
+
+SQL:
+  WITH ranked AS (
+    SELECT
+      c.FirstName + ' ' + c.LastName AS customer_name,
+      g.EnglishCountryRegionName AS country,
+      SUM(s.SalesAmount) AS revenue,
+      ROW_NUMBER() OVER (
+        PARTITION BY g.EnglishCountryRegionName
+        ORDER BY SUM(s.SalesAmount) DESC
+      ) AS rn
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+    JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+    GROUP BY c.CustomerKey, c.FirstName, c.LastName, g.EnglishCountryRegionName
+  )
+  SELECT country, customer_name, revenue
+  FROM ranked
+  WHERE rn = 1
+  ORDER BY country
+
+Result: 6 rows, columns=['country', 'customer_name', 'revenue']
+  Row 1: country=Australia, customer_name=Meagan Madan, revenue=8319.51
+  Row 2: country=Canada, customer_name=Isabella Bryant, revenue=6060.50
+  Row 3: country=France, customer_name=Nichole Nara, revenue=13295.38
+  Row 4: country=Germany, customer_name=Ricky Vazquez, revenue=10580.35
+  Row 5: country=United Kingdom, customer_name=Marie Sanz, revenue=8460.25
+  ... (1 more rows)
+
+======================================================================
+ID: hard_008 | difficulty: hard
+Q (VI): Top 3 sản phẩm bán chạy nhất trong từng quý của năm 2013
+Q (EN): Top 3 products by revenue per quarter in 2013
+Tags: ['cte', 'window', 'ranking', 'trend', 'glossary_term', 'multi_hop']
+
+SQL:
+  WITH product_sales AS (
+    SELECT
+      p.EnglishProductName AS product,
+      DATEPART(QUARTER, s.OrderDate) AS quarter,
+      SUM(s.SalesAmount) AS revenue,
+      ROW_NUMBER() OVER (
+        PARTITION BY DATEPART(QUARTER, s.OrderDate)
+        ORDER BY SUM(s.SalesAmount) DESC
+      ) AS rn
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    WHERE YEAR(s.OrderDate) = 2013
+    GROUP BY p.EnglishProductName, DATEPART(QUARTER, s.OrderDate)
+  )
+  SELECT quarter, product, revenue
+  FROM product_sales
+  WHERE rn <= 3
+  ORDER BY quarter, revenue DESC
+
+Result: 12 rows, columns=['quarter', 'product', 'revenue']
+  Row 1: quarter=1, product=Mountain-200 Black, 46, revenue=183599.20
+  Row 2: quarter=1, product=Mountain-200 Silver, 38, revenue=173999.25
+  Row 3: quarter=1, product=Mountain-200 Silver, 42, revenue=162399.30
+  Row 4: quarter=2, product=Mountain-200 Black, 42, revenue=243268.94
+  Row 5: quarter=2, product=Mountain-200 Black, 46, revenue=238678.96
+  ... (7 more rows)
+
+======================================================================
+ID: hard_009 | difficulty: hard
+Q (VI): Tỷ lệ phần trăm doanh thu của mỗi danh mục so với tổng
+Q (EN): Each category's revenue as a percentage of total
+Tags: ['cte', 'multi_hop', 'aggregation', 'comparison', 'glossary_term']
+
+SQL:
+  WITH cat_revenue AS (
+    SELECT
+      pc.EnglishProductCategoryName AS category,
+      SUM(s.SalesAmount) AS revenue
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+    JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+    GROUP BY pc.EnglishProductCategoryName
+  ),
+  total AS (
+    SELECT SUM(revenue) AS grand_total FROM cat_revenue
+  )
+  SELECT
+    cr.category,
+    cr.revenue,
+    ROUND(cr.revenue * 100.0 / t.grand_total, 2) AS pct_of_total
+  FROM cat_revenue cr
+  CROSS JOIN total t
+  ORDER BY cr.revenue DESC
+
+Result: 3 rows, columns=['category', 'revenue', 'pct_of_total']
+  Row 1: category=Bikes, revenue=28318144.65, pct_of_total=96.46
+  Row 2: category=Accessories, revenue=700759.96, pct_of_total=2.39
+  Row 3: category=Clothing, revenue=339772.61, pct_of_total=1.16
+
+======================================================================
+ID: hard_010 | difficulty: hard
+Q (VI): Top 10 khách hàng có nhiều đơn hàng nhất, kèm giá trị trung bình mỗi đơn
+Q (EN): Top 10 customers by order count, with average order value
+Tags: ['cte', 'ranking', 'aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  WITH cust_orders AS (
+    SELECT
+      c.CustomerKey,
+      c.FirstName + ' ' + c.LastName AS customer_name,
+      COUNT(DISTINCT s.SalesOrderNumber) AS order_count,
+      AVG(s.SalesAmount) AS avg_order_value,
+      SUM(s.SalesAmount) AS total_revenue
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+    GROUP BY c.CustomerKey, c.FirstName, c.LastName
+  )
+  SELECT TOP 10 customer_name, order_count, avg_order_value, total_revenue
+  FROM cust_orders
+  ORDER BY order_count DESC
+
+Result: 10 rows, columns=['customer_name', 'order_count', 'avg_order_value', 'total_revenue']
+  Row 1: customer_name=Mason Roberts, order_count=28, avg_order_value=22.00, total_revenue=1320.01
+  Row 2: customer_name=Dalton Perez, order_count=28, avg_order_value=20.16, total_revenue=1189.33
+  Row 3: customer_name=Jason Griffin, order_count=27, avg_order_value=26.61, total_revenue=1463.38
+  Row 4: customer_name=Charles Jackson, order_count=27, avg_order_value=22.08, total_revenue=1434.99
+  Row 5: customer_name=Hailey Patterson, order_count=27, avg_order_value=21.52, total_revenue=1205.38
+  ... (5 more rows)
+
+======================================================================
+ID: hard_011 | difficulty: hard
+Q (VI): Sản phẩm có doanh thu năm 2013 cao hơn năm 2012
+Q (EN): Products whose 2013 revenue exceeds their 2012 revenue
+Tags: ['cte', 'comparison', 'aggregation', 'multi_hop', 'trend', 'glossary_term']
+
+SQL:
+  WITH yearly AS (
+    SELECT
+      p.EnglishProductName AS product,
+      YEAR(s.OrderDate) AS year,
+      SUM(s.SalesAmount) AS revenue
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    WHERE YEAR(s.OrderDate) IN (2012, 2013)
+    GROUP BY p.EnglishProductName, YEAR(s.OrderDate)
+  ),
+  pivoted AS (
+    SELECT
+      product,
+      SUM(CASE WHEN year = 2012 THEN revenue ELSE 0 END) AS rev_2012,
+      SUM(CASE WHEN year = 2013 THEN revenue ELSE 0 END) AS rev_2013
+    FROM yearly
+    GROUP BY product
+  )
+  SELECT product, rev_2012, rev_2013, rev_2013 - rev_2012 AS growth
+  FROM pivoted
+  WHERE rev_2013 > rev_2012 AND rev_2012 > 0
+  ORDER BY growth DESC
+
+Result: 62 rows, columns=['product', 'rev_2012', 'rev_2013', 'growth']
+  Row 1: product=Mountain-200 Black, 38, rev_2012=342937.07, rev_2013=947830.87, growth=604893.80
+  Row 2: product=Mountain-200 Silver, 38, rev_2012=372026.96, rev_2013=967435.83, growth=595408.87
+  Row 3: product=Mountain-200 Black, 42, rev_2012=392361.32, rev_2013=970780.77, growth=578419.45
+  Row 4: product=Mountain-200 Silver, 42, rev_2012=352887.04, rev_2013=902476.11, growth=549589.07
+  Row 5: product=Mountain-200 Silver, 46, rev_2012=377744.08, rev_2013=923356.02, growth=545611.94
+  ... (57 more rows)
+
+======================================================================
+ID: hard_012 | difficulty: hard
+Q (VI): Doanh thu cộng dồn theo từng tháng trong năm 2013
+Q (EN): Cumulative revenue by month in 2013
+Tags: ['cte', 'window', 'trend', 'glossary_term']
+
+SQL:
+  WITH monthly AS (
+    SELECT
+      MONTH(OrderDate) AS month,
+      SUM(SalesAmount) AS revenue
+    FROM dbo.FactInternetSales
+    WHERE YEAR(OrderDate) = 2013
+    GROUP BY MONTH(OrderDate)
+  )
+  SELECT
+    month,
+    revenue,
+    SUM(revenue) OVER (ORDER BY month) AS cumulative_revenue
+  FROM monthly
+  ORDER BY month
+
+Result: 12 rows, columns=['month', 'revenue', 'cumulative_revenue']
+  Row 1: month=1, revenue=857689.91, cumulative_revenue=857689.91
+  Row 2: month=2, revenue=771348.74, cumulative_revenue=1629038.65
+  Row 3: month=3, revenue=1049907.39, cumulative_revenue=2678946.04
+  Row 4: month=4, revenue=1046022.77, cumulative_revenue=3724968.81
+  Row 5: month=5, revenue=1284592.93, cumulative_revenue=5009561.74
+  ... (7 more rows)
+
+======================================================================
+ID: hard_013 | difficulty: hard
+Q (VI): Khách hàng đã mua hàng vào năm 2013 nhưng chưa từng mua năm 2012
+Q (EN): Customers who bought in 2013 but never in 2012
+Tags: ['nested', 'filtering', 'comparison']
+
+SQL:
+  SELECT
+    c.CustomerKey,
+    c.FirstName,
+    c.LastName
+  FROM dbo.DimCustomer c
+  WHERE EXISTS (
+    SELECT 1 FROM dbo.FactInternetSales s
+    WHERE s.CustomerKey = c.CustomerKey AND YEAR(s.OrderDate) = 2013
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM dbo.FactInternetSales s
+    WHERE s.CustomerKey = c.CustomerKey AND YEAR(s.OrderDate) = 2012
+  )
+  ORDER BY c.CustomerKey
+
+Result: 1005 rows, columns=['CustomerKey', 'FirstName', 'LastName']
+  Row 1: CustomerKey=11000, FirstName=Jon, LastName=Yang
+  Row 2: CustomerKey=11001, FirstName=Eugene, LastName=Huang
+  Row 3: CustomerKey=11003, FirstName=Christy, LastName=Zhu
+  Row 4: CustomerKey=11004, FirstName=Elizabeth, LastName=Johnson
+  Row 5: CustomerKey=11005, FirstName=Julio, LastName=Ruiz
+  ... (1000 more rows)
+
+======================================================================
+ID: hard_014 | difficulty: hard
+Q (VI): Tỷ lệ chuyển đổi: phần trăm khách hàng đã từng mua hàng
+Q (EN): Conversion rate: percentage of customers who have made a purchase
+Tags: ['aggregation', 'comparison', 'multi_hop']
+
+SQL:
+  SELECT
+    COUNT(DISTINCT c.CustomerKey) AS total_customers,
+    COUNT(DISTINCT s.CustomerKey) AS buyers,
+    ROUND(COUNT(DISTINCT s.CustomerKey) * 100.0 / COUNT(DISTINCT c.CustomerKey), 2) AS conversion_pct
+  FROM dbo.DimCustomer c
+  LEFT JOIN dbo.FactInternetSales s ON c.CustomerKey = s.CustomerKey
+
+Result: 1 rows, columns=['total_customers', 'buyers', 'conversion_pct']
+  Row 1: total_customers=18484, buyers=18484, conversion_pct=100.00
+
+======================================================================
+ID: hard_015 | difficulty: hard
+Q (VI): Sản phẩm có doanh thu cao hơn doanh thu trung bình của danh mục đó
+Q (EN): Products with revenue above the average of their category
+Tags: ['cte', 'multi_hop', 'comparison', 'aggregation', 'glossary_term']
+
+SQL:
+  WITH product_revenue AS (
+    SELECT
+      p.EnglishProductName AS product,
+      pc.EnglishProductCategoryName AS category,
+      pc.ProductCategoryKey,
+      SUM(s.SalesAmount) AS revenue
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+    JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+    GROUP BY p.EnglishProductName, pc.EnglishProductCategoryName, pc.ProductCategoryKey
+  ),
+  cat_avg AS (
+    SELECT ProductCategoryKey, AVG(revenue) AS avg_rev
+    FROM product_revenue
+    GROUP BY ProductCategoryKey
+  )
+  SELECT pr.product, pr.category, pr.revenue, ca.avg_rev
+  FROM product_revenue pr
+  JOIN cat_avg ca ON pr.ProductCategoryKey = ca.ProductCategoryKey
+  WHERE pr.revenue > ca.avg_rev
+  ORDER BY pr.category, pr.revenue DESC
+
+Result: 53 rows, columns=['product', 'category', 'revenue', 'avg_rev']
+  Row 1: product=Sport-100 Helmet, Red, category=Accessories, revenue=78027.70, avg_rev=31852.73
+  Row 2: product=Sport-100 Helmet, Blue, category=Accessories, revenue=74353.75, avg_rev=31852.73
+  Row 3: product=Sport-100 Helmet, Black, category=Accessories, revenue=72954.15, avg_rev=31852.73
+  Row 4: product=HL Mountain Tire, category=Accessories, revenue=48860.00, avg_rev=31852.73
+  Row 5: product=Fender Set - Mountain, category=Accessories, revenue=46619.58, avg_rev=31852.73
+  ... (48 more rows)
+
+======================================================================
+ID: hard_016 | difficulty: hard
+Q (VI): Xếp hạng doanh thu sản phẩm theo từng tháng năm 2013
+Q (EN): Rank product revenue per month in 2013
+Tags: ['window', 'multi_hop', 'aggregation', 'trend', 'glossary_term']
+
+SQL:
+  SELECT
+    MONTH(s.OrderDate) AS month,
+    p.EnglishProductName AS product,
+    SUM(s.SalesAmount) AS revenue,
+    RANK() OVER (
+      PARTITION BY MONTH(s.OrderDate)
+      ORDER BY SUM(s.SalesAmount) DESC
+    ) AS month_rank
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+  WHERE YEAR(s.OrderDate) = 2013
+  GROUP BY MONTH(s.OrderDate), p.EnglishProductName
+
+Result: 1005 rows, columns=['month', 'product', 'revenue', 'month_rank']
+  Row 1: month=1, product=Mountain-200 Silver, 38, revenue=76559.67, month_rank=1
+  Row 2: month=1, product=Mountain-200 Black, 46, revenue=61964.73, month_rank=2
+  Row 3: month=1, product=Mountain-200 Black, 38, revenue=61964.73, month_rank=2
+  Row 4: month=1, product=Road-250 Black, 44, revenue=58640.40, month_rank=4
+  Row 5: month=1, product=Mountain-200 Silver, 42, revenue=51039.78, month_rank=5
+  ... (1000 more rows)
+
+======================================================================
+ID: hard_017 | difficulty: hard
+Q (VI): Top 5 khu vực đóng góp lớn nhất vào doanh thu Q4 2013
+Q (EN): Top 5 territories by revenue in Q4 2013
+Tags: ['ranking', 'aggregation', 'multi_hop', 'trend', 'glossary_term', 'filtering']
+
+SQL:
+  SELECT TOP 5
+    t.SalesTerritoryRegion AS region,
+    SUM(s.SalesAmount) AS revenue
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimSalesTerritory t ON s.SalesTerritoryKey = t.SalesTerritoryKey
+  WHERE YEAR(s.OrderDate) = 2013 AND MONTH(s.OrderDate) BETWEEN 10 AND 12
+  GROUP BY t.SalesTerritoryRegion
+  ORDER BY revenue DESC
+
+Result: 5 rows, columns=['region', 'revenue']
+  Row 1: region=Australia, revenue=1331762.11
+  Row 2: region=Southwest, revenue=1144117.27
+  Row 3: region=Northwest, revenue=725198.67
+  Row 4: region=United Kingdom, revenue=647815.88
+  Row 5: region=Germany, revenue=587904.80
+
+======================================================================
+ID: hard_018 | difficulty: hard
+Q (VI): Khách hàng có ít nhất 3 đơn hàng và mỗi đơn trên 500 USD
+Q (EN): Customers with at least 3 orders, each above 500 USD
+Tags: ['aggregation', 'filtering', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    c.FirstName + ' ' + c.LastName AS customer_name,
+    COUNT(DISTINCT s.SalesOrderNumber) AS order_count
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  WHERE s.SalesAmount > 500
+  GROUP BY c.CustomerKey, c.FirstName, c.LastName
+  HAVING COUNT(DISTINCT s.SalesOrderNumber) >= 3
+  ORDER BY order_count DESC
+
+Result: 956 rows, columns=['customer_name', 'order_count']
+  Row 1: customer_name=Lisa Cai, order_count=7
+  Row 2: customer_name=Larry Munoz, order_count=7
+  Row 3: customer_name=Lacey Zheng, order_count=7
+  Row 4: customer_name=Jordan Turner, order_count=7
+  Row 5: customer_name=Ariana Gray, order_count=6
+  ... (951 more rows)
+
+======================================================================
+ID: hard_019 | difficulty: hard
+Q (VI): Tỷ lệ phần trăm khách hàng theo nhóm tuổi
+Q (EN): Customer percentage by age group
+Tags: ['cte', 'window', 'aggregation']
+
+SQL:
+  WITH age_group AS (
+    SELECT
+      CASE
+        WHEN DATEDIFF(YEAR, BirthDate, '2014-01-01') < 30 THEN 'Under 30'
+        WHEN DATEDIFF(YEAR, BirthDate, '2014-01-01') < 50 THEN '30-49'
+        WHEN DATEDIFF(YEAR, BirthDate, '2014-01-01') < 70 THEN '50-69'
+        ELSE '70+'
+      END AS age_range,
+      CustomerKey
+    FROM dbo.DimCustomer
+  ),
+  counts AS (
+    SELECT age_range, COUNT(*) AS cnt
+    FROM age_group
+    GROUP BY age_range
+  )
+  SELECT
+    age_range,
+    cnt,
+    ROUND(cnt * 100.0 / SUM(cnt) OVER (), 2) AS pct
+  FROM counts
+  ORDER BY cnt DESC
+
+Result: 4 rows, columns=['age_range', 'cnt', 'pct']
+  Row 1: age_range=30-49, cnt=11857, pct=64.15
+  Row 2: age_range=50-69, cnt=5436, pct=29.41
+  Row 3: age_range=Under 30, cnt=612, pct=3.31
+  Row 4: age_range=70+, cnt=579, pct=3.13
+
+======================================================================
+ID: hard_020 | difficulty: hard
+Q (VI): Sản phẩm bán chạy nhất theo từng quốc gia trong năm 2013
+Q (EN): Top-selling product per country in 2013
+Tags: ['cte', 'window', 'multi_hop', 'ranking', 'trend', 'glossary_term']
+
+SQL:
+  WITH country_product AS (
+    SELECT
+      g.EnglishCountryRegionName AS country,
+      p.EnglishProductName AS product,
+      SUM(s.SalesAmount) AS revenue,
+      ROW_NUMBER() OVER (
+        PARTITION BY g.EnglishCountryRegionName
+        ORDER BY SUM(s.SalesAmount) DESC
+      ) AS rn
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+    JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    WHERE YEAR(s.OrderDate) = 2013
+    GROUP BY g.EnglishCountryRegionName, p.EnglishProductName
+  )
+  SELECT country, product, revenue
+  FROM country_product
+  WHERE rn = 1
+  ORDER BY country
+
+Result: 6 rows, columns=['country', 'product', 'revenue']
+  Row 1: country=Australia, product=Mountain-200 Silver, 38, revenue=220399.05
+  Row 2: country=Canada, product=Mountain-200 Black, 42, revenue=100979.56
+  Row 3: country=France, product=Mountain-200 Black, 46, revenue=105569.54
+  Row 4: country=Germany, product=Mountain-200 Silver, 46, revenue=134559.42
+  Row 5: country=United Kingdom, product=Mountain-200 Black, 38, revenue=144584.37
+  ... (1 more rows)
+
+======================================================================
+ID: hard_021 | difficulty: hard
+Q (VI): Phân phối doanh thu theo nhóm thu nhập của khách hàng
+Q (EN): Revenue distribution by customer income bracket
+Tags: ['aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  SELECT
+    CASE
+      WHEN c.YearlyIncome < 30000 THEN 'Low'
+      WHEN c.YearlyIncome < 70000 THEN 'Medium'
+      WHEN c.YearlyIncome < 100000 THEN 'High'
+      ELSE 'Very High'
+    END AS income_bracket,
+    COUNT(DISTINCT c.CustomerKey) AS customers,
+    SUM(s.SalesAmount) AS revenue,
+    AVG(s.SalesAmount) AS avg_order
+  FROM dbo.FactInternetSales s
+  JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+  GROUP BY
+    CASE
+      WHEN c.YearlyIncome < 30000 THEN 'Low'
+      WHEN c.YearlyIncome < 70000 THEN 'Medium'
+      WHEN c.YearlyIncome < 100000 THEN 'High'
+      ELSE 'Very High'
+    END
+  ORDER BY revenue DESC
+
+Result: 4 rows, columns=['income_bracket', 'customers', 'revenue', 'avg_order']
+  Row 1: income_bracket=Medium, customers=8831, revenue=12184940.08, avg_order=441.13
+  Row 2: income_bracket=High, customers=4533, revenue=8942758.29, avg_order=550.05
+  Row 3: income_bracket=Very High, customers=2198, revenue=4823969.27, avg_order=600.15
+  Row 4: income_bracket=Low, customers=2922, revenue=3407009.58, avg_order=401.77
+
+======================================================================
+ID: hard_022 | difficulty: hard
+Q (VI): Top 10 cặp sản phẩm thường được mua cùng nhau
+Q (EN): Top 10 product pairs frequently bought together
+Tags: ['multi_hop', 'aggregation', 'ranking']
+
+SQL:
+  SELECT TOP 10
+    p1.EnglishProductName AS product1,
+    p2.EnglishProductName AS product2,
+    COUNT(*) AS co_occurrence
+  FROM dbo.FactInternetSales s1
+  JOIN dbo.FactInternetSales s2
+    ON s1.SalesOrderNumber = s2.SalesOrderNumber
+    AND s1.SalesOrderLineNumber < s2.SalesOrderLineNumber
+  JOIN dbo.DimProduct p1 ON s1.ProductKey = p1.ProductKey
+  JOIN dbo.DimProduct p2 ON s2.ProductKey = p2.ProductKey
+  GROUP BY p1.EnglishProductName, p2.EnglishProductName
+  ORDER BY co_occurrence DESC
+
+Result: 10 rows, columns=['product1', 'product2', 'co_occurrence']
+  Row 1: product1=Mountain Bottle Cage, product2=Water Bottle - 30 oz., co_occurrence=1267
+  Row 2: product1=Road Bottle Cage, product2=Water Bottle - 30 oz., co_occurrence=932
+  Row 3: product1=Mountain Tire Tube, product2=Patch Kit/8 Patches, co_occurrence=785
+  Row 4: product1=Touring Tire, product2=Touring Tire Tube, co_occurrence=605
+  Row 5: product1=Water Bottle - 30 oz., product2=Road Bottle Cage, co_occurrence=589
+  ... (5 more rows)
+
+======================================================================
+ID: hard_023 | difficulty: hard
+Q (VI): Phân nhóm khách hàng theo Customer Lifetime Value (LTV)
+Q (EN): Customer LTV bucket distribution
+Tags: ['cte', 'aggregation', 'glossary_term']
+
+SQL:
+  WITH cust_total AS (
+    SELECT
+      c.CustomerKey,
+      SUM(s.SalesAmount) AS ltv
+    FROM dbo.DimCustomer c
+    LEFT JOIN dbo.FactInternetSales s ON c.CustomerKey = s.CustomerKey
+    GROUP BY c.CustomerKey
+  )
+  SELECT
+    CASE
+      WHEN ltv IS NULL OR ltv = 0 THEN 'No purchase'
+      WHEN ltv < 1000 THEN 'Low (<1K)'
+      WHEN ltv < 5000 THEN 'Medium (1-5K)'
+      WHEN ltv < 10000 THEN 'High (5-10K)'
+      ELSE 'VIP (>=10K)'
+    END AS ltv_bracket,
+    COUNT(*) AS customers
+  FROM cust_total
+  GROUP BY
+    CASE
+      WHEN ltv IS NULL OR ltv = 0 THEN 'No purchase'
+      WHEN ltv < 1000 THEN 'Low (<1K)'
+      WHEN ltv < 5000 THEN 'Medium (1-5K)'
+      WHEN ltv < 10000 THEN 'High (5-10K)'
+      ELSE 'VIP (>=10K)'
+    END
+  ORDER BY customers DESC
+
+Result: 4 rows, columns=['ltv_bracket', 'customers']
+  Row 1: ltv_bracket=Low (<1K), customers=10788
+  Row 2: ltv_bracket=Medium (1-5K), customers=5964
+  Row 3: ltv_bracket=High (5-10K), customers=1703
+  Row 4: ltv_bracket=VIP (>=10K), customers=29
+
+======================================================================
+ID: hard_024 | difficulty: hard
+Q (VI): Tỷ lệ tăng trưởng doanh thu năm 2013 so với 2012 theo danh mục sản phẩm
+Q (EN): Revenue growth percentage 2013 vs 2012 by category
+Tags: ['cte', 'multi_hop', 'aggregation', 'comparison', 'trend', 'glossary_term']
+
+SQL:
+  WITH cat_yearly AS (
+    SELECT
+      pc.EnglishProductCategoryName AS category,
+      YEAR(s.OrderDate) AS year,
+      SUM(s.SalesAmount) AS revenue
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+    JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+    WHERE YEAR(s.OrderDate) IN (2012, 2013)
+    GROUP BY pc.EnglishProductCategoryName, YEAR(s.OrderDate)
+  ),
+  pivoted AS (
+    SELECT
+      category,
+      MAX(CASE WHEN year = 2012 THEN revenue ELSE 0 END) AS rev_2012,
+      MAX(CASE WHEN year = 2013 THEN revenue ELSE 0 END) AS rev_2013
+    FROM cat_yearly
+    GROUP BY category
+  )
+  SELECT
+    category,
+    rev_2012,
+    rev_2013,
+    ROUND((rev_2013 - rev_2012) * 100.0 / NULLIF(rev_2012, 0), 2) AS growth_pct
+  FROM pivoted
+  ORDER BY growth_pct DESC
+
+Result: 3 rows, columns=['category', 'rev_2012', 'rev_2013', 'growth_pct']
+  Row 1: category=Clothing, rev_2012=642.79, rev_2013=323806.45, growth_pct=50275.15
+  Row 2: category=Accessories, rev_2012=2147.08, rev_2013=668241.53, growth_pct=31023.27
+  Row 3: category=Bikes, rev_2012=5839695.33, rev_2013=15359502.36, growth_pct=163.02
+
+======================================================================
+ID: hard_025 | difficulty: hard
+Q (VI): Khách hàng có doanh thu năm 2013 cao hơn năm 2012 ít nhất 50%
+Q (EN): Customers whose 2013 revenue exceeded 2012 revenue by at least 50%
+Tags: ['cte', 'comparison', 'multi_hop', 'trend', 'glossary_term']
+
+SQL:
+  WITH yearly_revenue AS (
+    SELECT
+      c.CustomerKey,
+      c.FirstName + ' ' + c.LastName AS customer_name,
+      YEAR(s.OrderDate) AS year,
+      SUM(s.SalesAmount) AS revenue
+    FROM dbo.DimCustomer c
+    JOIN dbo.FactInternetSales s ON c.CustomerKey = s.CustomerKey
+    WHERE YEAR(s.OrderDate) IN (2012, 2013)
+    GROUP BY c.CustomerKey, c.FirstName, c.LastName, YEAR(s.OrderDate)
+  ),
+  pivoted AS (
+    SELECT
+      CustomerKey,
+      MAX(customer_name) AS customer_name,
+      SUM(CASE WHEN year = 2012 THEN revenue ELSE 0 END) AS rev_2012,
+      SUM(CASE WHEN year = 2013 THEN revenue ELSE 0 END) AS rev_2013
+    FROM yearly_revenue
+    GROUP BY CustomerKey
+  )
+  SELECT customer_name, rev_2012, rev_2013, rev_2013 - rev_2012 AS growth
+  FROM pivoted
+  WHERE rev_2012 > 0 AND rev_2013 >= rev_2012 * 1.5
+  ORDER BY growth DESC
+
+Result: 908 rows, columns=['customer_name', 'rev_2012', 'rev_2013', 'growth']
+  Row 1: customer_name=Maurice Shan, rev_2012=2049.10, rev_2013=10860.57, growth=8811.47
+  Row 2: customer_name=Janet Munoz, rev_2012=2071.42, rev_2013=10417.75, growth=8346.33
+  Row 3: customer_name=Lacey Zheng, rev_2012=2049.10, rev_2013=9199.36, growth=7150.26
+  Row 4: customer_name=Jordan Turner, rev_2012=2071.42, rev_2013=9129.35, growth=7057.93
+  Row 5: customer_name=Larry Munoz, rev_2012=2049.10, rev_2013=9018.91, growth=6969.81
+  ... (903 more rows)
+
+======================================================================
+ID: hard_026 | difficulty: hard
+Q (VI): Thu nhập trung vị của khách hàng theo từng quốc gia
+Q (EN): Median customer income by country
+Tags: ['window', 'multi_hop', 'aggregation']
+
+SQL:
+  SELECT DISTINCT
+    g.EnglishCountryRegionName AS country,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY c.YearlyIncome)
+      OVER (PARTITION BY g.EnglishCountryRegionName) AS median_income
+  FROM dbo.DimCustomer c
+  JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  ORDER BY median_income DESC
+
+Result: 6 rows, columns=['country', 'median_income']
+  Row 1: country=Australia, median_income=70000.0
+  Row 2: country=Canada, median_income=60000.0
+  Row 3: country=United States, median_income=60000.0
+  Row 4: country=United Kingdom, median_income=30000.0
+  Row 5: country=Germany, median_income=30000.0
+  ... (1 more rows)
+
+======================================================================
+ID: hard_027 | difficulty: hard
+Q (VI): Đại lý có doanh thu cao hơn trung bình của loại business của họ
+Q (EN): Resellers with revenue above the average of their business type
+Tags: ['cte', 'comparison', 'aggregation', 'multi_hop', 'glossary_term']
+
+SQL:
+  WITH reseller_total AS (
+    SELECT
+      r.ResellerKey,
+      r.ResellerName,
+      r.BusinessType,
+      SUM(rs.SalesAmount) AS revenue
+    FROM dbo.DimReseller r
+    JOIN dbo.FactResellerSales rs ON r.ResellerKey = rs.ResellerKey
+    GROUP BY r.ResellerKey, r.ResellerName, r.BusinessType
+  ),
+  type_avg AS (
+    SELECT BusinessType, AVG(revenue) AS avg_rev
+    FROM reseller_total
+    GROUP BY BusinessType
+  )
+  SELECT rt.ResellerName, rt.BusinessType, rt.revenue, ta.avg_rev
+  FROM reseller_total rt
+  JOIN type_avg ta ON rt.BusinessType = ta.BusinessType
+  WHERE rt.revenue > ta.avg_rev
+  ORDER BY rt.BusinessType, rt.revenue DESC
+
+Result: 237 rows, columns=['ResellerName', 'BusinessType', 'revenue', 'avg_rev']
+  Row 1: ResellerName=Consolidated Sales, BusinessType=Specialty Bike Shop, revenue=193708.60, avg_rev=33780.83
+  Row 2: ResellerName=Brightwork Company, BusinessType=Specialty Bike Shop, revenue=184846.24, avg_rev=33780.83
+  Row 3: ResellerName=Trusted Catalog Store, BusinessType=Specialty Bike Shop, revenue=151331.06, avg_rev=33780.83
+  Row 4: ResellerName=Guaranteed Sales and Service, BusinessType=Specialty Bike Shop, revenue=124961.23, avg_rev=33780.83
+  Row 5: ResellerName=Elemental Sporting Goods, BusinessType=Specialty Bike Shop, revenue=120347.32, avg_rev=33780.83
+  ... (232 more rows)
+
+======================================================================
+ID: hard_028 | difficulty: hard
+Q (VI): Doanh thu cộng dồn của top 5 sản phẩm theo từng tháng năm 2013
+Q (EN): Cumulative monthly revenue for top 5 products in 2013
+Tags: ['cte', 'window', 'multi_hop', 'ranking', 'trend', 'glossary_term']
+
+SQL:
+  WITH product_monthly AS (
+    SELECT
+      p.EnglishProductName AS product,
+      MONTH(s.OrderDate) AS month,
+      SUM(s.SalesAmount) AS revenue
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+    WHERE YEAR(s.OrderDate) = 2013
+    GROUP BY p.EnglishProductName, MONTH(s.OrderDate)
+  ),
+  product_total AS (
+    SELECT
+      product,
+      SUM(revenue) AS total_rev,
+      RANK() OVER (ORDER BY SUM(revenue) DESC) AS r
+    FROM product_monthly
+    GROUP BY product
+  )
+  SELECT
+    pm.product,
+    pm.month,
+    pm.revenue,
+    SUM(pm.revenue) OVER (PARTITION BY pm.product ORDER BY pm.month) AS cumulative
+  FROM product_monthly pm
+  JOIN product_total pt ON pm.product = pt.product
+  WHERE pt.r <= 5
+  ORDER BY pm.product, pm.month
+
+Result: 60 rows, columns=['product', 'month', 'revenue', 'cumulative']
+  Row 1: product=Mountain-200 Black, 38, month=1, revenue=61964.73, cumulative=61964.73
+  Row 2: product=Mountain-200 Black, 38, month=2, revenue=34424.85, cumulative=96389.58
+  Row 3: product=Mountain-200 Black, 38, month=3, revenue=64259.72, cumulative=160649.30
+  Row 4: product=Mountain-200 Black, 38, month=4, revenue=41309.82, cumulative=201959.12
+  Row 5: product=Mountain-200 Black, 38, month=5, revenue=64259.72, cumulative=266218.84
+  ... (55 more rows)
+
+======================================================================
+ID: hard_029 | difficulty: hard
+Q (VI): Khách hàng đầu tiên và cuối cùng đặt hàng trong từng quốc gia
+Q (EN): First and last customer to place an order in each country
+Tags: ['cte', 'window', 'multi_hop', 'comparison']
+
+SQL:
+  WITH cust_orders AS (
+    SELECT
+      g.EnglishCountryRegionName AS country,
+      c.FirstName + ' ' + c.LastName AS customer,
+      s.OrderDate,
+      ROW_NUMBER() OVER (
+        PARTITION BY g.EnglishCountryRegionName
+        ORDER BY s.OrderDate ASC
+      ) AS first_rn,
+      ROW_NUMBER() OVER (
+        PARTITION BY g.EnglishCountryRegionName
+        ORDER BY s.OrderDate DESC
+      ) AS last_rn
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+    JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+  )
+  SELECT
+    country,
+    MIN(CASE WHEN first_rn = 1 THEN customer END) AS first_customer,
+    MIN(CASE WHEN first_rn = 1 THEN OrderDate END) AS first_order_date,
+    MIN(CASE WHEN last_rn = 1 THEN customer END) AS last_customer,
+    MIN(CASE WHEN last_rn = 1 THEN OrderDate END) AS last_order_date
+  FROM cust_orders
+  GROUP BY country
+  ORDER BY country
+
+Result: 6 rows, columns=['country', 'first_customer', 'first_order_date', 'last_customer', 'last_order_date']
+  Row 1: country=Australia, first_customer=Christy Zhu, first_order_date=2010-12-29, last_customer=Marvin Munoz, last_order_date=2014-01-28
+  Row 2: country=Canada, first_customer=Cole Watson, first_order_date=2010-12-29, last_customer=Gina Martin, last_order_date=2014-01-28
+  Row 3: country=France, first_customer=Rachael Martinez, first_order_date=2010-12-29, last_customer=Kate Nath, last_order_date=2014-01-26
+  Row 4: country=Germany, first_customer=Abigail Henderson, first_order_date=2011-01-01, last_customer=Timothy Green, last_order_date=2014-01-28
+  Row 5: country=United Kingdom, first_customer=Brad Deng, first_order_date=2010-12-31, last_customer=Tamara Lu, last_order_date=2014-01-28
+  ... (1 more rows)
+
+======================================================================
+ID: hard_030 | difficulty: hard
+Q (VI): Top 10 khách hàng có giá trị đơn trung bình cao nhất, có ít nhất 2 đơn
+Q (EN): Top 10 customers by average order value, with at least 2 orders
+Tags: ['cte', 'ranking', 'aggregation', 'filtering', 'multi_hop', 'glossary_term']
+
+SQL:
+  WITH cust_stats AS (
+    SELECT
+      c.CustomerKey,
+      c.FirstName + ' ' + c.LastName AS customer_name,
+      COUNT(DISTINCT s.SalesOrderNumber) AS order_count,
+      AVG(s.SalesAmount) AS avg_order_value
+    FROM dbo.FactInternetSales s
+    JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+    GROUP BY c.CustomerKey, c.FirstName, c.LastName
+  )
+  SELECT TOP 10 customer_name, order_count, avg_order_value
+  FROM cust_stats
+  WHERE order_count >= 2
+  ORDER BY avg_order_value DESC
+
+Result: 10 rows, columns=['customer_name', 'order_count', 'avg_order_value']
+  Row 1: customer_name=Drew Goel, order_count=2, avg_order_value=3010.81
+  Row 2: customer_name=George Fernandez, order_count=2, avg_order_value=3010.81
+  Row 3: customer_name=Jasmine Wilson, order_count=2, avg_order_value=3010.81
+  Row 4: customer_name=Krista Moreno, order_count=2, avg_order_value=3010.81
+  Row 5: customer_name=Roy Moreno, order_count=2, avg_order_value=3010.81
+  ... (5 more rows)
+

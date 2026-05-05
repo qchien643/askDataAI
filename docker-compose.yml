@@ -1,59 +1,50 @@
 services:
-  # ── Backend (FastAPI + Python) ──────────────────────────────────────────
+  # ── Backend (FastAPI + Python) ──
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: askdataai-backend
+    container_name: miniwren-backend
     ports:
       - "8000:8000"
     env_file:
       - .env
     environment:
-      # When running in Docker, SQL Server is on the HOST machine.
-      # host.docker.internal resolves to the host on Linux/Mac/Windows.
-      SQL_SERVER_HOST: ${SQL_SERVER_HOST:-host.docker.internal}
+      # Override: inside Docker, "localhost" = container itself
+      # Use host.docker.internal to reach host machine's SQL Server
+      SQL_SERVER_HOST: host.docker.internal
     extra_hosts:
-      - "host.docker.internal:host-gateway"   # required on Linux
+      - "host.docker.internal:host-gateway"
     volumes:
-      - chroma_data:/app/chroma_data
-      - ./manifests:/app/manifests
-      - ./semantic_memory.json:/app/semantic_memory.json
-      - ./glossary.yaml:/app/glossary.yaml
-      - ./models.yaml:/app/models.yaml
+      - chroma_data:/app/data/chroma_data
+      - ./data/manifests:/app/data/manifests
+      - ./data/semantic_memory.json:/app/data/semantic_memory.json
+      - ./configs/glossary.yaml:/app/configs/glossary.yaml
+      - ./configs/models.yaml:/app/configs/models.yaml
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     networks:
-      - askdataai
+      - miniwren
 
-  # ── Frontend (Next.js) ──────────────────────────────────────────────────
+  # ── Frontend (Next.js) ──
   frontend:
     build:
       context: ./web
       dockerfile: Dockerfile
       args:
-        # In Docker network, frontend calls backend via service name
-        NEXT_PUBLIC_API_BASE: http://backend:8000
-    container_name: askdataai-frontend
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+    container_name: miniwren-frontend
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     networks:
-      - askdataai
+      - miniwren
 
-# ── Named Volumes ───────────────────────────────────────────────────────
 volumes:
   chroma_data:
 
-# ── Networks ────────────────────────────────────────────────────────────
 networks:
-  askdataai:
+  miniwren:
     driver: bridge

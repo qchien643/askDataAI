@@ -1,379 +1,294 @@
-# askDataAI — Text-to-SQL Platform
+# Mini Wren AI
 
-> Hỏi dữ liệu bằng tiếng Việt, nhận câu SQL chính xác và biểu đồ trực quan.
+**Text-to-SQL Platform** — Hỏi câu hỏi bằng tiếng Việt, nhận SQL + kết quả + biểu đồ tự động.
 
-**askDataAI** là nền tảng Text-to-SQL thông minh được xây dựng trên pipeline 14 bước, hỗ trợ SQL Server, tích hợp OpenAI LLM và giao diện Memphis Design hiện đại với real-time reasoning trace.
+Lấy cảm hứng từ [WrenAI](https://github.com/Canner/WrenAI), rút gọn và tối ưu cho **SQL Server** + **tiếng Việt**.
 
----
+## ✨ Tính năng
 
-## ✨ Tính năng nổi bật
+- 🗣️ **Text-to-SQL**: Hỏi bằng ngôn ngữ tự nhiên → sinh SQL chính xác
+- 📊 **Auto Chart**: Tạo biểu đồ Vega-Lite (bar, line, pie, area...) từ kết quả
+- 🔒 **SQL Guardian**: Bảo vệ injection, read-only, column masking, RLS
+- 🧠 **14-Stage Pipeline**: PreFilter → Intent → Schema → CoT → Generate → Correct → Guard
+- 📖 **Business Glossary**: Ánh xạ thuật ngữ nghiệp vụ
+- 🔍 **Semantic Memory**: Học từ queries thành công trước đó
+- 🐛 **Debug Trace**: Xem chi tiết từng stage trong pipeline
+- 🎨 **Next.js UI**: Chat interface với data table + ERD modeling
 
-| Tính năng | Mô tả |
-|---|---|
-| 🧠 **14-stage pipeline** | Phân tích ý định → Schema linking → CoT reasoning → SQL generation |
-| 💬 **Multi-turn context** | Rolling summary + 7 lượt gần nhất để giữ ngữ cảnh hội thoại |
-| 📡 **Real-time pipeline trace** | SSE stream từng bước xử lý hiện ra trực tiếp trên UI |
-| 🗂️ **Thought Drawer** | Xem lại toàn bộ reasoning trace sau khi có kết quả |
-| 📊 **Auto visualization** | Tự động sinh biểu đồ Vega-Lite cho câu hỏi phân tích |
-| 🛡️ **PI Guardrail** | Bảo vệ chống prompt injection và câu hỏi không liên quan |
-| 📖 **Glossary & Memory** | Từ điển thuật ngữ nghiệp vụ + SQL memory theo ngữ nghĩa |
-| 🎨 **Memphis Design** | Giao diện geometric bold, custom SVG icons, cursor effects |
-
----
-
-## 🏗️ Kiến trúc
+## 🏗 Kiến trúc
 
 ```
-┌─────────────────────────────────────┐
-│          Frontend (Next.js)          │
-│  Memphis UI · SSE Client · Drawer   │
-└────────────────┬────────────────────┘
-                 │ HTTP / SSE
-┌────────────────▼────────────────────┐
-│          Backend (FastAPI)           │
-│  /v1/ask/stream · /v1/sql/execute   │
-└────────────────┬────────────────────┘
-                 │
-    ┌────────────┼────────────┐
-    ▼            ▼            ▼
-  OpenAI      ChromaDB     SQL Server
-  (LLM)    (Vector Store)   (Data)
+┌─────────────────┐     ┌─────────────────────────────────────┐
+│   Next.js UI    │────▶│  FastAPI Backend (port 8000)         │
+│   (port 3000)   │     │                                     │
+│  ┌────────────┐ │     │  ┌──────────┐  ┌────────────────┐  │
+│  │ Chat       │ │     │  │ Ask      │  │ Chart          │  │
+│  │ Modeling   │ │     │  │ Pipeline │  │ Generator      │  │
+│  │ Settings   │ │     │  │ (14 stg) │  │ (Vega-Lite)    │  │
+│  └────────────┘ │     │  └──────┬───┘  └────────────────┘  │
+└─────────────────┘     │         │                           │
+                        │  ┌──────▼───┐  ┌────────────────┐  │
+                        │  │ ChromaDB │  │ SQL Server     │  │
+                        │  │ (Vector) │  │ (Data Source)  │  │
+                        │  └──────────┘  └────────────────┘  │
+                        └─────────────────────────────────────┘
 ```
 
-### Pipeline 14 bước
+## 🚀 Quick Start (Docker)
 
-| Stage | Tên | Loại |
-|---|---|---|
-| 0 | PI Guardrail | Rule-based |
-| 0.5 | Conversation Context | LLM |
-| 1 | Pre-filter | Rule-based |
-| 2 | Instruction Matcher | Rule-based |
-| 3 | Intent Classifier | LLM |
-| 4 | Sub-intent Detector | LLM |
-| 5 | Schema Retrieval | Embedding |
-| 6 | Schema Linking | LLM |
-| 7 | Column Pruning | LLM |
-| 8 | DDL Context Builder | Template |
-| 9 | Glossary Lookup | Vector Search |
-| 10 | Memory Search | Vector Search |
-| 11 | CoT Reasoner | LLM |
-| 12 | SQL Generator | LLM |
-| 13 | SQL Executor & Corrector | Rule + LLM |
+### Yêu cầu
+- Docker & Docker Compose
+- SQL Server (host hoặc remote)
+- API key (OpenAI-compatible hoặc GitHub Models)
 
----
-
-## 📋 Yêu cầu hệ thống
-
-| Thành phần | Phiên bản tối thiểu |
-|---|---|
-| Python | 3.11+ |
-| Node.js | 20+ |
-| SQL Server | 2019+ (bao gồm Express) |
-| ODBC Driver | 17 for SQL Server |
-| OpenAI API Key | Tài khoản OpenAI |
-
----
-
-## 🚀 Cài đặt thủ công (không dùng Docker)
-
-### Bước 1 — Clone repository
+### 1. Clone & cấu hình
 
 ```bash
-git clone https://github.com/qchien643/askDataAI.git
-cd askDataAI
-```
-
----
-
-### Bước 2 — Cài đặt ODBC Driver 17 for SQL Server
-
-**Windows:**
-
-Tải và cài đặt từ Microsoft:
-> https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
-
-Chọn **ODBC Driver 17 for SQL Server** → **Windows x64**.
-
-Sau khi cài xong, kiểm tra trong **Control Panel → ODBC Data Sources**.
-
-**Ubuntu / Debian (Linux):**
-
-```bash
-sudo apt-get update
-sudo apt-get install -y curl gnupg2
-
-curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-
-curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list \
-  | sudo tee /etc/apt/sources.list.d/mssql-release.list
-
-sudo apt-get update
-sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
-```
-
-**macOS (Homebrew):**
-
-```bash
-brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
-brew update
-ACCEPT_EULA=Y brew install msodbcsql17
-```
-
----
-
-### Bước 3 — Tạo Python virtual environment
-
-```bash
-# Windows (PowerShell)
-python -m venv venv
-venv\Scripts\activate
-
-# Linux / macOS
-python3 -m venv venv
-source venv/bin/activate
-```
-
-> ⚠️ Luôn activate venv trước khi chạy bất kỳ lệnh nào. Dấu `(venv)` phải xuất hiện ở đầu terminal.
-
----
-
-### Bước 4 — Cài đặt Python dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Kiểm tra cài đặt thành công:
-
-```bash
-python -c "import fastapi, openai, chromadb, pyodbc; print('OK')"
-```
-
----
-
-### Bước 5 — Cấu hình environment variables
-
-Tạo file `.env` từ template:
-
-```bash
-# Windows
-copy .env.example .env
-
-# Linux / macOS
+git clone <repo-url> mini-wren-ai
+cd mini-wren-ai
 cp .env.example .env
+# Sửa .env với thông tin kết nối thật
 ```
 
-Mở `.env` và điền đầy đủ thông tin:
-
-```env
-# ── SQL Server ──────────────────────────────────────────
-SQL_SERVER_HOST=localhost         # IP hoặc hostname của SQL Server
-SQL_SERVER_PORT=1433              # Port mặc định
-SQL_SERVER_DB=AdventureWorksDW2025  # Tên database của bạn
-SQL_SERVER_USER=sa                # SQL Server username
-SQL_SERVER_PASS=your_password     # SQL Server password
-
-# ── OpenAI ──────────────────────────────────────────────
-OPENAI_API_KEY=sk-proj-...        # API key từ platform.openai.com
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-4o-mini          # Hoặc gpt-4o, gpt-3.5-turbo
-
-# ── ChromaDB ────────────────────────────────────────────
-CHROMA_PERSIST_DIR=./chroma_data
-
-# ── Knowledge files ─────────────────────────────────────
-GLOSSARY_PATH=./glossary.yaml
-MEMORY_PATH=./semantic_memory.json
-```
-
-> 🔑 **Lấy OpenAI API Key:** Đăng nhập tại [platform.openai.com](https://platform.openai.com) → API Keys → Create new secret key.
-
----
-
-### Bước 6 — Khởi động Backend
+### 2. Chạy
 
 ```bash
-# Đảm bảo venv đang active, sau đó chạy từ thư mục gốc project
-python -m uvicorn src.server:app --reload --port 8000
+docker compose up -d
 ```
 
-Kết quả thành công:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
 
+### 3. Sử dụng
+
+1. Mở http://localhost:3000 → trang Setup hiện ra
+2. Nhập thông tin SQL Server → **Connect**
+3. Chuyển sang trang **Home** → bắt đầu chat
+4. Hỏi: _"Top 5 sản phẩm có doanh thu cao nhất"_
+5. Click **📊 Tạo biểu đồ** để xem visualization
+
+## 💻 Manual Setup (Development)
+
+> Chi tiết đầy đủ + troubleshooting: **[docs/SETUP.md](docs/SETUP.md)**.
+> PowerShell scripts: **[scripts/README.md](scripts/README.md)**.
+
+### Cách nhanh (Windows + PowerShell)
+
+```powershell
+.\scripts\setup.ps1          # cài venv + npm install + tạo .env
+# Sửa .env với SQL Server + OpenAI key
+.\scripts\start-all.ps1      # mở 2 cửa sổ: backend 8000 + frontend 3000
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process
-INFO:     Started server process
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
+
+### Backend (manual)
+
+```bash
+# Yêu cầu: Python 3.10+, ODBC Driver 17 for SQL Server
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # Linux/Mac
+
+pip install -r requirements.txt
+
+cp .env.example .env
+# Sửa .env
+
+python -m uvicorn askdataai.server:app --reload --port 8000
 ```
 
-Kiểm tra tại:
-- **API:** http://localhost:8000/health
-- **Swagger UI:** http://localhost:8000/docs
-
----
-
-### Bước 7 — Cài đặt và khởi động Frontend
-
-Mở **terminal mới** (giữ terminal backend chạy ngầm):
+### Frontend (manual)
 
 ```bash
 cd web
-npm install
+echo "NEXT_PUBLIC_API_BASE=http://localhost:8000" > .env.local
+npm install --legacy-peer-deps
 npm run dev
 ```
 
-Kết quả thành công:
+Mở http://localhost:3000
+
+## 📋 Pipeline Architecture (14 Stages)
 
 ```
-▲ Next.js 14.x.x
-- Local:        http://localhost:3000
-- Ready in 2.3s
+question → PreFilter → InstructionMatch → IntentClassify → SubIntentDetect
+  → SchemaRetrieval → SchemaLinking → ColumnPruning → ContextBuild
+  → GlossaryInject → MemoryLookup → CoTReason
+  → SQLGeneration → SQLCorrection → Guardian → MemorySave → Result
 ```
 
-Mở trình duyệt: **http://localhost:3000**
+| # | Stage | LLM | Ý nghĩa |
+|---|-------|-----|---------|
+| 1 | PreFilter | ❌ | Lọc greeting, destructive, out-of-scope |
+| 2 | InstructionMatch | ❌ | Inject business rules |
+| 3 | IntentClassifier | ✅ | TEXT_TO_SQL / GENERAL / SCHEMA_EXPLORE |
+| 4 | SubIntentDetect | ❌ | RETRIEVAL / AGGREGATION / RANKING... |
+| 5 | SchemaRetrieval | ❌ | Vector search tìm tables liên quan |
+| 6 | SchemaLinking | ✅ | Map entities → tables/columns |
+| 7 | ColumnPruning | ✅ | Loại columns không liên quan |
+| 8 | ContextBuilder | ❌ | Build DDL text |
+| 9 | GlossaryLookup | ❌ | Tra cứu thuật ngữ nghiệp vụ |
+| 10 | SemanticMemory | ❌ | Tra cứu queries tương tự |
+| 11 | CoTReasoning | ✅ | Chain-of-thought plan |
+| 12 | SQLGeneration | ✅ | Sinh SQL (1 candidate, voting=off) |
+| 13 | SQLCorrection | ✅ | Auto-fix lỗi (max 3 retries) |
+| 13.5 | Guardian | ❌ | Security validation |
+| 14 | MemorySave | ❌ | Lưu trace thành công |
 
----
+**LLM Budget**: 4-6 calls/query (full pipeline)
 
-### Bước 8 — Kết nối database lần đầu
+## 📊 Chart Generation
 
-1. Vào trang **Setup** (tự động redirect khi lần đầu truy cập)
-2. Điền thông tin SQL Server connection
-3. Nhấn **"Test Connection"** để kiểm tra kết nối
-4. Nhấn **"Connect & Deploy"** — hệ thống sẽ:
-   - Đọc schema từ database
-   - Build vector index cho ChromaDB
-   - Sẵn sàng nhận câu hỏi
+Sau khi có kết quả SQL, click **"Tạo biểu đồ"** → LLM sinh Vega-Lite schema:
 
-> ⏳ Lần deploy đầu tiên mất 1-3 phút tùy kích thước database.
+| Chart Type | Khi nào |
+|------------|---------|
+| `bar` | So sánh categories |
+| `grouped_bar` | Sub-categories |
+| `stacked_bar` | Composition |
+| `line` | Trend theo thời gian |
+| `multi_line` | Nhiều metrics |
+| `area` | Volume theo thời gian |
+| `pie` | Tỷ lệ phần trăm |
 
----
+## 🔌 API Reference
 
-### Khởi động lại sau lần đầu
+### Core Endpoints
 
-Từ lần thứ hai, chỉ cần chạy:
+| Method | Path | Mô tả |
+|--------|------|-------|
+| `GET` | `/health` | Health check |
+| `POST` | `/v1/connections/connect` | Kết nối SQL Server |
+| `GET` | `/v1/connections/status` | Trạng thái kết nối |
+| `POST` | `/v1/ask` | Hỏi câu hỏi → SQL |
+| `POST` | `/v1/sql/execute` | Chạy SQL trực tiếp |
+| `POST` | `/v1/charts/generate` | Sinh biểu đồ |
+| `GET` | `/v1/models` | Xem models |
+| `PATCH` | `/v1/models/{name}` | Cập nhật metadata |
+
+### Knowledge Endpoints
+
+| Method | Path | Mô tả |
+|--------|------|-------|
+| `GET` | `/v1/knowledge/glossary` | Xem glossary |
+| `POST` | `/v1/knowledge/glossary` | Thêm term |
+| `PUT` | `/v1/knowledge/glossary/{id}` | Sửa term |
+| `DELETE` | `/v1/knowledge/glossary/{id}` | Xóa term |
+| `GET` | `/v1/knowledge/sql-pairs` | Xem SQL pairs |
+| `POST` | `/v1/knowledge/sql-pairs` | Thêm SQL pair |
+
+### Settings
+
+| Method | Path | Mô tả |
+|--------|------|-------|
+| `GET` | `/v1/settings` | Xem settings |
+| `PUT` | `/v1/settings` | Cập nhật settings |
+| `POST` | `/v1/deploy` | Re-deploy |
+
+### Ví dụ `/v1/ask`
 
 ```bash
-# Terminal 1 — Backend
-cd askDataAI
-venv\Scripts\activate        # Windows
-# hoặc: source venv/bin/activate   # Linux/macOS
-python -m uvicorn src.server:app --reload --port 8000
-
-# Terminal 2 — Frontend
-cd askDataAI/web
-npm run dev
+curl -X POST http://localhost:8000/v1/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Top 5 sản phẩm có doanh thu cao nhất", "debug": true}'
 ```
 
-Vào app → nhấn **"Connect"** để kết nối lại database (không cần deploy lại từ đầu).
-
----
-
-## 🐳 Cài đặt bằng Docker Compose
-
-> Phù hợp cho production hoặc khi không muốn cài Python/Node thủ công.
-
-### Yêu cầu
-
-- Docker Desktop (Windows/macOS) hoặc Docker Engine (Linux)
-- SQL Server đang chạy trên **máy host**
-
-### Các bước
-
-```bash
-# 1. Clone và cấu hình
-git clone https://github.com/qchien643/askDataAI.git
-cd askDataAI
-cp .env.example .env     # Điền thông tin vào .env
-
-# 2. Build và khởi động
-docker compose up --build
-
-# App chạy tại:
-# - Frontend: http://localhost:3000
-# - Backend:  http://localhost:8000
+Response:
+```json
+{
+  "question": "Top 5 sản phẩm có doanh thu cao nhất",
+  "intent": "TEXT_TO_SQL",
+  "sql": "SELECT TOP 5 ...",
+  "explanation": "Truy vấn lấy 5 sản phẩm...",
+  "columns": ["ProductName", "Revenue"],
+  "rows": [...],
+  "valid": true,
+  "pipeline_info": { ... },
+  "debug_trace": { ... }
+}
 ```
 
-**Chạy ngầm (detached):**
+## ⚙️ Environment Variables
+
+| Variable | Required | Default | Mô tả |
+|----------|----------|---------|-------|
+| `SQL_SERVER_HOST` | ✅ | `localhost` | SQL Server host |
+| `SQL_SERVER_PORT` | ❌ | `1433` | SQL Server port |
+| `SQL_SERVER_DB` | ✅ | - | Database name |
+| `SQL_SERVER_USER` | ✅ | `sa` | Username |
+| `SQL_SERVER_PASS` | ✅ | - | Password |
+| `OPENAI_API_KEY` | ✅ | - | LLM API key |
+| `OPENAI_BASE_URL` | ❌ | `https://api.openai.com/v1` | LLM endpoint |
+| `CHROMA_PERSIST_DIR` | ❌ | `./data/chroma_data` | ChromaDB storage |
+| `GLOSSARY_PATH` | ❌ | `./configs/glossary.yaml` | Business glossary |
+| `MEMORY_PATH` | ❌ | `./data/semantic_memory.json` | Query memory |
+
+## 🐳 Docker Commands
 
 ```bash
-docker compose up --build -d
+# Build & chạy
+docker compose up -d
 
 # Xem logs
-docker compose logs -f
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Rebuild sau khi sửa code
+docker compose up -d --build
 
 # Dừng
 docker compose down
+
+# Xóa toàn bộ data (ChromaDB)
+docker compose down -v
 ```
 
-**Lưu ý SQL Server với Docker:**
-
-Khi chạy trong Docker, backend không thể dùng `localhost` để reach SQL Server trên máy host.  
-Docker Compose đã cấu hình sẵn `host.docker.internal` — bạn chỉ cần đặt trong `.env`:
-
-```env
-SQL_SERVER_HOST=host.docker.internal
-```
-
----
-
-## 📁 Cấu trúc thư mục
+## 📁 Project Structure
 
 ```
-askDataAI/
-├── src/
-│   ├── server.py                    # FastAPI app, SSE endpoints
-│   ├── config.py                    # Settings từ .env
-│   ├── pipelines/
-│   │   └── ask_pipeline.py          # Pipeline 14 bước chính
-│   ├── generation/
-│   │   ├── llm_client.py            # OpenAI client wrapper
-│   │   ├── sql_generator.py         # Sinh SQL
-│   │   ├── sql_corrector.py         # Sửa SQL lỗi
-│   │   ├── intent_classifier.py     # Phân loại ý định
-│   │   ├── schema_linker.py         # Liên kết schema
-│   │   └── conversation_context.py  # Multi-turn context
-│   ├── retrieval/
-│   │   ├── schema_retriever.py      # Tìm bảng liên quan
-│   │   └── memory_retriever.py      # Tìm SQL tương tự
-│   └── security/
-│       └── pi_guardrail.py          # Prompt injection guard
-├── web/                             # Next.js frontend
-│   ├── src/pages/home.tsx           # Trang chính + pipeline UI
-│   ├── src/styles/globals.css       # Memphis design system
-│   └── Dockerfile
-├── Dockerfile                       # Backend Docker image
-├── docker-compose.yml               # Multi-service orchestration
-├── .env.example                     # Template biến môi trường
-├── glossary.yaml                    # Từ điển thuật ngữ nghiệp vụ
-├── models.yaml                      # Schema models
-└── requirements.txt                 # Python dependencies
+mini-wren-ai/
+├── CLAUDE.md                  # Agent navigation guide
+├── askdataai/                 # Python package (backend)
+│   ├── server.py              # FastAPI entry — askdataai.server:app
+│   ├── config.py              # Pydantic settings
+│   ├── connectors/            # SQL Server connector + introspection
+│   ├── indexing/              # OpenAI embedder + ChromaDB store
+│   ├── modeling/              # Manifest builder, deployer
+│   ├── retrieval/             # Schema retrieve/link/prune + glossary
+│   ├── generation/            # 14-stage LLM stages
+│   │   └── auto_describe/     # Auto schema description sub-feature
+│   ├── pipelines/             # ask_pipeline.py (god module), deploy_pipeline.py
+│   └── security/              # PIGuardrail + SQL Guardian (5-layer)
+├── web/                       # Next.js frontend
+├── configs/                   # User-edited YAML (TRACKED)
+│   ├── models.yaml            # Semantic model definitions
+│   └── glossary.yaml          # Business glossary
+├── data/                      # Runtime-generated (GITIGNORED)
+│   ├── chroma_data/           # Vector DB
+│   ├── manifests/             # Manifest snapshots
+│   └── semantic_memory.json   # Query memory
+├── docs/
+│   ├── SETUP.md               # Detailed setup guide
+│   ├── PROJECT_OVERVIEW.md
+│   ├── PROPOSAL.md
+│   └── pipeline/              # Per-stage deep dives (00..16)
+├── scripts/                   # PowerShell automation
+│   ├── setup.ps1
+│   ├── start-backend.ps1
+│   ├── start-frontend.ps1
+│   ├── start-all.ps1
+│   ├── stop-all.ps1
+│   ├── clean.ps1
+│   └── docker-up.ps1
+├── tests/                     # pytest suite
+├── Dockerfile                 # Backend image
+├── docker-compose.yml         # Orchestration
+├── pytest.ini
+├── .env.example
+└── requirements.txt
 ```
 
----
 
-## 🛠️ Tuỳ chỉnh
-
-### Thêm thuật ngữ nghiệp vụ
-
-Chỉnh sửa `glossary.yaml`:
-
-```yaml
-terms:
-  - name: "Doanh thu"
-    description: "Tổng giá trị bán hàng Internet và Reseller"
-    aliases: ["revenue", "oanh thu", "doanh so"]
-  - name: "Khách hàng VIP"
-    description: "Khách hàng có tổng mua hàng > 10.000 USD"
-```
-
-Sau khi sửa, **re-deploy** trong UI (Settings → Re-deploy) để áp dụng.
-
-### Chỉnh pipeline settings
-
-Vào trang **Settings** trong UI để bật/tắt:
-- Schema Linking
-- Column Pruning
 - CoT Reasoning
 - Glossary Matching
 
@@ -424,7 +339,9 @@ Nếu không có file này, tạo mới.
 ### ChromaDB lỗi khi deploy
 → Xóa thư mục cũ và deploy lại:
 ```bash
-rm -rf chroma_data/
+rm -rf data/chroma_data/
+# hoặc Windows:
+.\scripts\clean.ps1
 ```
 
 ---

@@ -36,24 +36,6 @@ const Sider = styled.aside`
   position: relative;
   flex-shrink: 0;
 
-  /* Memphis multicolor left accent strip */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(
-      180deg,
-      var(--m-yellow)  0%,
-      var(--m-pink)   25%,
-      var(--m-cyan)   50%,
-      var(--m-orange) 75%,
-      var(--m-purple) 100%
-    );
-    z-index: 2;
-  }
-
   /* Subtle diagonal stripe texture */
   &::after {
     content: '';
@@ -77,7 +59,6 @@ const SiderScrollArea = styled.div`
   overflow-x: hidden;
   position: relative;
   z-index: 1;
-  padding-left: 4px; /* offset for the accent strip */
 
   /* Sidebar custom scrollbar */
   &::-webkit-scrollbar { width: 3px; }
@@ -109,7 +90,6 @@ const SiderFooter = styled.div`
   border-top: 2px solid rgba(255,255,255,0.08);
   position: relative;
   z-index: 2;
-  padding-left: 4px;
 `;
 
 const FooterBtn = styled.button`

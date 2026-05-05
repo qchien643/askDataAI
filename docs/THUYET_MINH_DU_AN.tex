@@ -1,0 +1,869 @@
+% =====================================================================
+%  THUYẾT MINH DỰ ÁN — askDataAI
+%  Biên dịch bằng XeLaTeX hoặc LuaLaTeX (KHÔNG dùng pdfLaTeX —
+%  vì cần unicode tiếng Việt + fontspec).
+%
+%  Lệnh biên dịch:
+%      xelatex THUYET_MINH_DU_AN.tex
+%      xelatex THUYET_MINH_DU_AN.tex   (chạy 2 lần để mục lục cập nhật)
+%
+%  Yêu cầu font: Times New Roman (mặc định Windows/Mac có sẵn).
+%  Trên Linux có thể đổi sang "Liberation Serif" hoặc "DejaVu Serif".
+% =====================================================================
+
+\documentclass[11pt,a4paper]{article}
+
+% --- Encoding & language ---------------------------------------------
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{vietnamese}
+\setmainfont{Times New Roman}        % đổi font tại đây nếu cần
+% Nếu thiếu Times New Roman, dùng:
+% \setmainfont{Liberation Serif}
+
+% --- Layout & typography ---------------------------------------------
+\usepackage[a4paper, margin=2.3cm]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.5em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.4em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.4em}{}
+% paragraph chuyển sang block (tự xuống dòng nếu tiêu đề dài)
+\titleformat{\paragraph}[block]
+  {\normalfont\normalsize\bfseries}
+  {}{0pt}{}
+\titlespacing*{\paragraph}{0pt}{1ex}{0.4ex}
+
+% --- Lists, tables, links --------------------------------------------
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=*}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage[table]{xcolor}        % [table] option để có \rowcolor
+\definecolor{linkblue}{HTML}{1A5FB4}
+\definecolor{tablehead}{HTML}{E8F0FF}
+\definecolor{boxborder}{HTML}{B0B7C4}
+\usepackage[colorlinks=true,linkcolor=linkblue,urlcolor=linkblue,citecolor=linkblue]{hyperref}
+
+% Ký hiệu đơn giản (Times New Roman không có ✓/✗ Unicode)
+\newcommand{\yes}{\textbf{Có}}
+\newcommand{\no}{\textbf{Không}}
+\newcommand{\partly}{\textbf{Có hạn chế}}
+
+% Cột bảng tự xuống dòng
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+% --- Math symbols (cho \square dùng trong checkbox list) -------------
+\usepackage{amssymb}
+
+% --- TikZ for pipeline diagram ---------------------------------------
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds}
+
+% --- Header / Footer -------------------------------------------------
+\usepackage{fancyhdr}
+\setlength{\headheight}{14pt}      % tránh warning fancyhdr
+\addtolength{\topmargin}{-2pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small askDataAI — Thuyết minh dự án}
+\fancyhead[R]{\small \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Box helper ------------------------------------------------------
+\usepackage{tcolorbox}
+\tcbset{
+  notebox/.style={colback=blue!3, colframe=linkblue!50,
+    boxrule=0.4pt, sharp corners, left=4pt, right=4pt,
+    top=4pt, bottom=4pt, before skip=6pt, after skip=6pt}
+}
+
+% =====================================================================
+%  Bắt đầu nội dung
+% =====================================================================
+\begin{document}
+
+% --- Trang bìa --------------------------------------------------------
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\LARGE\bfseries THUYẾT MINH DỰ ÁN\par}
+\vspace{0.6cm}
+{\Huge\bfseries askDataAI\par}
+\vspace{1.2cm}
+{\large\itshape Trợ lý dữ liệu hội thoại cho doanh nghiệp\par}
+\vspace{0.4cm}
+{\normalsize Hỏi bằng ngôn ngữ tự nhiên — Hệ thống tự động sinh câu lệnh truy vấn,\\
+trả về bảng dữ liệu và biểu đồ trong vài giây, không yêu cầu kỹ năng lập trình.\par}
+
+\vspace{2cm}
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Tên dự án} & askDataAI \\ \hline
+\textbf{Lĩnh vực} & Công nghệ thông tin --- AI \\ \hline
+\end{tabular}
+
+\vfill
+\end{titlepage}
+
+% --- Mục lục ---------------------------------------------------------
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section*{Một số thuật ngữ thường gặp trong tài liệu}
+\addcontentsline{toc}{section}{Một số thuật ngữ thường gặp trong tài liệu}
+
+Để người đọc không có nền tảng kỹ thuật vẫn theo dõi được nội dung, dưới đây là giải thích ngắn các thuật ngữ xuất hiện nhiều nhất:
+
+\begin{longtable}{|L{3.2cm}|L{12cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Thuật ngữ} & \textbf{Giải thích đơn giản} \\
+\hline\endhead
+
+\textbf{SQL} & Ngôn ngữ truy vấn cơ sở dữ liệu --- dùng để hỏi dữ liệu trên hệ thống quản lý dữ liệu của doanh nghiệp. Ví dụ: \texttt{SELECT * FROM customers} nghĩa là "lấy tất cả khách hàng". \\ \hline
+\textbf{Text-to-SQL} & Công nghệ tự động chuyển câu hỏi tiếng Việt/Anh thành câu lệnh SQL. Người dùng không cần biết SQL vẫn hỏi được dữ liệu. \\ \hline
+\textbf{Cơ sở dữ liệu (CSDL)} & Kho lưu trữ dữ liệu có cấu trúc của doanh nghiệp --- ví dụ kho hàng, đơn hàng, khách hàng. \\ \hline
+\textbf{Schema (cấu trúc dữ liệu)} & Bản thiết kế của cơ sở dữ liệu --- gồm các bảng, các cột trong bảng, và mối quan hệ giữa các bảng. \\ \hline
+\textbf{Mô hình ngôn ngữ lớn (LLM)} & Mô hình AI được huấn luyện trên dữ liệu văn bản khổng lồ, có khả năng hiểu và sinh ngôn ngữ tự nhiên. ChatGPT là một ví dụ. \\ \hline
+\textbf{Prompt} & Câu lệnh bằng ngôn ngữ tự nhiên gửi cho mô hình AI để yêu cầu nó làm việc. \\ \hline
+\textbf{Embedding / Vector} & Cách biểu diễn từ ngữ thành dãy số để máy tính so sánh được mức độ tương đồng giữa các câu. \\ \hline
+\textbf{Pipeline (luồng xử lý)} & Chuỗi các bước xử lý nối tiếp nhau, mỗi bước nhận đầu ra của bước trước. \\ \hline
+\textbf{Benchmark (bộ đánh giá)} & Tập hợp câu hỏi mẫu có đáp án chuẩn, dùng để đo độ chính xác của hệ thống. \\ \hline
+\textbf{EX (Execution Match)} & Tỉ lệ câu trả lời của hệ thống cho ra kết quả giống hệt với đáp án chuẩn. \\ \hline
+\textbf{API} & Cổng giao tiếp giữa các phần mềm với nhau --- ví dụ "OpenAI API" là cách gọi mô hình của OpenAI từ phần mềm khác. \\ \hline
+\textbf{On-premise (tại chỗ)} & Phần mềm cài đặt trên hạ tầng riêng của doanh nghiệp, không gửi dữ liệu lên cloud bên ngoài. \\ \hline
+\textbf{SaaS} & Software-as-a-Service --- phần mềm dạng dịch vụ thuê bao theo tháng/năm, dùng chung trên hạ tầng nhà cung cấp. \\ \hline
+\textbf{Pilot} & Triển khai thử nghiệm với 1 khách hàng đầu tiên để chứng minh sản phẩm. \\ \hline
+\textbf{MVP} & Minimum Viable Product --- phiên bản tối thiểu của sản phẩm có thể chạy được, dùng để thử nghiệm thị trường. \\ \hline
+
+\end{longtable}
+
+\newpage
+% =====================================================================
+\section{PHẦN 1 --- TÍNH CẤP THIẾT}
+
+\subsection{Bài toán kinh doanh: dữ liệu nhiều, người khai thác ít}
+
+Trong doanh nghiệp hiện đại, dữ liệu giao dịch (đơn hàng, khách hàng, kho, công nợ\ldots) được lưu trong cơ sở dữ liệu quan hệ. Để trả lời một câu hỏi nghiệp vụ đơn giản như \textit{"Top 10 sản phẩm bán chạy nhất quý trước"}, người dùng cần biết viết câu lệnh SQL --- một kỹ năng kỹ thuật không phổ biến trong đội ngũ kinh doanh, vận hành, marketing.
+
+Theo khảo sát Adastra Data Professionals Market Survey 2024, \textbf{76\% tổ chức báo cáo thiếu hụt nhân lực phân tích dữ liệu, con số này tăng lên 82\% ở các doanh nghiệp lớn} \href{https://graphite-note.com/data-scientist-shortage/}{(Graphite Note, 2024)}. Tại Việt Nam, các nền tảng tuyển dụng cho thấy \textbf{hàng trăm vị trí phân tích dữ liệu đang cần tuyển nhưng không tìm đủ ứng viên có kỹ năng SQL + BI} \href{https://www.glassdoor.com/Job/vietnam-data-analyst-jobs-SRCH_IL.0,7_IN251_KO8,20.htm}{(Glassdoor Vietnam, 2026)}, và Edstellar liệt kê "Data Analyst \& SQL" là một trong \textbf{7 kỹ năng được săn lùng nhất tại Việt Nam năm 2026} \href{https://www.edstellar.com/blog/skills-in-demand-in-vietnam}{(Edstellar, 2026)}.
+
+\subsection{Câu chuyện Uber: bằng chứng giá trị kinh tế của Text-to-SQL}
+
+Ngày 11/09/2024, Uber Engineering công bố hệ thống nội bộ \textbf{QueryGPT} --- chatbot biến câu hỏi tiếng Anh tự nhiên thành câu lệnh SQL chạy được trên kho dữ liệu nội bộ. Các con số được Uber công bố chính thức:
+
+\begin{itemize}
+\item \textbf{1,2 triệu truy vấn tương tác/tháng} trên nền tảng dữ liệu của Uber.
+\item QueryGPT giúp \textbf{rút ngắn 70\% thời gian viết SQL}, tương đương \textbf{140.000 giờ tiết kiệm mỗi tháng} cho đội ngũ kỹ sư, quản lý vận hành, chuyên gia phân tích dữ liệu của hãng \href{https://www.uber.com/us/en/blog/query-gpt/}{(Uber Engineering Blog, 09/2024)}.
+\item Hệ thống được phát triển từ tháng 5/2023, qua \textbf{20 lần lặp} mới hoàn thiện thành kiến trúc gồm nhiều "tác nhân AI" phối hợp với nhau (mỗi tác nhân chuyên một nhiệm vụ: hiểu ý định, chọn bảng, lọc cột, sinh câu truy vấn) \href{https://sequel.sh/blog/query-gpt-uber}{(Sequel.sh, 2024)}.
+\end{itemize}
+
+\textbf{Pinterest} cũng công bố con số tương tự cho hệ thống Querybook của họ: tỉ lệ câu truy vấn do AI sinh được \textbf{chấp nhận ngay từ lần đầu (không cần sửa)} đã tăng từ 20\% lên \textbf{trên 40\%}, \textbf{tốc độ hoàn thành công việc viết SQL nhanh hơn 35\%} \href{https://medium.com/pinterest-engineering/how-we-built-text-to-sql-at-pinterest-30bad30dabff}{(Pinterest Engineering Blog, 04/2024)}.
+
+Các nghiên cứu thị trường tổng hợp cũng cho thấy \textbf{tầng ngữ nghĩa kết hợp Text-to-SQL có thể tăng độ chính xác AI tạo sinh từ 16\% lên 54\%, mang lại kết luận phân tích nhanh gấp 4,4 lần và giảm 45\% công sức} so với cách viết SQL truyền thống \href{https://querio.ai/articles/semantic-parsing-for-text-to-sql-in-bi}{(Querio, 2024)}.
+
+\subsection{Khoảng trống cho ngôn ngữ tiếng Việt}
+
+Mặc dù các sản phẩm thương mại và mã nguồn mở quốc tế đã nở rộ (Microsoft Power BI Copilot, Tableau Pulse, ThoughtSpot, WrenAI\ldots), \textbf{năng lực Text-to-SQL trên ngôn ngữ tiếng Việt vẫn rất hạn chế}.
+
+Bộ đánh giá học thuật \textbf{MultiSpider 2.0} (mở rộng Spider 2.0 sang 8 ngôn ngữ trong đó có tiếng Việt) cho thấy \href{https://arxiv.org/html/2509.24405}{(arXiv:2509.24405, 2025)}:
+
+\begin{itemize}
+\item Các mô hình AI tốt nhất hiện nay (DeepSeek-R1, OpenAI o1) chỉ đạt \textbf{độ chính xác 4\%} trên bộ MultiSpider 2.0 khi xử lý câu hỏi đa ngôn ngữ.
+\item Với phương pháp cộng tác giữa nhiều tác nhân AI, kết quả cải tiến lên được \textbf{15\%} --- vẫn rất thấp so với 60\% trên MultiSpider 1.0 (đơn giản hơn).
+\item \textbf{Tiếng Việt cùng tiếng Trung và tiếng Nhật được xếp vào nhóm "đặc biệt khó"} do mơ hồ ngữ nghĩa, hiện tượng dùng lẫn tiếng Anh, và việc liên kết câu hỏi với cấu trúc dữ liệu rất dễ sai.
+\end{itemize}
+
+Nghiên cứu chỉ rõ: hiệu năng tưởng "không tệ" trên các ngôn ngữ Đông Á thực ra là kết quả gây hiểu lầm vì điểm xuất phát của các ngôn ngữ này vốn đã thấp hơn đáng kể so với các ngôn ngữ châu Âu.
+
+\subsection{Thời điểm hành động}
+
+Ba yếu tố hội tụ tạo cơ hội ngay lúc này:
+
+\begin{enumerate}
+\item \textbf{Chi phí mô hình ngôn ngữ giảm mạnh}: GPT-4o-mini hiện $\sim\$0{,}15$/triệu token, một truy vấn chỉ tốn khoảng \$0{,}001 --- khả thi triển khai cho doanh nghiệp vừa và nhỏ.
+\item \textbf{Các kỹ thuật tiên tiến nhất đã được công bố mở} (M-Schema, Bidirectional Retrieval, Taxonomy-Guided Correction, RAG-enhanced Table Selection) --- sẵn sàng để nhóm Việt Nam tích hợp và tinh chỉnh cho ngữ cảnh nội địa.
+\item \textbf{Sự chứng minh từ Uber, Pinterest} đã loại bỏ nghi ngờ về tính khả thi: Text-to-SQL không còn là "công nghệ tương lai" mà đã sinh ra lợi nhuận đầu tư cụ thể có thể đong đếm bằng giờ công.
+\end{enumerate}
+
+Nếu không nắm bắt thời cơ trong 12--18 tháng, các tập đoàn quốc tế sẽ tung ra phiên bản hỗ trợ tiếng Việt và doanh nghiệp Việt phải lựa chọn giải pháp đắt tiền, không tinh chỉnh đúng nhu cầu nội địa.
+
+\newpage
+% =====================================================================
+\section{PHẦN 2 --- SỰ CẦN THIẾT}
+
+\subsection{Vấn đề thực tế}
+
+\textbf{Đối tượng chịu tác động trực tiếp} --- quản lý cấp trung và nhân viên nghiệp vụ (sales, marketing, vận hành, tài chính) tại các doanh nghiệp đã có hệ thống quản trị nguồn lực doanh nghiệp (ERP), quản lý quan hệ khách hàng (CRM), bán hàng (POS):
+
+\begin{longtable}{|L{4.2cm}|L{5.5cm}|L{5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Khó khăn} & \textbf{Biểu hiện cụ thể} & \textbf{Hệ quả} \\
+\hline\endhead
+
+Phụ thuộc bộ phận IT/BA để lấy báo cáo & Mỗi câu hỏi mới phải gửi yêu cầu, chờ 2--8 giờ & Quyết định kinh doanh chậm, mất cơ hội thị trường \\ \hline
+Excel + xuất tay là phương án mặc định & Sao chép từ công cụ truy vấn DB, lọc bằng Excel, dễ sai số & Báo cáo không khớp giữa các phòng, niềm tin dữ liệu giảm \\ \hline
+Bảng điều khiển "tĩnh" không đáp ứng câu hỏi mới & Lãnh đạo hỏi "vì sao doanh thu giảm?" --- bảng điều khiển chỉ hiển thị "đã giảm bao nhiêu" & Quy trình ra quyết định bị tắc \\ \hline
+Sản phẩm BI quốc tế giá cao + cần SQL & Power BI/Tableau license + đào tạo + bảo trì hàng năm $>$ 100.000 USD & DN vừa và nhỏ không tiếp cận được \\ \hline
+ChatGPT/Copilot không kết nối CSDL nội bộ & Phải sao chép dữ liệu ra ngoài → vi phạm bảo mật & Không khả thi cho ngân hàng, y tế, viễn thông \\ \hline
+\textbf{Năng lực ngôn ngữ tiếng Việt yếu} & Tool quốc tế dịch máy "doanh thu" → "revenue" mất ngữ cảnh ("doanh thu thuần", "doanh thu gộp") & Sinh SQL sai bảng, sai cột \\ \hline
+
+\end{longtable}
+
+\textbf{Số liệu hỗ trợ}:
+\begin{itemize}
+\item 76\% tổ chức thiếu nhân lực phân tích dữ liệu \href{https://graphite-note.com/data-scientist-shortage/}{(Adastra 2024 via Graphite Note)}.
+\item 82\% doanh nghiệp lớn báo cáo thiếu hụt tương tự.
+\item Tại Uber: trước QueryGPT, bộ phận dữ liệu nhận hơn 1,2 triệu truy vấn tương tác/tháng --- chứng minh nhu cầu hỏi-đáp dữ liệu không thể phục vụ thủ công ở quy mô lớn \href{https://www.uber.com/us/en/blog/query-gpt/}{(Uber Engineering, 2024)}.
+\end{itemize}
+
+\subsection{Giải pháp đề xuất}
+
+\textbf{askDataAI} là nền tảng hội thoại trên dữ liệu, cho phép người dùng đặt câu hỏi bằng tiếng Việt tự nhiên và nhận về:
+\begin{enumerate}
+\item Câu trả lời ngắn gọn diễn giải;
+\item Câu lệnh SQL minh bạch (có thể kiểm tra/giám sát);
+\item Bảng kết quả phân trang;
+\item Biểu đồ tự động phù hợp ngữ cảnh.
+\end{enumerate}
+
+\subsubsection{Sơ đồ luồng xử lý}
+
+Luồng xử lý mỗi câu hỏi được tổ chức thành 11 khối, sắp xếp đúng theo thứ tự thực thi bên trong hệ thống:
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  node distance=0.45cm,
+  block/.style={rectangle, rounded corners, draw=boxborder, very thin,
+    minimum width=12cm, minimum height=0.85cm, align=center,
+    text width=11.5cm, font=\small},
+  llm/.style={block, fill=yellow!20},
+  rule/.style={block, fill=blue!10},
+  db/.style={block, fill=green!15},
+  arrow/.style={-Latex, thick}
+]
+\node[block, fill=gray!10] (Q) {Câu hỏi tiếng Việt từ người dùng};
+\node[rule, below=of Q] (SEC) {Lớp Bảo mật đầu vào --- Chặn câu hỏi độc hại};
+\node[llm, below=of SEC] (CTX) {Bộ nhớ Hội thoại --- Lưu trữ phân cấp theo từng câu chuyện};
+\node[llm, below=of CTX] (TR1) {Dịch câu hỏi VI → EN --- Mô hình LLM nội bộ + Từ điển thuật ngữ công ty};
+\node[llm, below=of TR1] (INT) {Phân tích Ý định --- Lọc · Quy tắc nghiệp vụ · Phân loại câu hỏi};
+\node[llm, below=of INT] (SCH) {Liên kết Câu hỏi với Cấu trúc Dữ liệu --- Tìm song chiều · Liên kết · Cắt cột · M-Schema};
+\node[rule, below=of SCH] (KNW) {Bổ sung Tri thức --- Từ điển nghiệp vụ · Truy vấn cũ tham chiếu};
+\node[llm, below=of KNW] (GEN) {Suy luận \& Sinh Câu Truy Vấn --- Lập dàn ý · Sinh câu lệnh};
+\node[rule, below=of GEN] (VAL) {Xác thực --- Tự sửa theo phân loại lỗi · Bảo mật SQL 5 tầng};
+\node[db, below=of VAL] (EXEC) {Thực thi câu truy vấn + Sinh biểu đồ};
+\node[llm, below=of EXEC] (TR2) {Dịch lời giải thích EN → VI};
+\node[block, fill=gray!10, below=of TR2] (R) {Kết quả: SQL + Bảng + Biểu đồ + Diễn giải tiếng Việt};
+
+\draw[arrow] (Q) -- (SEC);
+\draw[arrow] (SEC) -- (CTX);
+\draw[arrow] (CTX) -- (TR1);
+\draw[arrow] (TR1) -- (INT);
+\draw[arrow] (INT) -- (SCH);
+\draw[arrow] (SCH) -- (KNW);
+\draw[arrow] (KNW) -- (GEN);
+\draw[arrow] (GEN) -- (VAL);
+\draw[arrow] (VAL) -- (EXEC);
+\draw[arrow] (EXEC) -- (TR2);
+\draw[arrow] (TR2) -- (R);
+\end{tikzpicture}
+\caption{Sơ đồ luồng xử lý 11 khối của askDataAI. Khối vàng = sử dụng mô hình ngôn ngữ; khối xanh dương = quy tắc/kết hợp; khối xanh lá = thao tác trực tiếp với cơ sở dữ liệu.}
+\end{figure}
+
+\textbf{Tại sao thứ tự này là hợp lý}:
+\begin{itemize}
+\item \textbf{Lớp bảo mật phải chạy trước}: chặn các câu hỏi độc hại trước khi tiêu tốn tài nguyên cho các bước phía sau.
+\item \textbf{Bộ nhớ hội thoại đặt trước bước dịch}: vì lịch sử trò chuyện được lưu bằng tiếng Việt, cần bổ sung ngữ cảnh ngay khi câu hỏi còn ở dạng gốc.
+\item \textbf{Bước dịch xếp giữa}: sau khi đã làm giàu ngữ cảnh tiếng Việt, mới dịch sang tiếng Anh để các bước xử lý phía sau (vốn dùng mô hình mạnh trên tiếng Anh) đạt hiệu năng tốt nhất.
+\item \textbf{Liên kết schema trước khi sinh câu truy vấn}: chọn được đúng bảng/cột cần dùng trước, sau đó mới lập dàn ý và viết câu lệnh.
+\item \textbf{Tự sửa và bảo mật SQL chạy ngay sau sinh}: bắt lỗi và đảm bảo an toàn trước khi chạm vào cơ sở dữ liệu thật.
+\item \textbf{Dịch ngược về tiếng Việt nằm cuối}: người dùng nhận được lời giải thích bằng ngôn ngữ mẹ đẻ.
+\end{itemize}
+
+\subsubsection{Bài toán \& cách giải quyết --- các khối đặc trưng}
+
+Phần này chỉ chọn 6 khối có giá trị kỹ thuật nổi bật để giải thích, làm nổi điểm sáng kiến trúc. Các khối hỗ trợ (lọc câu chào hỏi, lưu lại lịch sử, sinh biểu đồ\ldots) đi theo cách làm thông thường nên không liệt kê chi tiết.
+
+\paragraph{(1) Dịch câu hỏi từ tiếng Việt sang tiếng Anh --- Cây cầu ngôn ngữ}
+
+\begin{tcolorbox}[notebox]
+\textbf{Bài toán}: Các mô hình ngôn ngữ lớn được huấn luyện chủ yếu trên dữ liệu tiếng Anh. Câu tiếng Việt với nhiều biến thể (lỗi chính tả, từ viết tắt, dùng lẫn tiếng Anh) thường khiến mô hình hiểu sai ý, sinh ra câu truy vấn sai. Bộ đánh giá MultiSpider 2.0 chứng minh hiệu năng trên tiếng Việt chỉ bằng khoảng một phần tư so với tiếng Anh.
+
+\textbf{Cách giải quyết}: Hệ thống không gọi thẳng dịch máy thông thường. Thay vào đó, một mô hình ngôn ngữ chạy nội bộ trong hạ tầng khách hàng được kết hợp với \textbf{từ điển thuật ngữ riêng của công ty} để dịch sao cho khớp với nghiệp vụ. Ví dụ: "đại lý" được dịch thành \textit{reseller} (gắn với bảng dữ liệu bán qua đại lý), "công nợ" được dịch thành \textit{accounts receivable}.
+\end{tcolorbox}
+
+\paragraph{(2) Bộ nhớ Hội thoại --- Lưu trữ phân cấp theo từng câu chuyện}
+
+\begin{tcolorbox}[notebox]
+\textbf{Bài toán}: Người dùng hiếm khi hỏi từng câu độc lập. Họ thường hỏi nối tiếp: "vẫn theo quý đó nhưng phân theo vùng", "lọc thêm khách hàng VIP". Hệ thống cần nhớ ngữ cảnh nhiều lượt mà không "dội" toàn bộ lịch sử vào câu hỏi mới.
+
+\textbf{Cách giải quyết}: Hệ thống dùng \textbf{kiến trúc hỗn hợp 2 lớp}:
+
+\textit{Lớp 1 --- mem0}: lưu các thông tin bền vững theo thời gian về người dùng và phiên làm việc (tên, vai trò, các bộ lọc đã đặt trước đó, sở thích cá nhân hoá).
+
+\textit{Lớp 2 --- Tóm tắt phân cấp (Hierarchical Rolling Summary)}: thay vì tóm tắt cả phiên thành một đoạn văn duy nhất, hệ thống tổ chức lịch sử thành cây phân cấp:
+\begin{itemize}
+\item mỗi phiên trò chuyện = một \textbf{câu chuyện};
+\item mỗi câu chuyện được chia nhỏ thành nhiều \textbf{ý} (chủ đề con) --- ví dụ "ý về doanh thu Q1", "ý về phân nhóm theo vùng";
+\item khi người dùng đặt câu hỏi mới, hệ thống tra cứu xem ý nào liên quan rồi chỉ kéo phần đó vào ngữ cảnh.
+\end{itemize}
+
+Cách này giải quyết được hai vấn đề cùng lúc: trí nhớ dài hạn không bị "đứt đoạn" sau vài chục lượt hỏi, và chi phí mô hình ngôn ngữ vẫn nhỏ vì mỗi lần chỉ gửi đúng phần liên quan.
+\end{tcolorbox}
+
+\paragraph{(3) Khối Liên kết Câu hỏi với Cấu trúc Dữ liệu --- Nén kho dữ liệu lớn về tập đúng}
+
+\begin{tcolorbox}[notebox]
+\textbf{Bài toán}: Cơ sở dữ liệu doanh nghiệp thực tế thường có hàng trăm bảng, hàng nghìn cột. Một số bảng lớn của Uber có hơn 200 cột mỗi bảng. Nếu nhồi toàn bộ vào câu lệnh gửi cho mô hình ngôn ngữ thì vượt giới hạn cho phép, đồng thời quá nhiều thông tin không liên quan khiến mô hình chọn sai bảng.
+
+\textbf{Cách giải quyết}: Bốn bước nén tuần tự:
+\begin{enumerate}
+\item \textbf{Tìm song chiều}: tìm theo mô tả bảng và tìm theo mô tả cột song song trong cơ sở dữ liệu vector, sau đó mở rộng thêm các bảng có quan hệ khoá ngoại (1 bước nhảy) để có tập bảng/cột "ứng viên".
+\item \textbf{Liên kết entity}: mô hình ngôn ngữ ánh xạ các từ ngữ trong câu hỏi (ví dụ "khách hàng") về bảng/cột cụ thể.
+\item \textbf{Cắt tỉa cột thừa}: mô hình giữ lại các cột thực sự liên quan và các khoá cần cho phép nối bảng; bỏ các cột thừa làm câu lệnh nhiễu.
+\item \textbf{Dựng tài liệu schema giàu thông tin}: dựng tài liệu kèm 3 ví dụ giá trị thật cho mỗi cột, miền giá trị (giá trị nhỏ nhất/lớn nhất), và quan hệ khoá ngoại.
+\end{enumerate}
+
+Kết quả: giảm 5--10 lần kích thước câu lệnh gửi cho mô hình ngôn ngữ, giúp mô hình tập trung vào đúng bảng cần dùng.
+\end{tcolorbox}
+
+\paragraph{(4) Khối Suy luận \& Sinh Câu Truy Vấn --- Lập kế hoạch trước khi viết}
+
+\begin{tcolorbox}[notebox]
+\textbf{Bài toán}: Các câu hỏi phức tạp (cần truy vấn lồng nhau, hàm cửa sổ, nối nhiều bảng nhiều bước) thường khiến mô hình "viết thẳng câu lệnh" sai bố cục logic --- quên nhóm theo, đặt hàm tổng hợp vào điều kiện lọc, nối bảng sai chiều.
+
+\textbf{Cách giải quyết}: Tách thành \textbf{hai bước tư duy}:
+\begin{itemize}
+\item \textbf{Bước 1 --- Lập kế hoạch}: mô hình ngôn ngữ liệt kê các bảng cần dùng, cách nối, điều kiện lọc, cách nhóm và sắp xếp --- như một bản dàn ý.
+\item \textbf{Bước 2 --- Viết câu lệnh}: dùng chính bản dàn ý đó làm "khung xương" để sinh câu lệnh hoàn chỉnh.
+\end{itemize}
+
+Cách "lập dàn ý trước, viết sau" tăng độ chính xác khoảng 5--8\% trên các câu hỏi cần nối nhiều bước so với cách viết thẳng một lần.
+\end{tcolorbox}
+
+\paragraph{(5) Tự sửa Câu Truy Vấn theo Phân loại Lỗi --- Sửa lỗi có chiến lược}
+
+\begin{tcolorbox}[notebox]
+\textbf{Bài toán}: Mô hình ngôn ngữ có thể sinh ra câu truy vấn không chạy được hoặc chạy được nhưng cho kết quả sai. Cách sửa cũ --- đẩy thông báo lỗi vào mô hình và để nó "đoán mò" --- hay rơi vào vòng lặp vô hạn.
+
+\textbf{Cách giải quyết}: Áp dụng phương pháp công bố trong nghiên cứu \textit{SQL-of-Thought} (2024): khi câu truy vấn chạy lỗi, hệ thống không sửa ngay mà \textbf{phân loại lỗi vào 25 nhóm con} trong 9 nhóm lớn (cột không tồn tại, thiếu nhóm theo, nối bảng tạo tích Descartes, hàm tổng hợp đặt sai vị trí\ldots). Mỗi nhóm con có một công thức sửa chuyên biệt. So với cách thử-sai thuần, cách này tăng tỉ lệ tự sửa thành công khoảng 10--15\% và \textbf{giới hạn 2 lần thử lại} để tránh kẹt vòng lặp.
+\end{tcolorbox}
+
+\paragraph{(6) Lớp Bảo mật + Dịch ngược về tiếng Việt --- An toàn và thân thiện}
+
+\begin{tcolorbox}[notebox]
+\textbf{Bài toán bảo mật}: (a) Đầu vào có thể chứa câu lệnh độc hại nhúng vào câu hỏi để đánh lừa hệ thống; (b) Câu truy vấn sinh ra có thể là lệnh phá hoại hoặc câu truy vấn lách qua phân quyền cấp dòng; (c) Kết quả trả về có thể chứa dữ liệu cá nhân nhạy cảm.
+
+\textbf{Cách giải quyết bảo mật}: \textbf{Lớp bảo mật đầu pipeline} chặn các câu hỏi độc hại trước khi đi vào hệ thống. \textbf{Lớp bảo mật cuối pipeline 5 tầng} kiểm tra câu truy vấn trước khi cho chạy: rà soát mã độc → đảm bảo chỉ là lệnh đọc → so với danh sách bảng được phép → áp dụng phân quyền cấp dòng theo người dùng → che các cột nhạy cảm.
+
+\textbf{Bài toán ngôn ngữ}: Lời diễn giải, tiêu đề biểu đồ, thông báo lỗi từ mô hình ngôn ngữ mặc định trả ra tiếng Anh.
+
+\textbf{Cách giải quyết ngôn ngữ}: Bước cuối pipeline dịch các trường này về tiếng Việt, giữ nguyên tên bảng/cột kỹ thuật để đội phát triển vẫn có thể kiểm tra khi cần.
+\end{tcolorbox}
+
+\paragraph{Bonus: Autofill --- Tự sinh mô tả schema, khách hàng giữ bí mật kinh doanh}
+
+Đây là module riêng, chạy \textbf{một lần khi khởi tạo cho khách hàng mới}, không nằm trong luồng xử lý câu hỏi hằng ngày.
+
+\begin{tcolorbox}[notebox]
+\textbf{Bài toán}: Khách hàng (đặc biệt ngân hàng, y tế, viễn thông) muốn dùng askDataAI nhưng \textbf{không muốn tiết lộ chi tiết cấu trúc dữ liệu cho đội triển khai} --- bí mật kinh doanh nằm ngay trong tên bảng/cột (ví dụ tên cột "điểm rủi ro khách hàng cao", "biên lợi nhuận nội bộ"\ldots). Trong khi đó, mô tả tốt cho từng bảng/cột là điều kiện tiên quyết để hệ thống hiểu đúng ngữ cảnh.
+
+\textbf{Cách giải quyết}: Module Autofill chạy 6 bước nội bộ tại khách hàng:
+\begin{enumerate}
+\item \textbf{Học mẫu} --- đọc 5--10 mô tả mẫu do quản trị viên khách hàng cung cấp.
+\item \textbf{Rút văn phong} --- mô hình ngôn ngữ rút ra văn phong, mức chi tiết, cách viết.
+\item \textbf{Khảo sát dữ liệu} --- chạy các câu lệnh thống kê trên cơ sở dữ liệu khách hàng (đếm dòng, đếm giá trị duy nhất, lấy vài giá trị mẫu, tỉ lệ rỗng, miền giá trị).
+\item \textbf{Phân loại cột} --- phân loại từng cột thuộc nhóm nào: danh mục, đo lường, mã, văn bản, ngày, khoá ngoại.
+\item \textbf{Sinh mô tả} --- agent thông minh dùng các công cụ tra cứu mô tả tương tự + lấy thống kê + lấy quan hệ giữa các bảng để sinh mô tả theo văn phong đã học.
+\item \textbf{Lưu lại} --- ghi mô tả vào tệp cấu hình của hệ thống.
+\end{enumerate}
+
+Khách hàng chỉ cần cấp \textbf{tài khoản chỉ đọc} + 5--10 mô tả mẫu, hệ thống tự sinh phần còn lại. Đội triển khai không cần xem trực tiếp tên bảng/cột thực, vì mô tả được sinh tự động trong môi trường nội bộ của khách hàng.
+\end{tcolorbox}
+
+\subsubsection{Hiệu năng đo được}
+
+Trên bộ kiểm thử 100 câu hỏi tiếng Việt do nhóm tự xây dựng (sử dụng cơ sở dữ liệu mẫu AdventureWorks DW), hệ thống đạt \textbf{Execution Match (EX) 48\%} --- tỉ lệ kết quả truy vấn của hệ thống trùng khớp với đáp án chuẩn do chuyên gia viết. So với bộ đánh giá học thuật MultiSpider 2.0 (tiếng Việt chỉ đạt 4--15\%), đây là kết quả \textbf{vượt trội đáng kể} nhờ hệ thống được tinh chỉnh riêng cho cơ sở dữ liệu doanh nghiệp Việt + từ điển tiếng Việt.
+
+\subsection{Điểm mới / sáng tạo so với thị trường}
+
+\textbf{Bản chất askDataAI}: đây không phải phần mềm dạng dịch vụ dùng chung cho nhiều khách hàng (SaaS). Mỗi khi một công ty muốn sử dụng, đội phát triển sẽ \textbf{tuỳ biến và bàn giao riêng} một bản triển khai chạy trên hạ tầng của chính công ty đó (trung tâm dữ liệu riêng / đám mây riêng / hạ tầng \textbf{FPT AI Factory} trong tương lai). Từ điển nghiệp vụ, cấu trúc dữ liệu, quy tắc kinh doanh, mô hình AI --- tất cả đều thuộc về công ty khách hàng, không chia sẻ với khách hàng khác.
+
+\begin{longtable}{|L{3.6cm}|L{3.4cm}|L{2.8cm}|L{2.5cm}|L{2.5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Tiêu chí} & \textbf{askDataAI} & \textbf{Power BI Copilot} & \textbf{Tableau Pulse} & \textbf{ChatGPT GPT} \\
+\hline\endhead
+
+\textbf{Mô hình triển khai} & Tuỳ biến + bàn giao riêng cho từng công ty & Phần mềm dùng chung (Microsoft) & Phần mềm dùng chung (Tableau) & Phần mềm dùng chung (OpenAI) \\ \hline
+\textbf{Hạ tầng chạy} & Trên hạ tầng KH (DC riêng / FPT AI Factory) & Bắt buộc Azure & Bắt buộc Tableau Cloud & OpenAI cloud \\ \hline
+\textbf{Hiểu thuật ngữ Việt} & \yes{} (Glossary do KH cấu hình) & \no{} (Translate máy) & \no{} & \no{} \\ \hline
+\textbf{Tự sinh mô tả schema} & \yes{} (KH không cần tiết lộ schema thật) & \no{} & \no{} & \no{} \\ \hline
+\textbf{Tích hợp 3 kỹ thuật SOTA} & \yes{} (M-Schema + Bidirectional + Taxonomy) & \no{} (Đóng) & \no{} (Đóng) & \no{} \\ \hline
+\textbf{Conversation memory} & \yes{} (mem0 + Tóm tắt phân cấp) & \no{} & \no{} & Memory thường \\ \hline
+\textbf{Audit + minh bạch SQL} & \yes{} (Hiển thị toàn bộ SQL + reasoning) & \no{} (Đóng) & \no{} (Đóng) & \no{} \\ \hline
+\textbf{Tự học từ truy vấn cũ} & \yes{} (Semantic Memory) & --- & --- & \no{} \\ \hline
+
+\end{longtable}
+
+\textbf{4 đột phá kỹ thuật cụ thể}:
+
+\begin{enumerate}
+\item \textbf{Tính năng Autofill --- bảo mật bí mật kinh doanh của khách hàng}: module 6 bước tự khảo sát cơ sở dữ liệu khách hàng (đếm số dòng, đếm giá trị duy nhất, lấy giá trị mẫu, đo tỉ lệ rỗng), tự phân loại từng cột, và sinh mô tả cấu trúc dữ liệu bằng tác nhân AI thông minh học theo các mô tả mẫu. \textbf{Đặc biệt giá trị với khách hàng ngân hàng/y tế/viễn thông}: KH chỉ cần cấp tài khoản chỉ đọc cho hệ thống askDataAI, đội triển khai \textbf{không cần biết tên bảng/cột thật}.
+\item \textbf{Pipeline 2 đầu dịch tiếng Việt}: dịch VI→EN ở đầu (tăng độ chính xác LLM) + dịch EN→VI ở cuối (lời giải thích thân thiện cho người dùng cuối). Tính năng dịch được thiết kế chuyên sâu để có thể hiểu được các thuật ngữ chuyên ngành được doanh nghiệp sử dụng không phải chỉ là cách dịch máy móc thông thường.
+\item \textbf{Tích hợp 3 kỹ thuật SOTA năm 2024}: M-Schema (XiYan-SQL, Alibaba 2024) --- biểu diễn schema kèm ví dụ giá trị + miền giá trị + foreign key inline; Bidirectional Retrieval --- kết hợp tìm theo bảng + tìm theo cột; Taxonomy-Guided Correction (SQL-of-Thought 2024) --- phân loại lỗi theo 25 sub-category trước khi sửa.
+\item \textbf{Conversation Memory hỗn hợp}: mem0 (factual long-term) + Hierarchical Rolling Summary. Kiến trúc lai chưa thấy ở các sản phẩm thương mại đang lưu hành.
+\end{enumerate}
+
+\newpage
+% =====================================================================
+\section{PHẦN 3 --- MÔ TẢ SẢN PHẨM MẪU}
+
+\subsection{Hình dáng \& trải nghiệm}
+
+askDataAI gồm 2 giao diện:
+
+\textbf{(a) Giao diện Chat --- dành cho người dùng cuối}
+\begin{itemize}
+\item Trông giống ChatGPT: ô nhập câu hỏi, lịch sử hội thoại bên trái, panel kết quả bên phải.
+\item Mỗi câu hỏi → trả 4 thành phần: (1) lời diễn giải tiếng Việt ngắn gọn, (2) câu lệnh SQL được sinh (có nút "Hiện/Ẩn"), (3) bảng dữ liệu phân trang, (4) biểu đồ tự động.
+\item Tab "Gỡ lỗi chi tiết" dành cho người dùng kỹ thuật: xem chi tiết các bước trong luồng xử lý đã chạy như thế nào, mất bao lâu, gọi mô hình AI bao nhiêu lần.
+\item Trả lời theo thời gian thực: kết quả hiện dần ra màn hình thay vì phải chờ trọn 20 giây mới thấy gì.
+\end{itemize}
+
+\textbf{(b) Giao diện Quản trị --- dành cho cán bộ CNTT của doanh nghiệp}
+\begin{itemize}
+\item \textbf{Trang Kết nối cơ sở dữ liệu}: kết nối với CSDL doanh nghiệp, kiểm tra kết nối, kích hoạt hệ thống --- chỉ làm 1 lần khi khởi tạo.
+\item \textbf{Trang Mô hình hoá dữ liệu}: hiển thị sơ đồ các bảng và mối quan hệ giữa chúng dạng đồ hoạ; cho phép sửa mô tả bảng/cột, đặt tên hiển thị bằng tiếng Việt cho người dùng cuối.
+\item \textbf{Trang Tự sinh mô tả schema (Autofill)}: bấm 1 nút để hệ thống tự sinh mô tả cho các cột chưa có chú thích, có 2 chế độ: chỉ điền cột thiếu hoặc làm lại toàn bộ.
+\item \textbf{Trang Từ điển nghiệp vụ}: nơi quản trị viên định nghĩa các thuật ngữ kinh doanh đặc thù --- ví dụ "doanh thu" tương ứng với phép tính nào trong cơ sở dữ liệu.
+\item \textbf{Trang Thiết lập}: bật/tắt từng tính năng của hệ thống, theo dõi chi phí gọi mô hình AI, xem nhật ký hoạt động.
+\end{itemize}
+
+\subsection{Công nghệ cốt lõi}
+
+\begin{longtable}{|L{4cm}|L{4.5cm}|L{6cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Vai trò} & \textbf{Công nghệ} & \textbf{Mô tả dễ hiểu} \\
+\hline\endhead
+
+Mô hình AI hiểu \& sinh ngôn ngữ & OpenAI GPT-4o-mini & "Bộ não" của hệ thống --- hiểu câu hỏi tiếng Việt và viết câu truy vấn dữ liệu \\ \hline
+Mô hình tạo "vector ngữ nghĩa" & OpenAI text-embedding-3-small & Biến câu hỏi và mô tả bảng thành dãy số để máy so sánh tương đồng \\ \hline
+Lớp bảo mật chống chiếm quyền & Mô hình AI nhỏ chạy nội bộ (Hugging Face) & Phát hiện câu hỏi cố tình đánh lừa hệ thống, không cần Internet \\ \hline
+Kho lưu trữ vector & ChromaDB & Lưu các "vector ngữ nghĩa" của bảng/cột để tìm kiếm nhanh \\ \hline
+Bộ nhớ hội thoại & mem0 + Tóm tắt phân cấp tự xây & Nhớ thông tin quan trọng và lịch sử qua nhiều lượt hỏi \\ \hline
+Phần xử lý phía máy chủ & Python + FastAPI & Khung công nghệ chuẩn xây máy chủ web tốc độ cao \\ \hline
+Phần giao diện người dùng & Next.js + React + Ant Design + Vega-Lite & Giao diện chat, sơ đồ bảng, biểu đồ trực quan \\ \hline
+Đóng gói \& triển khai & Docker Compose & Cài đặt toàn bộ hệ thống bằng 1 lệnh \\ \hline
+
+\end{longtable}
+
+\subsection{Chứng minh khả thi --- Đóng góp của từng kỹ thuật SOTA}
+
+Hệ thống đã được đánh giá trên bộ kiểm thử 100 câu hỏi tiếng Việt do nhóm tự xây dựng. Bảng dưới đây định lượng đóng góp của từng kỹ thuật tới tỉ lệ Execution Match (EX):
+
+\begin{longtable}{|L{4.5cm}|R{2.4cm}|L{7cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Kỹ thuật áp dụng} & \textbf{EX cộng dồn} & \textbf{Cơ chế tác động} \\
+\hline\endhead
+
+Phiên bản ban đầu --- luồng xử lý cơ bản, sửa lỗi 1 lượt & 41,0\% & Điểm xuất phát \\ \hline
++ Định dạng schema giàu thông tin (M-Schema): kèm 3 ví dụ giá trị + miền giá trị + quan hệ bảng & +1--3\% & Mô hình AI giảm đoán sai. Ví dụ: thấy cột "Trạng thái" có giá trị mẫu \texttt{["A","I"]} thì hiểu ngay là mã 2 ký tự. \\ \hline
++ Tìm kiếm bảng theo 2 hướng (theo tên bảng + theo tên cột) & +0--2\% (CSDL nhỏ), \textbf{+5--7\% (CSDL lớn)} & Tăng khả năng tìm đúng bảng cần dùng khi CSDL có hàng trăm bảng \\ \hline
++ Sửa lỗi theo phân loại (25 loại lỗi SQL có công thức sửa) & +1--2\% & Khi sinh sai, hệ thống nhận diện đúng loại lỗi rồi áp công thức tương ứng \\ \hline
++ Sửa các lỗi kỹ thuật khác trong luồng xử lý & +5--7\% & Bao gồm: bỏ giới hạn cắt 100 dòng, không bị treo trong vòng lặp sửa lỗi \\ \hline
+\textbf{Tổng kết hiện tại} & \textbf{48,0\%} & \textbf{+7\% tuyệt đối so phiên bản ban đầu} \\ \hline
+
+\end{longtable}
+
+\textbf{Đối chiếu với bộ đánh giá học thuật}: MultiSpider 2.0 Vietnamese --- mô hình tốt nhất hiện nay (DeepSeek-R1, OpenAI o1) chỉ đạt \textbf{4--15\%} \href{https://arxiv.org/html/2509.24405}{(arXiv:2509.24405)}. Hệ thống askDataAI đạt \textbf{48\%} trên 100 câu hỏi do nhóm tự xây dựng --- chứng minh khoảng cách giữa hệ thống đã tinh chỉnh cho ngữ cảnh Việt Nam và mô hình AI "thô" là \textbf{rất lớn}.
+
+\textbf{Đối chiếu với trường hợp Pinterest}: tỉ lệ chấp nhận lần đầu 20\% → 40\%+ \href{https://medium.com/pinterest-engineering/how-we-built-text-to-sql-at-pinterest-30bad30dabff}{(Pinterest Engineering, 2024)}. askDataAI đang ở mức \textbf{tương đương Pinterest đang vận hành thực tế}, dù bộ kiểm thử là tiếng Việt --- ngôn ngữ "đặc biệt khó".
+
+\textbf{Dự kiến}: với các cải tiến tiếp theo, nhóm kỳ vọng \textbf{đạt 60--65\%} trong 6 tháng tới.
+
+\subsection{Hướng phát triển trung hạn}
+
+Phiên bản hiện tại tập trung vào một dialect SQL duy nhất để chứng minh kiến trúc; các kế hoạch mở rộng:
+
+\begin{enumerate}
+\item \textbf{Hỗ trợ đa hệ quản trị CSDL} (12 tháng): mở rộng sang PostgreSQL, MySQL, Oracle, BigQuery, Snowflake. Module dịch SQL đã được thiết kế tách rời để dễ thêm phương ngữ mới.
+\item \textbf{Hỗ trợ CSDL lớn (1000+ bảng, 10000+ cột)}: thêm Agentic Schema Explorer (tương tự QueryGPT của Uber) thay cho retrieval một-lần.
+\item \textbf{Đa ngôn ngữ}: mở rộng VI↔EN sang Thai, Indonesian, Khmer --- phục vụ thị trường ASEAN.
+\item \textbf{Tích hợp FPT AI Factory}: chạy LLM nội bộ trên hạ tầng GPU FPT thay vì phụ thuộc OpenAI cloud. KH có lưu trữ dữ liệu trong nước tuyệt đối, chi phí dự đoán được, và tận dụng được các deal hợp tác giữa askDataAI và FPT AI Factory để giảm giá GPU credit cho KH.
+\end{enumerate}
+
+\newpage
+% =====================================================================
+\section{PHẦN 4 --- KẾ HOẠCH KINH DOANH}
+
+\begin{tcolorbox}[notebox]
+\textbf{Bản chất kinh doanh}: askDataAI \textbf{không phải} phần mềm dạng dịch vụ dùng chung cho nhiều khách hàng. Mỗi khi một công ty muốn sử dụng, đội ngũ askDataAI sẽ \textbf{tuỳ biến và bàn giao một bản triển khai riêng} chạy trên hạ tầng của công ty đó. Doanh thu chính đến từ phí triển khai (thu 1 lần) + giấy phép sử dụng vĩnh viễn + phí bảo trì hàng năm + phát triển tính năng theo yêu cầu, \textbf{không phải tính phí thuê bao theo từng người dùng}.
+\end{tcolorbox}
+
+\subsection{Thị trường mục tiêu \& quy mô}
+
+\textbf{Bối cảnh thị trường có nguồn}: tính đến 31/12/2024, cả nước có \textbf{940.078 doanh nghiệp đang hoạt động}, trong đó doanh nghiệp nhỏ và vừa chiếm gần 98\% --- còn lại khoảng \textbf{2\% ($\sim$18.800 doanh nghiệp) thuộc nhóm có quy mô lớn} \href{https://www.gso.gov.vn/du-lieu-va-so-lieu-thong-ke/2025/01/tinh-hinh-doanh-nghiep-gia-nhap-va-tai-gia-nhap-thi-truong-nam-2024/}{(Tổng cục Thống kê 2024)} \href{https://baodautu.vn/chiem-gan-98-tong-so-doanh-nghiep-doanh-nghiep-nho-va-vua-dang-o-dau-trong-nen-kinh-te-d249574.html}{(Báo Đầu tư)}.
+
+\textbf{Phân khúc khách hàng} --- tập trung vào nhóm có nhu cầu triển khai nội bộ + giữ bí mật dữ liệu:
+
+\begin{longtable}{|L{3.4cm}|L{3.5cm}|L{4cm}|L{3.5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Phân khúc} & \textbf{Quy mô VN} & \textbf{Đặc điểm} & \textbf{Pain point chính} \\
+\hline\endhead
+
+Doanh nghiệp lớn (theo phân loại GSO) & $\sim$18.800 đơn vị & Đa phần đã có Power BI/Tableau nhưng phụ thuộc IT & Bảo mật + tuỳ chỉnh nghiệp vụ riêng \\ \hline
+Ngân hàng, BHXH, viễn thông, y tế công & $\sim$300 đơn vị & Yêu cầu lưu trữ dữ liệu tại VN tuyệt đối & Tuân thủ luật + giữ bí mật cấu trúc dữ liệu \\ \hline
+Cơ quan nhà nước, đơn vị công & Hàng nghìn đơn vị & Mua sắm CNTT dạng đầu tư 1 lần & Tránh phụ thuộc cloud nước ngoài \\ \hline
+DN cỡ trung có ERP nội bộ & Subset của 18.800 DN lớn + DN vừa cao cấp & Đã có dữ liệu giao dịch, chưa có công cụ phân tích NL & Chi phí hợp lý + tuỳ biến nghiệp vụ \\ \hline
+
+\end{longtable}
+
+\textbf{Quy mô thị trường --- phân tích theo 3 lớp TAM / SAM / SOM}\\
+\textit{(TAM = toàn bộ thị trường tiềm năng; SAM = phần thị trường mà sản phẩm có thể phục vụ thực tế; SOM = phần thị trường nhóm dự kiến chiếm được trong 3 năm đầu.)}
+
+\begin{itemize}
+\item \textbf{TAM}: $\sim$18.800 đơn vị + vài nghìn đơn vị công. Theo Panorama ERP Report (2022), chi phí triển khai phần mềm doanh nghiệp cỡ trung dao động 150.000--750.000 USD/dự án (3,7--18,7 tỷ VND) \href{https://lacviet.vn/en/chi-phi-trien-khai-erp-bao-nhieu/}{(Lạc Việt)}. Tổng ngân sách lên tới hàng chục nghìn tỷ VND/năm.
+\item \textbf{SAM}: nhóm có ngân sách CNTT $>$1 tỷ VND/dự án --- ước $\sim$4.000 đơn vị.
+\item \textbf{SOM} 3 năm đầu: 25--35 dự án bàn giao → tổng giá trị triển khai \textbf{20--35 tỷ VND}. Tương ứng $<$1\% SAM.
+\end{itemize}
+
+\subsection{Mô hình doanh thu}
+
+\begin{longtable}{|L{3.5cm}|L{6.5cm}|L{4cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hạng mục} & \textbf{Mô tả} & \textbf{Khoảng giá} \\
+\hline\endhead
+
+Phí triển khai (thu 1 lần) & Cài đặt + tích hợp CSDL + tuỳ biến quy trình + xây từ điển + đào tạo đội ngũ KH & 500 triệu --- 2 tỷ VND/dự án \\ \hline
+Giấy phép sử dụng vĩnh viễn & Quyền sử dụng askDataAI vô thời hạn trên hạ tầng KH, không giới hạn câu hỏi & 200 triệu --- 1 tỷ VND \\ \hline
+Phí bảo trì \& hỗ trợ hàng năm & Bảo trì, vá lỗi, cập nhật mô hình AI, hỗ trợ kỹ thuật cấp 1, SLA 99,5\% & 15--20\% giá trị triển khai/năm \\ \hline
+Phát triển tính năng theo yêu cầu & Kết nối CSDL hiếm, dashboard riêng, tích hợp ERP nội bộ & 50--500 triệu/tính năng \\ \hline
+Dịch vụ Tự sinh mô tả schema (Autofill) & Chạy module Autofill trên CSDL KH, deliverable là tệp mô tả & 50--200 triệu/CSDL \\ \hline
+Đào tạo trực tiếp tại văn phòng KH & Workshop cho cán bộ CNTT + người dùng chính & 5--20 triệu/người \\ \hline
+
+\end{longtable}
+
+\textbf{Dự phóng doanh thu 3 năm}:
+
+\begin{center}
+\begin{tabular}{|c|R{1.7cm}|R{1.7cm}|R{1.7cm}|R{2.7cm}|R{2.3cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Năm} & \textbf{Số dự án mới} & \textbf{TB/dự án} & \textbf{DT triển khai} & \textbf{Bảo trì cộng dồn} & \textbf{Tổng DT} \\
+\hline
+Năm 1 & 3 & 800tr & 2,4 tỷ & --- & \textbf{$\sim$2,4 tỷ} \\ \hline
+Năm 2 & 8 & 1,0 tỷ & 8,0 tỷ & 0,4 tỷ & \textbf{$\sim$8,4 tỷ} \\ \hline
+Năm 3 & 15 & 1,2 tỷ & 18,0 tỷ & 1,7 tỷ & \textbf{$\sim$19,7 tỷ} \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Phí bảo trì cộng dồn} (15--20\% giá trị triển khai/năm) tích luỹ qua các năm --- đây là nguồn doanh thu định kỳ ổn định, là nền tảng tài chính dài hạn của dự án.
+
+\subsection{Cách tiếp cận khách hàng}
+
+Mô hình bán hàng dành riêng cho doanh nghiệp (B2B) --- bán trực tiếp + thông qua đối tác phân phối. \textbf{Không có} kênh khách hàng tự đăng ký mua online.
+
+\paragraph{Giai đoạn 1 (tháng 1--6) --- Triển khai thử nghiệm có chọn lọc, không thu phí}
+\begin{itemize}
+\item Triển khai 3 dự án thử nghiệm hoàn toàn miễn phí đổi lấy lời chứng thực + tình huống minh hoạ. Mục tiêu: 1 ngân hàng cỡ vừa, 1 chuỗi bán lẻ, 1 doanh nghiệp sản xuất.
+\item Mỗi dự án thử nghiệm kéo dài 3 tháng: cài đặt → cấu hình từ điển nghiệp vụ → đào tạo → bàn giao.
+\end{itemize}
+
+\paragraph{Giai đoạn 2 (tháng 7--12) --- Tuyển sales doanh nghiệp đầu tiên}
+\begin{itemize}
+\item Tuyển 1 nhân sự bán hàng có quan hệ với Giám đốc CNTT/Giám đốc dữ liệu/Trưởng phòng Kỹ thuật dữ liệu của ngân hàng/viễn thông.
+\item Tham dự Banking Tech Vietnam, Vietnam ICT Summit, FPT TechDay với vai trò diễn giả.
+\item Hợp tác phân phối với FPT IS, CMC TS, Viettel CISC --- chia hoa hồng 20--30\%.
+\end{itemize}
+
+\paragraph{Giai đoạn 3 (năm 2 trở đi) --- Mở rộng}
+\begin{itemize}
+\item Đăng ký vào danh sách nhà cung cấp tại các tập đoàn lớn (VPBank, Vietcombank, Viettel, FPT, MobiFone, EVN\ldots).
+\item Hợp tác chính thức với FPT AI Factory: "askDataAI trên hạ tầng FPT AI Factory".
+\end{itemize}
+
+\textbf{3 kênh phân phối}: Bán trực tiếp; Qua đối tác phân phối (FPT IS, CMC TS, Viettel CISC); Qua đối tác hạ tầng (FPT AI Factory).
+
+\subsection{Lộ trình hình thành doanh nghiệp}
+
+\subsubsection{Mốc thời gian chính}
+
+\begin{longtable}{|L{1.6cm}|L{1.8cm}|L{11.5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Mốc} & \textbf{Thời gian} & \textbf{Sự kiện} \\
+\hline\endhead
+
+Mốc 0 & Hiện tại & MVP đã chạy được, độ chính xác 48\% trên bộ kiểm thử nội bộ, có 1 bản demo \\ \hline
+Mốc 1 & Tháng 3 & Hoàn thiện tính năng ưu tiên, độ chính xác $>$ 60\%, ký triển khai thử nghiệm với 3 KH chiến lược \\ \hline
+Mốc 2 & Tháng 6 & Đăng ký doanh nghiệp, bàn giao 3 dự án thử nghiệm + ký hợp đồng thương mại đầu tiên ($\sim$800 triệu) \\ \hline
+Mốc 3 & Tháng 12 & 3 dự án thương mại bàn giao ($\sim$2,4 tỷ doanh thu), ký LOI với FPT AI Factory, gọi vốn ban đầu (5--10 tỷ), hỗ trợ thêm PostgreSQL \& MySQL \\ \hline
+Mốc 4 & Tháng 18 & Mở rộng đội ngũ lên 12 người, 8 dự án bàn giao, ra mắt phiên bản chạy chính thức trên FPT AI Factory \\ \hline
+Mốc 5 & Tháng 24 & Doanh thu $\sim$8,4 tỷ, 11 dự án đang bảo trì, mở rộng ASEAN (Lào, Campuchia, Myanmar) \\ \hline
+Mốc 6 & Tháng 36 & Doanh thu $\sim$20 tỷ, gọi vốn vòng tăng tốc (Series A), hỗ trợ ngôn ngữ thứ 2 (Thái/Indonesia) \\ \hline
+
+\end{longtable}
+
+\subsubsection{Loại hình pháp lý}
+
+\begin{itemize}
+\item \textbf{Giai đoạn 0--6 tháng}: hoạt động dưới dạng nhóm dự án sinh viên / nhóm nghiên cứu khởi nghiệp --- chưa đăng ký pháp nhân, ký hợp đồng triển khai thử nghiệm dạng biên bản ghi nhớ (MoU) không trả phí.
+\item \textbf{Tháng 6}: thành lập Công ty TNHH (đơn giản, phù hợp nhóm $<$5 thành viên) hoặc Công ty Cổ phần (phù hợp khi đã có nhà đầu tư). Vốn điều lệ tối thiểu 100 triệu VND.
+\item \textbf{Tháng 18 trở đi}: chuyển đổi sang Công ty Cổ phần nếu chưa làm, mở chi nhánh tại TP.HCM.
+\item \textbf{Năm 3}: cân nhắc thành lập pháp nhân Singapore hoặc Delaware nếu gọi vốn quốc tế.
+\end{itemize}
+
+\subsubsection{Kế hoạch sở hữu trí tuệ (IP)}
+
+\begin{longtable}{|L{4cm}|L{6.5cm}|L{3.8cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Loại tài sản trí tuệ} & \textbf{Đối tượng được bảo hộ} & \textbf{Thời điểm thực hiện} \\
+\hline\endhead
+
+Đăng ký nhãn hiệu trong nước & Tên "askDataAI" + logo + slogan & Tháng 3 (Cục Sở hữu Trí tuệ Việt Nam) \\ \hline
+Đăng ký nhãn hiệu quốc tế & Theo Hệ thống Madrid --- 5 nước Đông Nam Á & Tháng 12 \\ \hline
+Bí mật kinh doanh & Cấu trúc luồng xử lý, mẫu prompt tiếng Việt, từ điển nghiệp vụ, bảng phân loại lỗi & Bảo vệ qua NDA + giới hạn truy cập nội bộ \\ \hline
+Bản quyền phần mềm & Mã nguồn của hệ thống & Cục Bản quyền Tác giả (mỗi phiên bản lớn) \\ \hline
+Sáng chế & (1) Tính năng Autofill --- quy trình 6 bước; (2) Liên kết câu hỏi tiếng Việt với cấu trúc dữ liệu; (3) Bộ nhớ hội thoại lai mem0 + tóm tắt phân cấp & Năm 2 \\ \hline
+Giấy phép sử dụng phần mềm & Mỗi khách hàng được cấp 1 giấy phép riêng (mã nguồn không công khai) & Tháng 6 \\ \hline
+
+\end{longtable}
+
+\subsubsection{Cấu trúc tổ chức}
+
+\begin{center}
+\begin{tabular}{|L{4cm}|c|L{8cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Vai trò} & \textbf{SL} & \textbf{Trách nhiệm chính} \\
+\hline
+Tổng Giám đốc / Trưởng nhóm (CEO) & 1 & Định hướng sản phẩm, kết nối khách hàng, gọi vốn \\ \hline
+Giám đốc Công nghệ / Trưởng nhóm AI (CTO) & 1 & Thiết kế kiến trúc hệ thống, tinh chỉnh mô hình AI, đánh giá độ chính xác \\ \hline
+Kỹ sư Backend cấp cao & 1 & Xây dựng API, tích hợp cơ sở dữ liệu, đảm bảo bảo mật \\ \hline
+Kỹ sư Frontend & 1 & Giao diện chat, sơ đồ bảng, biểu đồ \\ \hline
+Thiết kế sản phẩm / Phân tích nghiệp vụ (kiêm) & 1 & Trải nghiệm người dùng, từ điển tiếng Việt, hỗ trợ KH sau bàn giao \\ \hline
+Marketing / Tăng trưởng (kiêm) & 1 & Nội dung, cộng đồng, tìm kiếm khách hàng \\ \hline
+\end{tabular}
+\end{center}
+
+Sau khi gọi vốn ban đầu (Mốc 3): bổ sung 1 kỹ sư DevOps; Mốc 4: thêm 2 Kỹ sư Backend + 2 nhân viên Bán hàng doanh nghiệp; Mốc 5: 1 quản lý hỗ trợ khách hàng sau bán.
+
+\textit{(Hồ sơ năng lực chi tiết từng thành viên: xem PHẦN 6.)}
+
+\newpage
+% =====================================================================
+\section{PHẦN 5 --- DỰ TOÁN KINH PHÍ}
+
+\subsection{Tổng mức đầu tư giai đoạn khởi nghiệp (12 tháng đầu)}
+
+\textbf{Tổng dự toán: $\sim$3,8 tỷ VND} (chia làm 3 đợt giải ngân theo cột mốc).
+
+\subsection{Liệt kê chi phí ban đầu}
+
+\subsubsection{A. Nhân sự (12 tháng × 6 thành viên cốt lõi) --- 2.520 triệu VND (66\%)}
+
+\textbf{Nguồn tham chiếu mức lương} (2024--2025): Software Engineer Senior tại VN dao động \textbf{30--50 triệu/tháng} \href{https://vnexpress.net/khong-de-thanh-ky-su-ai-luong-thang-50-trieu-4796118.html}{(VnExpress)}; AI Engineer mid-level 18--50 triệu/tháng \href{https://trainocate.com.vn/luong-nganh-tri-tue-nhan-tao-a190}{(Trainocate)}; Frontend 8--35 triệu/tháng, Backend 9--68,5 triệu/tháng \href{https://huflit.edu.vn/vi/tin-tuc/luong-nganh-tri-tue-nhan-tao-ai/}{(HUFLIT)}.
+
+\begin{longtable}{|L{4cm}|c|R{1.5cm}|R{1.5cm}|L{4cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Vị trí} & \textbf{SL} & \textbf{Lương/tháng} & \textbf{Tổng/12T} & \textbf{Ghi chú} \\
+\hline\endhead
+
+CEO / Founder & 1 & 25 & 300 & Founder thấp hơn thị trường \\ \hline
+CTO / Lead AI & 1 & 40 & 480 & Trong dải Senior AI 30--50tr \\ \hline
+Backend Senior & 1 & 32 & 384 & Trong dải Backend Senior \\ \hline
+Frontend Engineer & 1 & 22 & 264 & Trong dải mid-level \\ \hline
+Designer / BA & 1 & 20 & 240 & Theo khảo sát RMIT \\ \hline
+Marketing / Growth & 1 & 18 & 216 & Mid-level marketing \\ \hline
+BHXH + thưởng (\textasciitilde 25\%) & --- & --- & 471 & Theo Luật Lao động + thưởng tháng 13 \\ \hline
+Thuê freelance (đồ hoạ, nội dung) & --- & --- & 165 & Theo dự án \\ \hline
+\textbf{Tổng nhân sự} & \textbf{6} & & \textbf{2.520} & \\ \hline
+
+\end{longtable}
+
+\subsubsection{B. Hạ tầng \& dịch vụ --- 350 triệu VND (9\%)}
+
+\textbf{Nguồn tham chiếu giá}: FPT AI Factory niêm yết GPU H100/H200 từ \textbf{2,5 USD/giờ} \href{https://ai.fptcloud.com/pricing/}{(FPT AI Factory)}; OpenAI GPT-4o-mini API public $\sim$0,15 USD/triệu token đầu vào.
+
+\begin{longtable}{|L{4.5cm}|L{6cm}|R{2.2cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hạng mục} & \textbf{Mô tả} & \textbf{Chi phí (tr.VND)} \\
+\hline\endhead
+
+OpenAI API + GPU FPT AI Factory & LLM + Embedding cho 3 pilot + môi trường dev/test, $\sim$20tr/tháng & 240 \\ \hline
+Máy chủ ảo (VPS Việt + AWS staging) & 2 máy chủ: thử nghiệm + vận hành & 60 \\ \hline
+Tên miền + chứng chỉ bảo mật + CDN & askdataai.vn, Cloudflare Pro & 12 \\ \hline
+Hộp thư + bộ công cụ làm việc nhóm & Google Workspace 6 tài khoản, \$14/user/tháng & 13 \\ \hline
+Công cụ quản lý mã nguồn + dự án & GitHub + Notion + Slack + Linear & 18 \\ \hline
+Dự phòng vector DB cloud (Pinecone) & ChromaDB nội bộ free, fallback Pinecone & 7 \\ \hline
+\textbf{Tổng hạ tầng} & & \textbf{350} \\ \hline
+
+\end{longtable}
+
+\subsubsection{C. Nghiên cứu \& Phát triển sản phẩm --- 300 triệu VND (8\%)}
+
+\begin{longtable}{|L{10cm}|R{2.2cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hạng mục} & \textbf{Chi phí (tr.VND)} \\
+\hline\endhead
+
+Mua bộ dữ liệu đánh giá tham khảo + tài liệu nghiên cứu khoa học & 50 \\ \hline
+Hợp tác nghiên cứu với 1 trường đại học (đồng công bố bài báo) & 100 \\ \hline
+Mua dữ liệu mẫu doanh nghiệp Việt (đã ẩn danh) để cải tiến mô hình & 80 \\ \hline
+Phần cứng dev (2 laptop cao cấp + 1 máy chủ GPU cho mô hình bảo mật nội bộ) & 70 \\ \hline
+\textbf{Tổng R\&D} & \textbf{300} \\ \hline
+
+\end{longtable}
+
+\subsubsection{D. Marketing \& Sales --- 300 triệu VND (8\%)}
+
+\begin{longtable}{|L{10cm}|R{2.2cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hạng mục} & \textbf{Chi phí (tr.VND)} \\
+\hline\endhead
+
+Quay video giới thiệu + chuỗi nội dung tiếng Việt & 80 \\ \hline
+Tham dự hội nghị (AI4VN, Banking Tech, Vietnam Web Summit) --- 3 sự kiện & 90 \\ \hline
+Quảng cáo Facebook + LinkedIn (target B2B) & 60 \\ \hline
+Tổ chức workshop / hội thảo trực tuyến (12 buổi/năm) & 50 \\ \hline
+Quà tặng KH thử nghiệm + chi phí đi lại demo trực tiếp & 20 \\ \hline
+\textbf{Tổng Marketing} & \textbf{300} \\ \hline
+
+\end{longtable}
+
+\subsubsection{E. Pháp lý \& Sở hữu trí tuệ --- 120 triệu VND (3\%)}
+
+\textbf{Nguồn tham chiếu lệ phí nhà nước}: Thành lập DN: tổng lệ phí $\sim$5--7 triệu \href{https://luattanhoang.com/chi-phi-thanh-lap-cong-ty.html}{(Luật Tân Hoàng)}; Đăng ký nhãn hiệu Cục SHTT: 2,2tr/nhóm đầu, 1,8tr/nhóm sau, 360K/nhóm cấp giấy \href{https://luatvietan.vn/le-phi-nop-don-dang-ky-nhan-hieu.html}{(Luật Việt An)}; Madrid: 2tr trong nước + 3,6tr/nhóm xét nghiệm + WIPO fee \href{https://ipvietnam.gov.vn/en/nhan-hieu}{(Cục SHTT)}.
+
+\begin{longtable}{|L{4cm}|L{6cm}|R{2.2cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hạng mục} & \textbf{Mô tả} & \textbf{Chi phí (tr.VND)} \\
+\hline\endhead
+
+Thành lập công ty TNHH/JSC & Lệ phí nhà nước + dịch vụ luật + chữ ký số & 15 \\ \hline
+Đăng ký nhãn hiệu VN (3 nhóm) & Lệ phí Cục SHTT + đại diện SHCN & 18 \\ \hline
+Madrid Protocol --- đợt 1 (2 nước) & Trong nước + xét nghiệm + WIPO fee 2 nước & 30 \\ \hline
+Tư vấn pháp lý hợp đồng + Nghị định 13/2023 & Mẫu hợp đồng license + NDA + DPA & 30 \\ \hline
+Bản quyền phần mềm (3 release) & Cục Bản quyền Tác giả & 9 \\ \hline
+Dự phòng (sáng chế Autofill + thanh tra thuế) & & 18 \\ \hline
+\textbf{Tổng Pháp lý} & & \textbf{120} \\ \hline
+
+\end{longtable}
+
+\subsubsection{F. Vận hành \& quản lý --- 210 triệu VND (6\%)}
+
+\textbf{Nguồn tham chiếu giá coworking}: Toong $\sim$2tr/chỗ; Dreamplex Đống Đa 1,6tr/tháng; quận trung tâm HN 1,5--6tr/chỗ \href{https://timvanphong.com.vn/coworking-space-gia-re-tai-ha-noi/}{(Tìm Văn Phòng)} \href{https://maisonoffice.vn/van-phong-tron-goi/dreamplex-coworking-space/}{(Maison Office)}.
+
+\begin{longtable}{|L{6cm}|L{4cm}|R{2.2cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Hạng mục} & \textbf{Mô tả} & \textbf{Chi phí (tr.VND)} \\
+\hline\endhead
+
+Không gian làm việc chung (5 chỗ × 12 tháng × 1,5tr) & Coworking ngoại trung tâm Hà Nội & 90 \\ \hline
+Thuê dịch vụ kế toán ngoài & Công ty kế toán nhỏ giai đoạn đầu & 50 \\ \hline
+Bảo hiểm trách nhiệm + sức khoẻ NV & Tuân thủ Luật Lao động & 40 \\ \hline
+Văn phòng phẩm, in ấn, dụng cụ & & 15 \\ \hline
+Đi lại + công tác phí gặp KH & Triển khai onsite tại 3 KH & 15 \\ \hline
+\textbf{Tổng Vận hành} & & \textbf{210} \\ \hline
+
+\end{longtable}
+
+\subsection{Tổng kết chi phí}
+
+\begin{center}
+\begin{tabular}{|L{6cm}|R{2.5cm}|R{2cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Khoản mục} & \textbf{Số tiền (tr.VND)} & \textbf{Tỷ trọng} \\ \hline
+A. Nhân sự & 2.520 & 66\% \\ \hline
+B. Hạ tầng \& dịch vụ & 350 & 9\% \\ \hline
+C. R\&D & 300 & 8\% \\ \hline
+D. Marketing \& Sales & 300 & 8\% \\ \hline
+E. Pháp lý \& IP & 120 & 3\% \\ \hline
+F. Vận hành & 210 & 6\% \\ \hline
+\textbf{TỔNG} & \textbf{3.800} & \textbf{100\%} \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Nguồn vốn dự kiến}
+
+\begin{center}
+\begin{tabular}{|L{4.5cm}|R{2.2cm}|R{1.5cm}|L{4.5cm}|}
+\hline
+\rowcolor{tablehead}\textbf{Nguồn} & \textbf{Số tiền (tr.VND)} & \textbf{Tỷ trọng} & \textbf{Ghi chú} \\ \hline
+Vốn tự có của founders & 500 & 13\% & Mỗi founder 80--100tr \\ \hline
+Quỹ Khởi nghiệp ĐH/thành phố & 800 & 21\% & Quỹ ĐH, HCM City Investment \\ \hline
+Cuộc thi khởi nghiệp + giải thưởng & 300 & 8\% & VN Innovation Day, Techfest \\ \hline
+DT hợp đồng thương mại đầu tiên & 700 & 18\% & 1 hợp đồng $\sim$800tr \\ \hline
+Vòng Pre-seed (Angel) & 1.500 & 40\% & Mục tiêu tháng 6 \\ \hline
+\textbf{TỔNG} & \textbf{3.800} & \textbf{100\%} & \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection{Tác động xã hội \& môi trường}
+
+\textbf{Tác động tích cực}:
+\begin{itemize}
+\item \textbf{Dân chủ hoá dữ liệu}: cho phép hàng triệu nhân viên không biết SQL truy cập dữ liệu doanh nghiệp $\rightarrow$ tăng chất lượng quyết định ở mọi cấp.
+\item \textbf{Giảm giờ làm thủ công}: case Uber chứng minh tiết kiệm 140.000 giờ/tháng cho 1 doanh nghiệp \href{https://www.uber.com/us/en/blog/query-gpt/}{(Uber Engineering, 2024)}. Áp dụng tỉ lệ tương tự, doanh nghiệp Việt 100 nhân viên có thể giải phóng hàng nghìn giờ/tháng.
+\item \textbf{Giáo dục}: mã nguồn community + tài liệu tiếng Việt giúp sinh viên VN tiếp cận công nghệ NLP/LLM thực tế.
+\item \textbf{Tiết kiệm năng lượng}: pipeline tinh chỉnh (M-Schema, taxonomy correction) giúp giảm 30\% LLM call so với cách "dùng GPT-4 thuần" $\rightarrow$ giảm carbon footprint.
+\item \textbf{Bảo mật dữ liệu Việt}: triển khai on-premise giúp dữ liệu nhạy cảm (ngân hàng, y tế) không bị gửi ra nước ngoài, phù hợp Luật An ninh mạng + Nghị định 13/2023 về bảo vệ dữ liệu cá nhân.
+\end{itemize}
+
+\newpage
+% =====================================================================
+\section{PHẦN 6 --- NĂNG LỰC ĐỘI NGŨ}
+
+Nhóm có nền tảng kỹ thuật vững chắc của một software engineer toàn diện, với khả năng phát triển sản phẩm end-to-end bao gồm frontend, backend, thiết kế nghiệp vụ và AI engineering. Đây là nền tảng trực tiếp phục vụ cho việc xây dựng và vận hành sản phẩm của dự án.
+
+\textbf{Các dự án thực tế đã triển khai}:
+
+\begin{itemize}
+\item \textbf{Chatbot nội bộ trên văn bản pháp luật} --- ứng dụng kiến trúc GraphRAG để truy xuất và trả lời chính xác các câu hỏi pháp lý từ kho tài liệu nội bộ.
+\item \textbf{Hệ thống quản lý chuỗi siêu thị minimart} --- ứng dụng kiến trúc multi-agent để tự động hoá và tối ưu hoá các nghiệp vụ vận hành chuỗi bán lẻ.
+\item \textbf{Mạng xã hội ảo phục vụ mô phỏng chiến dịch kinh tế} --- ứng dụng kiến trúc agent swarm để mô phỏng hành vi người dùng và dự báo hiệu quả của các chiến dịch truyền thông, marketing.
+\end{itemize}
+
+\newpage
+% =====================================================================
+\section*{PHỤ LỤC --- TÀI LIỆU THAM CHIẾU}
+\addcontentsline{toc}{section}{PHỤ LỤC --- TÀI LIỆU THAM CHIẾU}
+
+\subsection*{Case study công nghiệp}
+\begin{enumerate}
+\item Uber Engineering Blog --- \textit{QueryGPT: Natural Language to SQL Using Generative AI} (09/2024). \href{https://www.uber.com/us/en/blog/query-gpt/}{Link}
+\item Pinterest Engineering --- \textit{How we built Text-to-SQL at Pinterest} (04/2024). \href{https://medium.com/pinterest-engineering/how-we-built-text-to-sql-at-pinterest-30bad30dabff}{Link}
+\item Sequel.sh --- \textit{A Deep Dive into QueryGPT: Uber's AI-Powered SQL Generator} (2024). \href{https://sequel.sh/blog/query-gpt-uber}{Link}
+\item WrenAI Blog --- \textit{How Uber is Saving 140,000 Hours Each Month Using Text-to-SQL} (2024). \href{https://medium.com/wrenai/how-uber-is-saving-140-000-hours-each-month-using-text-to-sql-and-how-you-can-harness-the-same-fb4818ae4ea3}{Link}
+\end{enumerate}
+
+\subsection*{Báo cáo thị trường \& nghiên cứu}
+\begin{enumerate}\setcounter{enumi}{4}
+\item Edstellar --- \textit{Top 7 In-Demand Skills in Vietnam for 2026}. \href{https://www.edstellar.com/blog/skills-in-demand-in-vietnam}{Link}
+\item Glassdoor --- \textit{Data Analyst Jobs in Vietnam} (cập nhật 2026). \href{https://www.glassdoor.com/Job/vietnam-data-analyst-jobs-SRCH_IL.0,7_IN251_KO8,20.htm}{Link}
+\item Graphite Note --- \textit{The Definitive Solution to the Data Scientist Shortage} (2024, trích Adastra Survey). \href{https://graphite-note.com/data-scientist-shortage/}{Link}
+\item Querio --- \textit{Semantic Parsing for Text-to-SQL in BI} (2024). \href{https://querio.ai/articles/semantic-parsing-for-text-to-sql-in-bi}{Link}
+\end{enumerate}
+
+\subsection*{Benchmark học thuật}
+\begin{enumerate}\setcounter{enumi}{8}
+\item \textit{Multilingual Text-to-SQL: Benchmarking the Limits of Language Models} --- arXiv:2509.24405 (2025). MultiSpider 2.0 với tiếng Việt. \href{https://arxiv.org/html/2509.24405}{Link}
+\item \textit{Text-to-SQL for Enterprise Data Analytics} --- arXiv:2507.14372 (2025). \href{https://arxiv.org/html/2507.14372v1}{Link}
+\end{enumerate}
+
+\subsection*{Paper kỹ thuật áp dụng trong askDataAI}
+\begin{enumerate}\setcounter{enumi}{10}
+\item Alibaba --- \textit{XiYan-SQL: M-Schema + Bidirectional Retrieval} (2024).
+\item \textit{SQL-of-Thought: Taxonomy-Guided SQL Correction} (2024).
+\end{enumerate}
+
+\end{document}

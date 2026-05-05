@@ -1,0 +1,235 @@
+customers:
+  CustomerKey:
+    description: Customer identifier (PK, used to join with sales tables)
+    enum_values: []
+    type: integer
+  GeographyKey:
+    description: FK to geography table (customer geographic location)
+    enum_values: []
+    type: integer
+  CustomerAlternateKey:
+    description: Alternate customer identifier (business key)
+    enum_values: []
+    type: string
+  Title:
+    description: 'Title: Mr., Mrs., Ms.'
+    enum_values: []
+    type: string
+  FirstName:
+    description: Customer first name
+    enum_values: []
+    type: string
+  MiddleName:
+    description: Customer middle name
+    enum_values: []
+    type: string
+  LastName:
+    description: Customer last name
+    enum_values: []
+    type: string
+  BirthDate:
+    description: Customer birth date
+    enum_values: []
+    type: date
+  MaritalStatus:
+    description: 'Marital status: S = Single, M = Married'
+    enum_values: []
+    type: string
+  Gender:
+    description: 'Gender: M = Male, F = Female'
+    enum_values: []
+    type: string
+  EmailAddress:
+    description: Email address
+    enum_values: []
+    type: string
+  YearlyIncome:
+    description: Annual income (USD)
+    enum_values: []
+    type: decimal
+  TotalChildren:
+    description: Total number of children
+    enum_values: []
+    type: integer
+  EnglishEducation:
+    description: 'Education level: Bachelors, Graduate Degree, High School, Partial College, Partial High School'
+    enum_values: []
+    type: string
+  EnglishOccupation:
+    description: 'Occupation: Professional, Skilled Manual, Clerical, Management, Manual'
+    enum_values: []
+    type: string
+  HouseOwnerFlag:
+    description: 'House ownership flag: 1 = Yes, 0 = No'
+    enum_values: []
+    type: string
+  NumberCarsOwned:
+    description: Number of cars owned
+    enum_values: []
+    type: integer
+  AddressLine1:
+    description: Address line 1
+    enum_values: []
+    type: string
+  Phone:
+    description: Phone number
+    enum_values: []
+    type: string
+  DateFirstPurchase:
+    description: Date of first purchase
+    enum_values: []
+    type: date
+  CommuteDistance:
+    description: 'Commute distance: 0-1 Miles, 1-2 Miles, 2-5 Miles, 5-10 Miles, 10+ Miles'
+    enum_values: []
+    type: string
+products:
+  ProductKey:
+    description: Product identifier (PK)
+    enum_values: []
+    type: integer
+  ProductAlternateKey:
+    description: Alternate product identifier (SKU)
+    enum_values: []
+    type: string
+  ProductSubcategoryKey:
+    description: FK to product subcategory table
+    enum_values: []
+    type: integer
+  EnglishProductName:
+    description: Product name (English)
+    enum_values: []
+    type: string
+  StandardCost:
+    description: Standard manufacturing cost (USD)
+    enum_values: []
+    type: decimal
+  Color:
+    description: Product color
+    enum_values: []
+    type: string
+  SafetyStockLevel:
+    description: Safety stock level
+    enum_values: []
+    type: integer
+  ReorderPoint:
+    description: Reorder point threshold
+    enum_values: []
+    type: integer
+  ListPrice:
+    description: List price (USD)
+    enum_values: []
+    type: decimal
+  Size:
+    description: Product size
+    enum_values: []
+    type: string
+  DaysToManufacture:
+    description: Number of days to manufacture
+    enum_values: []
+    type: integer
+  DealerPrice:
+    description: Dealer price (USD)
+    enum_values: []
+    type: decimal
+  Status:
+    description: 'Product status: Current, NULL (discontinued)'
+    enum_values: []
+    type: string
+internet_sales:
+  ProductKey:
+    description: FK to products table
+    enum_values: []
+    type: integer
+  OrderDateKey:
+    description: FK to dates table (order date)
+    enum_values: []
+    type: integer
+  DueDateKey:
+    description: FK to dates table (due date)
+    enum_values: []
+    type: integer
+  ShipDateKey:
+    description: FK to dates table (ship date)
+    enum_values: []
+    type: integer
+  CustomerKey:
+    description: FK to customers table
+    enum_values: []
+    type: integer
+  PromotionKey:
+    description: FK to promotions table
+    enum_values: []
+    type: integer
+  CurrencyKey:
+    description: FK to currency table
+    enum_values: []
+    type: integer
+  SalesTerritoryKey:
+    description: FK to sales territory table
+    enum_values: []
+    type: integer
+  SalesOrderNumber:
+    description: Sales order number (e.g., SO43697)
+    enum_values: []
+    type: string
+  SalesOrderLineNumber:
+    description: Line item number within the order
+    enum_values: []
+    type: integer
+  RevisionNumber:
+    description: Order revision number
+    enum_values: []
+    type: integer
+  OrderQuantity:
+    description: Quantity of products ordered
+    enum_values: []
+    type: integer
+  UnitPrice:
+    description: Unit price per product (USD)
+    enum_values: []
+    type: decimal
+  ExtendedAmount:
+    description: Extended amount = UnitPrice × OrderQuantity
+    enum_values: []
+    type: decimal
+  UnitPriceDiscountPct:
+    description: Unit price discount percentage
+    enum_values: []
+    type: decimal
+  DiscountAmount:
+    description: Discount amount (USD)
+    enum_values: []
+    type: decimal
+  ProductStandardCost:
+    description: Standard manufacturing cost (USD)
+    enum_values: []
+    type: decimal
+  TotalProductCost:
+    description: Total product cost (USD)
+    enum_values: []
+    type: decimal
+  SalesAmount:
+    description: Actual sales amount (USD) = ExtendedAmount - DiscountAmount
+    enum_values: []
+    type: decimal
+  TaxAmt:
+    description: Tax amount (USD)
+    enum_values: []
+    type: decimal
+  Freight:
+    description: Freight/shipping cost (USD)
+    enum_values: []
+    type: decimal
+  OrderDate:
+    description: Order date
+    enum_values: []
+    type: datetime
+  DueDate:
+    description: Due date
+    enum_values: []
+    type: datetime
+  ShipDate:
+    description: Actual ship date
+    enum_values: []
+    type: datetime

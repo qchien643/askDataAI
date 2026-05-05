@@ -1,0 +1,170 @@
+# SQL Error Taxonomy — Sprint 5
+# Inspired by SQL-of-Thought (arXiv 2509.00581) — 9 categories × 31 sub-cat
+# trên Spider; ablation cho thấy bỏ taxonomy → -8-10% EX accuracy.
+#
+# Used by CorrectionPlanner to classify SQL execution failures and propose
+# repair strategies. CorrectionFixer applies the strategy to produce corrected SQL.
+
+version: "1.0"
+description: "T-SQL error categories for taxonomy-guided correction (askDataAI Sprint 5)"
+
+categories:
+
+  syntax_errors:
+    label: "Syntax / Parser errors"
+    items:
+      - id: unmatched_parens
+        description: "Mismatched parentheses or quotes"
+        repair_hint: "Count opening and closing parens; balance them. Re-quote string literals if missing single-quotes."
+
+      - id: missing_keyword
+        description: "Missing required keyword (FROM, WHERE, GROUP BY, etc.)"
+        repair_hint: "Add the missing clause. T-SQL clause order: SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY."
+
+      - id: invalid_keyword_order
+        description: "Clauses in wrong order (e.g. WHERE before FROM)"
+        repair_hint: "Reorder clauses: SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY."
+
+      - id: declare_variable
+        description: "Used DECLARE @var which is not allowed in single-statement queries"
+        repair_hint: "Inline values directly. E.g. instead of DECLARE @y INT = 2013, hard-code 2013."
+
+  schema_linking:
+    label: "Schema linking errors"
+    items:
+      - id: nonexistent_table
+        description: "Referenced table does not exist in schema"
+        repair_hint: "Find the correct table name from DDL. Check for typos like 'customer' vs 'customers'."
+
+      - id: nonexistent_column
+        description: "Referenced column does not exist in target table"
+        repair_hint: "Check column exists in the target table; check for typos. May need a JOIN to bring in the column from another table."
+
+      - id: ambiguous_column
+        description: "Column name exists in multiple joined tables without alias"
+        repair_hint: "Qualify column with table alias. E.g. customers.CustomerKey instead of CustomerKey."
+
+      - id: schema_qualifier_missing
+        description: "Table referenced without [dbo].[...] schema prefix"
+        repair_hint: "Use full qualifier [dbo].[TableName] for SQL Server."
+
+  join_errors:
+    label: "JOIN errors"
+    items:
+      - id: missing_join
+        description: "Cross-product (Cartesian) without ON clause"
+        repair_hint: "Add proper JOIN ... ON condition based on FK relationship from schema."
+
+      - id: wrong_join_type
+        description: "Used INNER JOIN where LEFT/RIGHT JOIN is needed (or vice versa)"
+        repair_hint: "Match JOIN type to question intent: 'all customers including those without orders' → LEFT JOIN."
+
+      - id: wrong_join_condition
+        description: "Joining on incorrect columns"
+        repair_hint: "Use the FK columns from schema relationships section."
+
+      - id: chain_too_short
+        description: "Multi-hop query missing intermediate JOIN"
+        repair_hint: "Add intermediate JOIN. E.g. sales → customers → geography (geography not directly on sales)."
+
+  filter_errors:
+    label: "WHERE / HAVING filter errors"
+    items:
+      - id: wrong_operator
+        description: "Wrong operator: '=' where LIKE/IN/BETWEEN is needed"
+        repair_hint: "Use IN for list match, LIKE for pattern, BETWEEN for ranges, = only for exact equality."
+
+      - id: type_mismatch
+        description: "Comparing INT to string literal or vice versa"
+        repair_hint: "Convert types: CAST(col AS NVARCHAR) or CAST('123' AS INT). Match data types from schema."
+
+      - id: missing_filter
+        description: "Question implies a filter but SQL has none"
+        repair_hint: "Re-read question for time / category / status conditions and add WHERE clause."
+
+      - id: redundant_filter
+        description: "Filter contradicts another filter (always-false)"
+        repair_hint: "Remove or fix the conflicting WHERE conditions."
+
+  aggregation_errors:
+    label: "Aggregation / GROUP BY errors"
+    items:
+      - id: missing_groupby
+        description: "Aggregate function without GROUP BY when SELECT has non-aggregate columns"
+        repair_hint: "Add GROUP BY for ALL non-aggregate columns in SELECT clause."
+
+      - id: wrong_aggregate
+        description: "Used SUM where COUNT needed (or vice versa)"
+        repair_hint: "Match aggregate to question intent: 'how many' → COUNT, 'total amount' → SUM, 'average' → AVG."
+
+      - id: aggregate_in_where
+        description: "Aggregate function (SUM, COUNT, AVG) appears in WHERE clause"
+        repair_hint: "Move aggregate filter to HAVING clause. WHERE filters rows; HAVING filters aggregated groups."
+
+      - id: count_distinct_missing
+        description: "COUNT(*) where COUNT(DISTINCT col) is needed"
+        repair_hint: "When question says 'how many distinct X', use COUNT(DISTINCT X) not COUNT(*)."
+
+  value_errors:
+    label: "Date / value formatting errors"
+    items:
+      - id: date_format
+        description: "Date / time format mismatch"
+        repair_hint: "Use T-SQL functions: YEAR(date), MONTH(date), DATEPART(QUARTER, date). Format dates as 'YYYY-MM-DD'."
+
+      - id: case_sensitivity
+        description: "String comparison case-sensitivity issue"
+        repair_hint: "Use LOWER() or COLLATE Latin1_General_CI_AS for case-insensitive match."
+
+      - id: null_handling
+        description: "NULL comparison using = or != (always evaluates to NULL)"
+        repair_hint: "Use IS NULL / IS NOT NULL for null checks. ISNULL(col, default) for default values."
+
+  subquery_errors:
+    label: "Subquery / CTE errors"
+    items:
+      - id: cte_orderby
+        description: "ORDER BY inside CTE/subquery without TOP — invalid in SQL Server"
+        repair_hint: "Remove ORDER BY from CTE. If ranking needed, use ROW_NUMBER() OVER (ORDER BY ...) inside CTE."
+
+      - id: nested_with
+        description: "WITH keyword nested inside another CTE — syntax error"
+        repair_hint: "Use only one WITH at top level; chain multiple CTEs with commas: WITH a AS (...), b AS (...)."
+
+      - id: unnecessary_subquery
+        description: "Subquery used where simple JOIN would work"
+        repair_hint: "Replace correlated subquery with JOIN for better performance and readability."
+
+      - id: missing_subquery
+        description: "Question requires comparison to aggregate but no subquery used"
+        repair_hint: "Use subquery: WHERE col > (SELECT AVG(col) FROM ...) or WITH ... AS (...)."
+
+  set_op_errors:
+    label: "Set operation errors"
+    items:
+      - id: union_vs_unionall
+        description: "UNION (deduplicates) used where UNION ALL (preserves dups) needed or vice versa"
+        repair_hint: "UNION ALL is faster + preserves duplicates. Use UNION only when explicit dedup needed."
+
+      - id: column_count_mismatch
+        description: "UNION/INTERSECT/EXCEPT branches have different column counts"
+        repair_hint: "Both branches must have identical column count and compatible types in matching positions."
+
+  semantic_errors:
+    label: "Semantic / intent errors"
+    items:
+      - id: misinterpreted_intent
+        description: "SQL doesn't match question's analytical intent"
+        repair_hint: "Re-read question. Identify: (1) what entity is being asked about, (2) what filter, (3) what aggregation, (4) what ordering."
+
+      - id: off_by_one
+        description: "TOP N off by 1, or BETWEEN bounds wrong"
+        repair_hint: "Re-read question for exact N. BETWEEN is inclusive on both ends in T-SQL."
+
+      - id: wrong_ordering
+        description: "ORDER BY direction reversed (ASC vs DESC)"
+        repair_hint: "Match question intent: 'highest/most/top' → DESC; 'lowest/least/bottom' → ASC."
+
+      - id: wrong_table_for_metric
+        description: "SUM(SalesAmount) from wrong fact table (e.g. ResellerSales when question asks about Internet)"
+        repair_hint: "Match fact table to question source: 'online'/'internet' → FactInternetSales; 'reseller'/'B2B' → FactResellerSales."

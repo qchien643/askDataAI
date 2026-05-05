@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "tag": "smoke",
+    "git_sha": "8946146",
+    "timestamp": "2026-04-30T16:25:12",
+    "dataset_size": 1
+  },
+  "config_snapshot": {
+    "backend_url": "http://localhost:8000",
+    "judge_model": "gpt-4o-mini",
+    "openai_base_url": "https://api.openai.com/v1"
+  },
+  "summary": {
+    "total": 1,
+    "correct": 1,
+    "ex_match_rate": 1.0,
+    "valid_rate": 1.0,
+    "by_method": {
+      "exact": 1
+    },
+    "by_difficulty": {
+      "easy": {
+        "n": 1,
+        "correct": 1,
+        "ex_rate": 1.0,
+        "valid_rate": 1.0
+      }
+    },
+    "by_tag": {
+      "aggregation": {
+        "n": 1,
+        "ex_rate": 1.0
+      }
+    },
+    "latency_p50_ms": 17595,
+    "latency_p95_ms": 17595
+  },
+  "results": [
+    {
+      "example_id": "easy_001",
+      "difficulty": "easy",
+      "tags": [
+        "aggregation"
+      ],
+      "pred_sql": "SELECT COUNT(*) AS TotalCustomers\nFROM [dbo].[DimCustomer];",
+      "pred_translated": "",
+      "pred_rows": [
+        {
+          "TotalCustomers": 18484
+        }
+      ],
+      "pred_cols": [
+        "TotalCustomers"
+      ],
+      "pred_row_count": 1,
+      "pred_valid": true,
+      "pred_error": "",
+      "pred_intent": "TEXT_TO_SQL",
+      "pred_retries": 0,
+      "gold_rows": [
+        {
+          "total_customers": 18484
+        }
+      ],
+      "gold_cols": [
+        "total_customers"
+      ],
+      "gold_row_count": 1,
+      "gold_valid": true,
+      "gold_error": "",
+      "match": true,
+      "match_method": "exact",
+      "judge_verdict": "",
+      "judge_reasoning": "",
+      "judge_confidence": 0.0,
+      "compare_reason": "set match (perm=(0,))",
+      "pipeline_latency_ms": 17595,
+      "gold_latency_ms": 248,
+      "judge_latency_ms": 0
+    }
+  ]
+}

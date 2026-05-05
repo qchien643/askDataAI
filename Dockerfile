@@ -19,12 +19,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
-COPY src/ ./src/
-COPY glossary.yaml .
-COPY models.yaml .
+COPY askdataai/ ./askdataai/
+COPY configs/ ./configs/
 
 # Create runtime data directories (volumes will mount here)
-RUN mkdir -p chroma_data manifests
+RUN mkdir -p data/chroma_data data/manifests
 
 # Expose FastAPI port
 EXPOSE 8000
@@ -34,6 +33,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run with uvicorn
-CMD ["python", "-m", "uvicorn", "src.server:app", \
+CMD ["python", "-m", "uvicorn", "askdataai.server:app", \
      "--host", "0.0.0.0", "--port", "8000", \
      "--log-level", "info"]

@@ -30,6 +30,9 @@ export interface Column {
   display_name: string;
   type: string;
   description: string;
+  is_calculated?: boolean;
+  expression?: string;
+  enum_values?: string[];  // Tập giá trị hợp lệ (categorical column)
 }
 
 export interface Relationship {
@@ -193,5 +196,45 @@ export interface SettingsData {
 
 export interface ModelUpdateData {
   description?: string;
-  columns?: { name: string; description?: string; display_name?: string }[];
+  columns?: { name: string; description?: string; display_name?: string; enum_values?: string[] }[];
+}
+
+export interface AddColumnData {
+  name: string;
+  type: string;
+  display_name?: string;
+  description?: string;
+}
+
+export interface AddModelData {
+  name: string;
+  table_reference: string;
+  description?: string;
+  primary_key?: string;
+  columns: AddColumnData[];
+}
+
+export interface AddRelationshipData {
+  name: string;
+  model_from: string;
+  model_to: string;
+  join_type: string;
+  condition: string;
+}
+
+export interface TestGenerateResponse {
+  success: boolean;
+  models_added: number;
+  relationships_added: number;
+  models: { name: string; table: string; columns_count: number }[];
+  relationships: { name: string; from: string; to: string }[];
+  message: string;
+}
+
+export interface AutoDescribeEvent {
+  phase: string;
+  status: string;
+  progress: string;
+  table?: string;
+  descriptions?: Record<string, string>;
 }

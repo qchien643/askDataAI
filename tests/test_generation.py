@@ -21,21 +21,21 @@ os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 import warnings
 warnings.filterwarnings("ignore")
 
-from src.config import settings
-from src.connectors.connection import SQLServerConnector
-from src.connectors.schema_introspector import SchemaIntrospector
-from src.modeling.manifest_builder import ManifestBuilder
-from src.modeling.deploy import ManifestDeployer
-from src.indexing.embedder import HuggingFaceEmbedder
-from src.indexing.vector_store import VectorStore
-from src.indexing.schema_indexer import SchemaIndexer
-from src.retrieval.schema_retriever import SchemaRetriever
-from src.retrieval.context_builder import ContextBuilder
-from src.generation.llm_client import LLMClient
-from src.generation.intent_classifier import IntentClassifier, Intent
-from src.generation.sql_generator import SQLGenerator
-from src.generation.sql_rewriter import SQLRewriter
-from src.generation.sql_corrector import SQLCorrector
+from askdataai.config import settings
+from askdataai.connectors.connection import SQLServerConnector
+from askdataai.connectors.schema_introspector import SchemaIntrospector
+from askdataai.modeling.manifest_builder import ManifestBuilder
+from askdataai.modeling.deploy import ManifestDeployer
+from askdataai.indexing.embedder import OpenAIEmbedder
+from askdataai.indexing.vector_store import VectorStore
+from askdataai.indexing.schema_indexer import SchemaIndexer
+from askdataai.retrieval.schema_retriever import SchemaRetriever
+from askdataai.retrieval.context_builder import ContextBuilder
+from askdataai.generation.llm_client import LLMClient
+from askdataai.generation.intent_classifier import IntentClassifier, Intent
+from askdataai.generation.sql_generator import SQLGenerator
+from askdataai.generation.sql_rewriter import SQLRewriter
+from askdataai.generation.sql_corrector import SQLCorrector
 
 
 def separator(title):
@@ -55,7 +55,7 @@ def setup():
 
     chroma_dir = os.path.join(os.path.dirname(__file__), "..", "chroma_data")
     store = VectorStore(persist_dir=chroma_dir)
-    embedder = HuggingFaceEmbedder(api_key=settings.huggingface_api_key)
+    embedder = OpenAIEmbedder(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
     indexer = SchemaIndexer(vector_store=store, embedder=embedder)
 
     deployer = ManifestDeployer(

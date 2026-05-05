@@ -196,6 +196,10 @@ export default function VegaChart({
         // 1. Deep-patch the spec to force Memphis colors
         const patchedSpec = patchSpec({ ...spec });
 
+        // LLM specs sometimes embed hallucinated data; we own data via the prop.
+        delete patchedSpec.data;
+        delete patchedSpec.datasets;
+
         // 2. Merge Memphis config on top
         const fullSpec: any = {
           ...patchedSpec,
@@ -322,9 +326,20 @@ export default function VegaChart({
           },
         };
 
-        if (data && data.length > 0) {
-          fullSpec.data = { values: data };
+        // A single undefined/null row makes vega throw inside Array.forEach.
+        const safeData = Array.isArray(data)
+          ? data.filter(
+              (r): r is Record<string, any> =>
+                r !== null && typeof r === 'object' && !Array.isArray(r),
+            )
+          : [];
+
+        if (safeData.length === 0) {
+          if (!cancelled) setError('Không có dữ liệu để vẽ biểu đồ');
+          return;
         }
+
+        fullSpec.data = { values: safeData };
 
         if (cancelled) return;
 

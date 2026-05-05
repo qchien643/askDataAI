@@ -1,0 +1,1398 @@
+{
+  "samples": {
+    "customers": {
+      "CustomerKey": {
+        "examples": [
+          11000,
+          11001,
+          11002
+        ],
+        "range": [
+          11000,
+          29483
+        ]
+      },
+      "GeographyKey": {
+        "examples": [
+          2,
+          3,
+          4
+        ],
+        "range": [
+          2,
+          654
+        ]
+      },
+      "CustomerAlternateKey": {
+        "examples": [
+          "AW00011000",
+          "AW00011001",
+          "AW00011002"
+        ],
+        "range": null
+      },
+      "Title": {
+        "examples": [
+          "Mr.",
+          "Mrs.",
+          "Ms"
+        ],
+        "range": null
+      },
+      "FirstName": {
+        "examples": [
+          "Aaron",
+          "Abby",
+          "Abhijit"
+        ],
+        "range": null
+      },
+      "MiddleName": {
+        "examples": [
+          "A",
+          "A.",
+          "B"
+        ],
+        "range": null
+      },
+      "LastName": {
+        "examples": [
+          "Adams",
+          "Agbonile",
+          "Alan"
+        ],
+        "range": null
+      },
+      "BirthDate": {
+        "examples": [
+          "1916-02-10",
+          "1917-02-09",
+          "1917-06-05"
+        ],
+        "range": [
+          "1916-02-10",
+          "1986-06-25"
+        ]
+      },
+      "MaritalStatus": {
+        "examples": [
+          "M",
+          "S"
+        ],
+        "range": null
+      },
+      "Gender": {
+        "examples": [
+          "F",
+          "M"
+        ],
+        "range": null
+      },
+      "EmailAddress": {
+        "examples": [
+          "aaron10@adventure-works.com",
+          "aaron11@adventure-works.com",
+          "aaron12@adventure-works.com"
+        ],
+        "range": null
+      },
+      "YearlyIncome": {
+        "examples": [
+          10000.0,
+          20000.0,
+          30000.0
+        ],
+        "range": [
+          10000.0,
+          170000.0
+        ]
+      },
+      "TotalChildren": {
+        "examples": [
+          0,
+          1,
+          2
+        ],
+        "range": [
+          0,
+          5
+        ]
+      },
+      "EnglishEducation": {
+        "examples": [
+          "Bachelors",
+          "Graduate Degree",
+          "High School"
+        ],
+        "range": null
+      },
+      "EnglishOccupation": {
+        "examples": [
+          "Clerical",
+          "Management",
+          "Manual"
+        ],
+        "range": null
+      },
+      "HouseOwnerFlag": {
+        "examples": [
+          "0",
+          "1"
+        ],
+        "range": null
+      },
+      "NumberCarsOwned": {
+        "examples": [
+          0,
+          1,
+          2
+        ],
+        "range": [
+          0,
+          4
+        ]
+      },
+      "AddressLine1": {
+        "examples": [
+          "00, rue Saint-Lazare",
+          "02, place de Fontenoy",
+          "035, boulevard du Montparnasse"
+        ],
+        "range": null
+      },
+      "Phone": {
+        "examples": [
+          "1 (11) 500 555-0110",
+          "1 (11) 500 555-0111",
+          "1 (11) 500 555-0112"
+        ],
+        "range": null
+      },
+      "DateFirstPurchase": {
+        "examples": [
+          "2010-12-29",
+          "2010-12-30",
+          "2010-12-31"
+        ],
+        "range": [
+          "2010-12-29",
+          "2014-01-28"
+        ]
+      },
+      "CommuteDistance": {
+        "examples": [
+          "0-1 Miles",
+          "10+ Miles",
+          "1-2 Miles"
+        ],
+        "range": null
+      }
+    },
+    "products": {
+      "ProductKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          606
+        ]
+      },
+      "ProductAlternateKey": {
+        "examples": [
+          "AR-5381",
+          "BA-8327",
+          "BB-7421"
+        ],
+        "range": null
+      },
+      "ProductSubcategoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          37
+        ]
+      },
+      "EnglishProductName": {
+        "examples": [
+          "Adjustable Race",
+          "All-Purpose Bike Stand",
+          "AWC Logo Cap"
+        ],
+        "range": null
+      },
+      "StandardCost": {
+        "examples": [
+          0.8565,
+          1.4923,
+          1.8663
+        ],
+        "range": [
+          0.8565,
+          2171.2942
+        ]
+      },
+      "Color": {
+        "examples": [
+          "Black",
+          "Blue",
+          "Grey"
+        ],
+        "range": null
+      },
+      "SafetyStockLevel": {
+        "examples": [
+          4,
+          60,
+          100
+        ],
+        "range": [
+          4,
+          1000
+        ]
+      },
+      "ReorderPoint": {
+        "examples": [
+          3,
+          45,
+          75
+        ],
+        "range": [
+          3,
+          750
+        ]
+      },
+      "ListPrice": {
+        "examples": [
+          2.29,
+          3.99,
+          4.99
+        ],
+        "range": [
+          2.29,
+          3578.27
+        ]
+      },
+      "Size": {
+        "examples": [
+          "38",
+          "40",
+          "42"
+        ],
+        "range": null
+      },
+      "DaysToManufacture": {
+        "examples": [
+          0,
+          1,
+          2
+        ],
+        "range": [
+          0,
+          4
+        ]
+      },
+      "DealerPrice": {
+        "examples": [
+          1.374,
+          2.394,
+          2.994
+        ],
+        "range": [
+          1.374,
+          2146.962
+        ]
+      },
+      "Status": {
+        "examples": [
+          "Current"
+        ],
+        "range": null
+      }
+    },
+    "product_subcategories": {
+      "ProductSubcategoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          37
+        ]
+      },
+      "ProductCategoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          4
+        ]
+      },
+      "EnglishProductSubcategoryName": {
+        "examples": [
+          "Bib-Shorts",
+          "Bike Racks",
+          "Bike Stands"
+        ],
+        "range": null
+      }
+    },
+    "product_categories": {
+      "ProductCategoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          4
+        ]
+      },
+      "EnglishProductCategoryName": {
+        "examples": [
+          "Accessories",
+          "Bikes",
+          "Clothing"
+        ],
+        "range": null
+      }
+    },
+    "dates": {
+      "DateKey": {
+        "examples": [
+          20050101,
+          20050102,
+          20050103
+        ],
+        "range": [
+          20050101,
+          20141231
+        ]
+      },
+      "FullDateAlternateKey": {
+        "examples": [
+          "2005-01-01",
+          "2005-01-02",
+          "2005-01-03"
+        ],
+        "range": [
+          "2005-01-01",
+          "2014-12-31"
+        ]
+      },
+      "EnglishDayNameOfWeek": {
+        "examples": [
+          "Friday",
+          "Monday",
+          "Saturday"
+        ],
+        "range": null
+      },
+      "DayNumberOfMonth": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          31
+        ]
+      },
+      "DayNumberOfYear": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          366
+        ]
+      },
+      "WeekNumberOfYear": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          53
+        ]
+      },
+      "EnglishMonthName": {
+        "examples": [
+          "April",
+          "August",
+          "December"
+        ],
+        "range": null
+      },
+      "MonthNumberOfYear": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          12
+        ]
+      },
+      "CalendarQuarter": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          4
+        ]
+      },
+      "CalendarYear": {
+        "examples": [
+          2005,
+          2006,
+          2007
+        ],
+        "range": [
+          2005,
+          2014
+        ]
+      },
+      "CalendarSemester": {
+        "examples": [
+          1,
+          2
+        ],
+        "range": [
+          1,
+          2
+        ]
+      },
+      "FiscalQuarter": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          4
+        ]
+      },
+      "FiscalYear": {
+        "examples": [
+          2005,
+          2006,
+          2007
+        ],
+        "range": [
+          2005,
+          2014
+        ]
+      }
+    },
+    "geography": {
+      "GeographyKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          655
+        ]
+      },
+      "City": {
+        "examples": [
+          "Abingdon",
+          "Albany",
+          "Alexandria"
+        ],
+        "range": null
+      },
+      "StateProvinceCode": {
+        "examples": [
+          "17",
+          "31",
+          "32"
+        ],
+        "range": null
+      },
+      "StateProvinceName": {
+        "examples": [
+          "Alabama",
+          "Alberta",
+          "Arizona"
+        ],
+        "range": null
+      },
+      "CountryRegionCode": {
+        "examples": [
+          "AU",
+          "CA",
+          "DE"
+        ],
+        "range": null
+      },
+      "EnglishCountryRegionName": {
+        "examples": [
+          "Australia",
+          "Canada",
+          "France"
+        ],
+        "range": null
+      },
+      "PostalCode": {
+        "examples": [
+          "01071",
+          "01906",
+          "02062"
+        ],
+        "range": null
+      },
+      "SalesTerritoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          10
+        ]
+      }
+    },
+    "sales_territory": {
+      "SalesTerritoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          11
+        ]
+      },
+      "SalesTerritoryAlternateKey": {
+        "examples": [
+          0,
+          1,
+          2
+        ],
+        "range": [
+          0,
+          10
+        ]
+      },
+      "SalesTerritoryRegion": {
+        "examples": [
+          "Australia",
+          "Canada",
+          "Central"
+        ],
+        "range": null
+      },
+      "SalesTerritoryCountry": {
+        "examples": [
+          "Australia",
+          "Canada",
+          "France"
+        ],
+        "range": null
+      },
+      "SalesTerritoryGroup": {
+        "examples": [
+          "Europe",
+          "NA",
+          "North America"
+        ],
+        "range": null
+      }
+    },
+    "currency": {
+      "CurrencyKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          105
+        ]
+      },
+      "CurrencyAlternateKey": {
+        "examples": [
+          "AED",
+          "AFA",
+          "ALL"
+        ],
+        "range": null
+      },
+      "CurrencyName": {
+        "examples": [
+          "Afghani",
+          "Algerian Dinar",
+          "Argentine Peso"
+        ],
+        "range": null
+      }
+    },
+    "promotions": {
+      "PromotionKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          16
+        ]
+      },
+      "PromotionAlternateKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          16
+        ]
+      },
+      "EnglishPromotionName": {
+        "examples": [
+          "Half-Price Pedal Sale",
+          "LL Road Frame Sale",
+          "Mountain Tire Sale"
+        ],
+        "range": null
+      },
+      "EnglishPromotionType": {
+        "examples": [
+          "Discontinued Product",
+          "Excess Inventory",
+          "New Product"
+        ],
+        "range": null
+      },
+      "EnglishPromotionCategory": {
+        "examples": [
+          "Customer",
+          "No Discount",
+          "Reseller"
+        ],
+        "range": null
+      },
+      "StartDate": {
+        "examples": [
+          "2010-11-29",
+          "2010-12-29",
+          "2011-11-12"
+        ],
+        "range": [
+          "2010-11-29",
+          "2013-10-29"
+        ]
+      },
+      "EndDate": {
+        "examples": [
+          "2011-12-28",
+          "2012-01-28",
+          "2012-02-28"
+        ],
+        "range": [
+          "2011-12-28",
+          "2014-06-30"
+        ]
+      },
+      "MinQty": {
+        "examples": [
+          0,
+          11,
+          15
+        ],
+        "range": [
+          0,
+          61
+        ]
+      },
+      "MaxQty": {
+        "examples": [
+          14,
+          24,
+          40
+        ],
+        "range": [
+          14,
+          60
+        ]
+      }
+    },
+    "resellers": {
+      "ResellerKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          701
+        ]
+      },
+      "GeographyKey": {
+        "examples": [
+          1,
+          3,
+          5
+        ],
+        "range": [
+          1,
+          655
+        ]
+      },
+      "ResellerAlternateKey": {
+        "examples": [
+          "AW00000001",
+          "AW00000002",
+          "AW00000003"
+        ],
+        "range": null
+      },
+      "ResellerName": {
+        "examples": [
+          "A Bicycle Association",
+          "A Bike Store",
+          "A Cycle Shop"
+        ],
+        "range": null
+      },
+      "NumberEmployees": {
+        "examples": [
+          2,
+          3,
+          4
+        ],
+        "range": [
+          2,
+          100
+        ]
+      },
+      "OrderFrequency": {
+        "examples": [
+          "A",
+          "Q",
+          "S"
+        ],
+        "range": null
+      },
+      "ProductLine": {
+        "examples": [
+          "Mountain",
+          "Road",
+          "Touring"
+        ],
+        "range": null
+      },
+      "BusinessType": {
+        "examples": [
+          "Specialty Bike Shop",
+          "Value Added Reseller",
+          "Warehouse"
+        ],
+        "range": null
+      },
+      "AnnualSales": {
+        "examples": [
+          300000.0,
+          800000.0,
+          1000000.0
+        ],
+        "range": [
+          300000.0,
+          3000000.0
+        ]
+      },
+      "AnnualRevenue": {
+        "examples": [
+          30000.0,
+          80000.0,
+          100000.0
+        ],
+        "range": [
+          30000.0,
+          300000.0
+        ]
+      },
+      "YearOpened": {
+        "examples": [
+          1974,
+          1975,
+          1976
+        ],
+        "range": [
+          1974,
+          2005
+        ]
+      }
+    },
+    "internet_sales": {
+      "ProductKey": {
+        "examples": [
+          214,
+          217,
+          222
+        ],
+        "range": [
+          214,
+          606
+        ]
+      },
+      "OrderDateKey": {
+        "examples": [
+          20101229,
+          20101230,
+          20101231
+        ],
+        "range": [
+          20101229,
+          20140128
+        ]
+      },
+      "DueDateKey": {
+        "examples": [
+          20110110,
+          20110111,
+          20110112
+        ],
+        "range": [
+          20110110,
+          20140209
+        ]
+      },
+      "ShipDateKey": {
+        "examples": [
+          20110105,
+          20110106,
+          20110107
+        ],
+        "range": [
+          20110105,
+          20140204
+        ]
+      },
+      "CustomerKey": {
+        "examples": [
+          11000,
+          11001,
+          11002
+        ],
+        "range": [
+          11000,
+          29483
+        ]
+      },
+      "PromotionKey": {
+        "examples": [
+          1,
+          2,
+          13
+        ],
+        "range": [
+          1,
+          14
+        ]
+      },
+      "CurrencyKey": {
+        "examples": [
+          6,
+          19,
+          29
+        ],
+        "range": [
+          6,
+          100
+        ]
+      },
+      "SalesTerritoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          10
+        ]
+      },
+      "SalesOrderNumber": {
+        "examples": [
+          "SO43697",
+          "SO43698",
+          "SO43699"
+        ],
+        "range": null
+      },
+      "SalesOrderLineNumber": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          8
+        ]
+      },
+      "RevisionNumber": {
+        "examples": [
+          1
+        ],
+        "range": [
+          1,
+          1
+        ]
+      },
+      "OrderQuantity": {
+        "examples": [
+          1
+        ],
+        "range": [
+          1,
+          1
+        ]
+      },
+      "UnitPrice": {
+        "examples": [
+          2.29,
+          3.99,
+          4.99
+        ],
+        "range": [
+          2.29,
+          3578.27
+        ]
+      },
+      "ExtendedAmount": {
+        "examples": [
+          2.29,
+          3.99,
+          4.99
+        ],
+        "range": [
+          2.29,
+          3578.27
+        ]
+      },
+      "UnitPriceDiscountPct": {
+        "examples": [
+          0.0
+        ],
+        "range": [
+          0.0,
+          0.0
+        ]
+      },
+      "DiscountAmount": {
+        "examples": [
+          0.0
+        ],
+        "range": [
+          0.0,
+          0.0
+        ]
+      },
+      "ProductStandardCost": {
+        "examples": [
+          0.8565,
+          1.4923,
+          1.8663
+        ],
+        "range": [
+          0.8565,
+          2171.2942
+        ]
+      },
+      "TotalProductCost": {
+        "examples": [
+          0.8565,
+          1.4923,
+          1.8663
+        ],
+        "range": [
+          0.8565,
+          2171.2942
+        ]
+      },
+      "SalesAmount": {
+        "examples": [
+          2.29,
+          3.99,
+          4.99
+        ],
+        "range": [
+          2.29,
+          3578.27
+        ]
+      },
+      "TaxAmt": {
+        "examples": [
+          0.1832,
+          0.3192,
+          0.3992
+        ],
+        "range": [
+          0.1832,
+          286.2616
+        ]
+      },
+      "Freight": {
+        "examples": [
+          0.0573,
+          0.0998,
+          0.1248
+        ],
+        "range": [
+          0.0573,
+          89.4568
+        ]
+      },
+      "OrderDate": {
+        "examples": [
+          "2010-12-29",
+          "2010-12-30",
+          "2010-12-31"
+        ],
+        "range": [
+          "2010-12-29",
+          "2014-01-28"
+        ]
+      },
+      "DueDate": {
+        "examples": [
+          "2011-01-10",
+          "2011-01-11",
+          "2011-01-12"
+        ],
+        "range": [
+          "2011-01-10",
+          "2014-02-09"
+        ]
+      },
+      "ShipDate": {
+        "examples": [
+          "2011-01-05",
+          "2011-01-06",
+          "2011-01-07"
+        ],
+        "range": [
+          "2011-01-05",
+          "2014-02-04"
+        ]
+      }
+    },
+    "reseller_sales": {
+      "ProductKey": {
+        "examples": [
+          212,
+          213,
+          214
+        ],
+        "range": [
+          212,
+          606
+        ]
+      },
+      "OrderDateKey": {
+        "examples": [
+          20101229,
+          20110129,
+          20110301
+        ],
+        "range": [
+          20101229,
+          20131129
+        ]
+      },
+      "DueDateKey": {
+        "examples": [
+          20110110,
+          20110210,
+          20110313
+        ],
+        "range": [
+          20110110,
+          20131211
+        ]
+      },
+      "ShipDateKey": {
+        "examples": [
+          20110105,
+          20110205,
+          20110308
+        ],
+        "range": [
+          20110105,
+          20131206
+        ]
+      },
+      "ResellerKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          701
+        ]
+      },
+      "EmployeeKey": {
+        "examples": [
+          272,
+          281,
+          282
+        ],
+        "range": [
+          272,
+          296
+        ]
+      },
+      "PromotionKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          16
+        ]
+      },
+      "CurrencyKey": {
+        "examples": [
+          6,
+          19,
+          36
+        ],
+        "range": [
+          6,
+          100
+        ]
+      },
+      "SalesTerritoryKey": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          10
+        ]
+      },
+      "SalesOrderNumber": {
+        "examples": [
+          "SO43659",
+          "SO43659",
+          "SO43659"
+        ],
+        "range": null
+      },
+      "SalesOrderLineNumber": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          72
+        ]
+      },
+      "OrderQuantity": {
+        "examples": [
+          1,
+          2,
+          3
+        ],
+        "range": [
+          1,
+          44
+        ]
+      },
+      "UnitPrice": {
+        "examples": [
+          1.3282,
+          1.374,
+          2.495
+        ],
+        "range": [
+          1.3282,
+          2146.962
+        ]
+      },
+      "ExtendedAmount": {
+        "examples": [
+          1.374,
+          2.748,
+          2.994
+        ],
+        "range": [
+          1.374,
+          30992.91
+        ]
+      },
+      "UnitPriceDiscountPct": {
+        "examples": [
+          0.0,
+          0.02,
+          0.05
+        ],
+        "range": [
+          0.0,
+          0.4
+        ]
+      },
+      "DiscountAmount": {
+        "examples": [
+          0.0,
+          0.3188,
+          0.6367
+        ],
+        "range": [
+          0.0,
+          4005.2376
+        ]
+      },
+      "ProductStandardCost": {
+        "examples": [
+          0.8565,
+          1.8663,
+          2.9733
+        ],
+        "range": [
+          0.8565,
+          2171.2942
+        ]
+      },
+      "TotalProductCost": {
+        "examples": [
+          0.8565,
+          1.713,
+          1.8663
+        ],
+        "range": [
+          0.8565,
+          38530.3854
+        ]
+      },
+      "SalesAmount": {
+        "examples": [
+          1.374,
+          2.748,
+          2.994
+        ],
+        "range": [
+          1.374,
+          27893.619
+        ]
+      },
+      "TaxAmt": {
+        "examples": [
+          0.1099,
+          0.2198,
+          0.2395
+        ],
+        "range": [
+          0.1099,
+          2231.4895
+        ]
+      },
+      "Freight": {
+        "examples": [
+          0.0344,
+          0.0687,
+          0.0749
+        ],
+        "range": [
+          0.0344,
+          697.3405
+        ]
+      },
+      "OrderDate": {
+        "examples": [
+          "2010-12-29",
+          "2011-01-29",
+          "2011-03-01"
+        ],
+        "range": [
+          "2010-12-29",
+          "2013-11-29"
+        ]
+      },
+      "DueDate": {
+        "examples": [
+          "2011-01-10",
+          "2011-02-10",
+          "2011-03-13"
+        ],
+        "range": [
+          "2011-01-10",
+          "2013-12-11"
+        ]
+      },
+      "ShipDate": {
+        "examples": [
+          "2011-01-05",
+          "2011-02-05",
+          "2011-03-08"
+        ],
+        "range": [
+          "2011-01-05",
+          "2013-12-06"
+        ]
+      }
+    }
+  },
+  "fk_map": {
+    "internet_sales.CustomerKey": "customers.CustomerKey",
+    "internet_sales.ProductKey": "products.ProductKey",
+    "internet_sales.OrderDateKey": "dates.DateKey",
+    "internet_sales.CurrencyKey": "currency.CurrencyKey",
+    "internet_sales.PromotionKey": "promotions.PromotionKey",
+    "internet_sales.SalesTerritoryKey": "sales_territory.SalesTerritoryKey",
+    "reseller_sales.ProductKey": "products.ProductKey",
+    "reseller_sales.ResellerKey": "resellers.ResellerKey",
+    "reseller_sales.OrderDateKey": "dates.DateKey",
+    "reseller_sales.CurrencyKey": "currency.CurrencyKey",
+    "reseller_sales.PromotionKey": "promotions.PromotionKey",
+    "reseller_sales.SalesTerritoryKey": "sales_territory.SalesTerritoryKey",
+    "customers.GeographyKey": "geography.GeographyKey",
+    "geography.SalesTerritoryKey": "sales_territory.SalesTerritoryKey",
+    "products.ProductSubcategoryKey": "product_subcategories.ProductSubcategoryKey",
+    "product_subcategories.ProductCategoryKey": "product_categories.ProductCategoryKey",
+    "resellers.GeographyKey": "geography.GeographyKey"
+  },
+  "errors": []
+}

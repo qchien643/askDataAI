@@ -8,7 +8,7 @@
 1. [Dự án là gì?](#1-dự-án-là-gì)
 2. [Vấn đề giải quyết](#2-vấn-đề-giải-quyết)
 3. [Demo Flow](#3-demo-flow)
-4. [Pipeline chi tiết (14 stages)](#4-pipeline-chi-tiết)
+4. [Pipeline chi tiết (16 stages)](#4-pipeline-chi-tiết)
 5. [Chart Generation](#5-chart-generation)
 6. [Kiến trúc kỹ thuật](#6-kiến-trúc-kỹ-thuật)
 7. [Tính năng sắp tới: AI Auto-Description](#7-tính-năng-sắp-tới)
@@ -76,7 +76,16 @@
 
 ## 4. Pipeline chi tiết
 
-Pipeline xử lý gồm **14 bước**, chia thành 5 giai đoạn chính:
+Pipeline xử lý gồm **16 bước**, chia thành 6 giai đoạn chính (Sprint 2-5 cập nhật):
+
+### 🟤 Giai đoạn 0: Bảo mật & Ngữ cảnh (Bước 0-0.7)
+
+| Bước | Tên | Làm gì? | Dùng AI? |
+|------|-----|---------|----------|
+| 0 | **PI Guardrail** | Phát hiện prompt injection bằng local model offline | ❌ Local model |
+| 0.5 | **Conversation Context** | mem0 inject context multi-turn | ❌ mem0 |
+| 0.7 | **Question Translator** | Dịch VI → EN nội bộ trước khi vào pipeline | ✅ LLM |
+
 
 ### 🔴 Giai đoạn 1: Tiền xử lý (Bước 1-2)
 
@@ -96,10 +105,10 @@ Pipeline xử lý gồm **14 bước**, chia thành 5 giai đoạn chính:
 
 | Bước | Tên | Làm gì? | Dùng AI? |
 |------|-----|---------|----------|
-| 5 | **Schema Retrieval** | Dùng vector search tìm bảng/cột liên quan trong ChromaDB | ❌ Vector DB |
+| 5 | **Schema Retrieval** | Vector search ChromaDB + FK 1-hop. Bidirectional mode (Sprint 4): augment + table-first + column-first | ❌ hoặc ✅¹ |
 | 6 | **Schema Linking** | LLM xác nhận: "khách hàng" = bảng DimCustomer, cột FirstName | ✅ LLM |
 | 7 | **Column Pruning** | Loại bỏ cột dư, giảm kích thước context | ✅ LLM |
-| 8 | **Context Builder** | Ghép tất cả thành prompt hoàn chỉnh (DDL + relationships) | ❌ Template |
+| 8 | **Context Builder** | DDL hoặc M-Schema (Sprint 2)² format | ❌ Template |
 
 ### 🔵 Giai đoạn 4: Bổ sung kiến thức (Bước 9-11)
 
@@ -113,16 +122,21 @@ Pipeline xử lý gồm **14 bước**, chia thành 5 giai đoạn chính:
 
 | Bước | Tên | Làm gì? | Dùng AI? |
 |------|-----|---------|----------|
-| 12 | **SQL Generation** | Sinh câu SQL từ toàn bộ context | ✅ LLM |
-| 13 | **SQL Correction** | Chạy thử SQL, nếu lỗi → sửa tự động (tối đa 3 lần) | ✅ LLM |
+| 12 | **SQL Generation** | Sinh N candidates + execution-based voting (skip nếu voting OFF) | ✅ LLM |
+| 13 | **SQL Correction** | Chạy SQL, retry max 2-3 lần. 2 strategies: execution_only / taxonomy_guided³ | ✅ LLM |
 | 13.5 | **Guardian** | Kiểm tra bảo mật: chống injection, read-only, masking | ❌ Rule-based |
 | 14 | **Memory Save** | Lưu kết quả thành công vào bộ nhớ | ❌ File I/O |
 
+¹ Bidirectional retrieval — `ENABLE_BIDIRECTIONAL_RETRIEVAL=true`. Cần re-deploy ChromaDB để tạo `column_descriptions` collection.
+² M-Schema — `ENABLE_MSCHEMA=true`. Format key-value gọn hơn DDL ~30% tokens, đính kèm examples + ranges + inline FK.
+³ Taxonomy correction — `CORRECTION_STRATEGY=taxonomy_guided`. Chia retry thành Plan + Fix.
+
 ### Tổng kết Pipeline
 
-- **Tổng: 14 bước** (5 bước dùng LLM, 9 bước rule-based)
-- **LLM calls mỗi query**: 4-6 lần
-- **Thời gian trung bình**: 8-15 giây
+- **Tổng: 16 bước** (8 bước dùng LLM, 8 bước rule-based)
+- **LLM calls mỗi query**: 5-9 lần (typical), tối đa 14 (full features)
+- **Thời gian trung bình**: 15-25 giây
+- **Benchmark hiện tại**: EX 48% trên 100 mẫu Vietnamese (Sprint 5.6)
 
 ---
 
@@ -154,9 +168,10 @@ Kết quả SQL → LLM phân tích → Chọn loại chart → Sinh Vega-Lite J
 |-----------|-----------|---------|
 | **Frontend** | Next.js 16, React 19, Ant Design | Giao diện chat, biểu đồ, ERD |
 | **Backend** | Python, FastAPI | API server, pipeline engine |
-| **LLM** | OpenAI GPT-4o | Sinh SQL, phân tích ý định |
-| **Vector DB** | ChromaDB | Tìm kiếm bảng/cột tương tự |
-| **Embeddings** | HuggingFace MiniLM | Chuyển text thành vector |
+| **LLM** | OpenAI GPT-4o-mini (default) | Sinh SQL, phân tích ý định |
+| **Vector DB** | ChromaDB embedded | Tìm kiếm bảng/cột tương tự |
+| **Embeddings** | OpenAI text-embedding-3-small | Chuyển text thành vector |
+| **PI Guard** | Local Hugging Face model (offline) | Phát hiện prompt injection |
 | **Database** | SQL Server | Nguồn dữ liệu thực |
 | **Deploy** | Docker Compose | Đóng gói & triển khai |
 
@@ -189,19 +204,21 @@ Kết quả SQL → LLM phân tích → Chọn loại chart → Sinh Vega-Lite J
 
 ---
 
-## 7. Tính năng sắp tới
+## 7. Sprint history & cải tiến SOTA
 
-### 🔮 AI Auto-Description
+| Sprint | Nội dung | Toggle |
+|---|---|---|
+| 1 | Hand-craft 100-sample benchmark Vietnamese, canonical_hash + LLM judge | — |
+| 2 | M-Schema format (XiYan-SQL) — examples + ranges + inline FK | `ENABLE_MSCHEMA` |
+| 3 | YAML enrichment: Claude rewrite configs/models.yaml với data sampled từ DB | — |
+| 4 | Bidirectional retrieval (XiYan): QuestionAugmenter + column_descriptions | `ENABLE_BIDIRECTIONAL_RETRIEVAL` |
+| 5 | Taxonomy-guided correction (SQL-of-Thought): 9 categories × 25 sub-cat | `CORRECTION_STRATEGY` |
+| 5.6 | Bug fixes: LIMIT 100 cutoff, taxonomy retry cap, toggle binding | `EXEC_ROW_LIMIT` |
 
-**Hiện tại:** Khi kết nối database mới, người dùng phải mô tả thủ công từng bảng/cột → tốn rất nhiều thời gian (database 50+ bảng × 10 cột = 500+ descriptions).
-
-**Giải pháp:** AI tự sinh descriptions dựa trên:
-1. Tên bảng/cột (DimCustomer.FirstName → "Tên khách hàng")
-2. Kiểu dữ liệu (INT, VARCHAR, DATE...)
-3. Dữ liệu mẫu (scan vài dòng đầu)
-4. Vài description mẫu do người dùng cung cấp (few-shot learning)
-
-**Kết quả kỳ vọng:** Giảm thời gian setup từ **vài giờ** → **vài phút**.
+**Benchmark progression** (100 mẫu AdventureWorks DW):
+- Baseline: EX 41% (easy 43.3%, medium 55%, hard 20%)
+- Sprint 5.6: **EX 48%** (easy 63.3% +20%, medium 60% +5%, hard 16.7% 0%)
+- Latency p50: 23s, cost ~$0.025/run
 
 ---
 

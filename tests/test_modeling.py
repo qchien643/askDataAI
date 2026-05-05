@@ -17,11 +17,11 @@ import json
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.config import settings
-from src.connectors.connection import SQLServerConnector
-from src.connectors.schema_introspector import SchemaIntrospector
-from src.modeling.manifest_builder import ManifestBuilder
-from src.modeling.deploy import ManifestDeployer
+from askdataai.config import settings
+from askdataai.connectors.connection import SQLServerConnector
+from askdataai.connectors.schema_introspector import SchemaIntrospector
+from askdataai.modeling.manifest_builder import ManifestBuilder
+from askdataai.modeling.deploy import ManifestDeployer
 
 
 def separator(title: str):

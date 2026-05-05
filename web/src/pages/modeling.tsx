@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import styled from 'styled-components';
-import { Drawer, Table, Button, message, Typography, Tag, Input } from 'antd';
-import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { Drawer, Table, Button, message, Typography, Tag, Input, Modal, Form, Select, Space, Progress, Popconfirm, Tooltip } from 'antd';
+import {
+  EditOutlined, SaveOutlined, CloseOutlined,
+  PlusOutlined, DeleteOutlined, ExperimentOutlined,
+  RobotOutlined, ThunderboltOutlined,
+} from '@ant-design/icons';
 import ReactFlow, {
   MiniMap, Controls, Background,
   useNodesState, useEdgesState,
@@ -13,12 +17,15 @@ import SiderLayout from '@/components/layouts/SiderLayout';
 import RequireConnection from '@/components/guards/RequireConnection';
 import { useConnection } from '@/contexts/ConnectionContext';
 import { api } from '@/hooks/useApi';
-import type { Model, Relationship } from '@/utils/types';
+import type { Model, Relationship, AutoDescribeEvent } from '@/utils/types';
 
 const { Text } = Typography;
 const { TextArea } = Input;
 
-/* ── Custom Node — Memphis ── */
+/* ══════════════════════════════════════════════
+   ── Styled Components — Neo-Memphis ──
+   ══════════════════════════════════════════════ */
+
 const NodeWrapper = styled.div`
   width: 300px;
   border: 2px solid var(--m-black, #0D0D0D);
@@ -95,6 +102,30 @@ const ColType = styled.span`
   text-transform: uppercase;
 `;
 
+const EnumBadge = styled.span`
+  font-size: 8px;
+  background: #722ed1;
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin-left: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+`;
+
+const TestBadge = styled.span`
+  font-size: 8px;
+  background: var(--m-yellow, #FFE600);
+  color: #0D0D0D;
+  padding: 1px 5px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-left: auto;
+`;
+
 /* PK icon */
 const PkIcon = () => (
   <svg width="10" height="10" viewBox="0 0 24 24" fill="#faad14" stroke="#faad14" strokeWidth="1">
@@ -110,8 +141,24 @@ const FkIcon = () => (
   </svg>
 );
 
+/* ── Toolbar ── */
+const ToolbarWrapper = styled.div`
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 2px solid #0D0D0D;
+  box-shadow: 3px 3px 0 #0D0D0D;
+  font-family: 'Space Grotesk', sans-serif;
+`;
+
 function ModelNodeComponent({ data }: { data: any }) {
-  const { model, fkColumns } = data;
+  const { model, fkColumns, isTest } = data;
   const fkSet = new Set(fkColumns || []);
 
   return (
@@ -133,6 +180,7 @@ function ModelNodeComponent({ data }: { data: any }) {
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {model.name}
         </span>
+        {isTest && <TestBadge>🧪 TEST</TestBadge>}
         <span style={{ fontSize: 10, opacity: 0.7 }}>{model.columns.length} cols</span>
       </NodeHeader>
       <NodeBody>
@@ -147,6 +195,9 @@ function ModelNodeComponent({ data }: { data: any }) {
                 {isFk && !isPk && <FkIcon />}
                 <span style={{ fontWeight: isPk ? 600 : 400 }}>{col.display_name || col.name}</span>
                 <ColType>{col.type}</ColType>
+                {col.enum_values && col.enum_values.length > 0 && (
+                  <EnumBadge title={col.enum_values.join(', ')}>ENUM</EnumBadge>
+                )}
               </ColRow>
               {col.description && (
                 <ColDesc title={col.description}>{col.description}</ColDesc>
@@ -248,22 +299,130 @@ function extractFkColumns(rels: Relationship[], modelName: string): string[] {
   return fkCols;
 }
 
+/* ── EnumTagEditor Component ── */
+function EnumTagEditor({
+  values,
+  onChange,
+}: {
+  values: string[];
+  onChange: (vals: string[]) => void;
+}) {
+  const [inputVisible, setInputVisible] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+
+  const handleClose = (removed: string) => {
+    onChange(values.filter(v => v !== removed));
+  };
+
+  const handleConfirm = () => {
+    const trimmed = inputValue.trim();
+    if (trimmed && !values.includes(trimmed)) {
+      onChange([...values, trimmed]);
+    }
+    setInputValue('');
+    setInputVisible(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center', minHeight: 24 }}>
+      {values.map(v => (
+        <Tag
+          key={v}
+          closable
+          onClose={() => handleClose(v)}
+          color="purple"
+          style={{
+            fontSize: 11,
+            margin: 0,
+            fontFamily: "'JetBrains Mono', monospace",
+            cursor: 'default',
+          }}
+        >
+          {v}
+        </Tag>
+      ))}
+      {inputVisible ? (
+        <Input
+          autoFocus
+          size="small"
+          style={{ width: 110, fontSize: 11 }}
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onBlur={handleConfirm}
+          onPressEnter={handleConfirm}
+          placeholder="Add value..."
+        />
+      ) : (
+        <Tag
+          onClick={() => setInputVisible(true)}
+          style={{
+            cursor: 'pointer',
+            background: '#f9f0ff',
+            border: '1px dashed #722ed1',
+            color: '#722ed1',
+            fontSize: 11,
+            margin: 0,
+          }}
+        >
+          + Add
+        </Tag>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   ── Phase Progress Label ──
+   ══════════════════════════════════════════════ */
+const PHASE_LABELS: Record<string, string> = {
+  indexing: '📚 Indexing existing descriptions',
+  context: '🔍 Extracting style guide',
+  profiling: '📊 Profiling columns (SQL)',
+  classification: '🏷️ Classifying column types',
+  agent_loop: '🤖 Agent generating descriptions',
+  persist: '💾 Saving to models.yaml',
+  done: '✅ Complete',
+  error: '❌ Error',
+};
+
+/* ══════════════════════════════════════════════
+   ── Main Page Component ──
+   ══════════════════════════════════════════════ */
 export default function ModelingPage() {
   const { markNeedsRedeploy } = useConnection();
   const [models, setModels] = useState<Model[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Track test tables
+  const [testTables, setTestTables] = useState<Set<string>>(new Set());
 
   // Editing state
   const [editing, setEditing] = useState(false);
   const [editDesc, setEditDesc] = useState('');
   const [editColDescs, setEditColDescs] = useState<Record<string, string>>({});
   const [editColDisplayNames, setEditColDisplayNames] = useState<Record<string, string>>({});
+  const [editColEnums, setEditColEnums] = useState<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
+
+  // Modal states
+  const [addModelOpen, setAddModelOpen] = useState(false);
+  const [addRelOpen, setAddRelOpen] = useState(false);
+  const [aiDescOpen, setAiDescOpen] = useState(false);
+
+  // AI Describe state
+  const [aiRunning, setAiRunning] = useState(false);
+  const [aiEvents, setAiEvents] = useState<AutoDescribeEvent[]>([]);
+  const [aiSelectedTables, setAiSelectedTables] = useState<string[]>([]);
+
+  // Loading
+  const [testLoading, setTestLoading] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const [addModelForm] = Form.useForm();
+  const [addRelForm] = Form.useForm();
 
   useEffect(() => {
     loadModels();
@@ -291,12 +450,15 @@ export default function ModelingPage() {
     setEditDesc(selectedModel.description || '');
     const colDescs: Record<string, string> = {};
     const colNames: Record<string, string> = {};
+    const colEnums: Record<string, string[]> = {};
     for (const c of selectedModel.columns) {
       colDescs[c.name] = c.description || '';
       colNames[c.name] = c.display_name || '';
+      colEnums[c.name] = c.enum_values || [];
     }
     setEditColDescs(colDescs);
     setEditColDisplayNames(colNames);
+    setEditColEnums(colEnums);
     setEditing(true);
   };
 
@@ -312,6 +474,7 @@ export default function ModelingPage() {
         name: c.name,
         description: editColDescs[c.name] ?? c.description,
         display_name: editColDisplayNames[c.name] ?? c.display_name,
+        enum_values: editColEnums[c.name] ?? c.enum_values ?? [],
       }));
       await api.updateModel(selectedModel.name, {
         description: editDesc,
@@ -327,6 +490,142 @@ export default function ModelingPage() {
     setSaving(false);
   };
 
+  /* ── Schema CRUD handlers ── */
+  const handleAddModel = async (values: any) => {
+    try {
+      const columnsRaw = (values.columns || '').split('\n').filter((l: string) => l.trim());
+      const columns = columnsRaw.map((line: string) => {
+        const [name, type = 'string'] = line.split(':').map((s: string) => s.trim());
+        return { name, type, display_name: '', description: '' };
+      });
+      await api.addModel({
+        name: values.name,
+        table_reference: values.table_reference,
+        description: values.description || '',
+        primary_key: values.primary_key || '',
+        columns,
+      });
+      message.success(`Model "${values.name}" added`);
+      setAddModelOpen(false);
+      addModelForm.resetFields();
+      markNeedsRedeploy();
+      loadModels();
+    } catch (err: any) {
+      message.error(err.message || 'Failed to add model');
+    }
+  };
+
+  const handleDeleteModel = async (name: string) => {
+    try {
+      const res = await api.deleteModel(name);
+      message.success(`Model "${name}" deleted (${res.relationships_removed} relationships removed)`);
+      setTestTables(prev => { const s = new Set(prev); s.delete(name); return s; });
+      if (selectedModel?.name === name) {
+        setDrawerOpen(false);
+        setSelectedModel(null);
+      }
+      markNeedsRedeploy();
+      loadModels();
+    } catch (err: any) {
+      message.error(err.message || 'Failed to delete model');
+    }
+  };
+
+  const handleDeleteColumn = async (modelName: string, colName: string) => {
+    try {
+      await api.deleteColumn(modelName, colName);
+      message.success(`Column "${colName}" deleted`);
+      markNeedsRedeploy();
+      loadModels();
+      // Refresh drawer
+      if (selectedModel?.name === modelName) {
+        const updated = { ...selectedModel, columns: selectedModel.columns.filter(c => c.name !== colName) };
+        setSelectedModel(updated);
+      }
+    } catch (err: any) {
+      message.error(err.message || 'Failed to delete column');
+    }
+  };
+
+  const handleAddRelationship = async (values: any) => {
+    try {
+      await api.addRelationship({
+        name: values.name,
+        model_from: values.model_from,
+        model_to: values.model_to,
+        join_type: values.join_type,
+        condition: values.condition,
+      });
+      message.success(`Relationship "${values.name}" added`);
+      setAddRelOpen(false);
+      addRelForm.resetFields();
+      markNeedsRedeploy();
+      loadModels();
+    } catch (err: any) {
+      message.error(err.message || 'Failed to add relationship');
+    }
+  };
+
+  const handleDeleteRelationship = async (name: string) => {
+    try {
+      await api.deleteRelationship(name);
+      message.success(`Relationship "${name}" deleted`);
+      markNeedsRedeploy();
+      loadModels();
+    } catch (err: any) {
+      message.error(err.message || 'Failed to delete relationship');
+    }
+  };
+
+  /* ── Test Generate ── */
+  const handleTestGenerate = async () => {
+    setTestLoading(true);
+    try {
+      const res = await api.testGenerate();
+      if (res.success) {
+        const newNames = res.models.map(m => m.name);
+        setTestTables(prev => new Set([...prev, ...newNames]));
+        message.success(`${res.models_added} test tables generated with ${res.relationships_added} relationships`);
+        markNeedsRedeploy();
+        loadModels();
+      }
+    } catch (err: any) {
+      message.error(err.message || 'Failed to generate test tables');
+    }
+    setTestLoading(false);
+  };
+
+  /* ── AI Auto-Describe ── */
+  const handleAiDescribe = async () => {
+    if (aiSelectedTables.length === 0) {
+      message.warning('Select at least one table');
+      return;
+    }
+    setAiRunning(true);
+    setAiEvents([]);
+    try {
+      await api.autoDescribeStream(aiSelectedTables, (evt) => {
+        setAiEvents(prev => {
+          // Update existing phase or add new
+          const existing = prev.findIndex(e => e.phase === evt.phase);
+          if (existing >= 0) {
+            const updated = [...prev];
+            updated[existing] = evt;
+            return updated;
+          }
+          return [...prev, evt];
+        });
+      });
+      message.success('AI descriptions generated! Deploy to apply.');
+      markNeedsRedeploy();
+      loadModels();
+    } catch (err: any) {
+      message.error(err.message || 'AI description failed');
+    }
+    setAiRunning(false);
+  };
+
+  /* ── Diagram builder ── */
   const buildDiagram = (mdls: Model[], rels: Relationship[]) => {
     const cols = 3;
     const gapX = 380;
@@ -338,6 +637,7 @@ export default function ModelingPage() {
       data: {
         model: m,
         fkColumns: extractFkColumns(rels, m.name),
+        isTest: testTables.has(m.name),
         onNodeClick: (model: Model) => {
           setSelectedModel(model);
           setEditing(false);
@@ -370,10 +670,17 @@ export default function ModelingPage() {
     setEdges(newEdges);
   };
 
-  /* ── Column table columns (with inline editing) ── */
-  const colTableCols = [
+  // Rebuild diagram if testTables changes
+  useEffect(() => {
+    if (models.length > 0) {
+      buildDiagram(models, relationships);
+    }
+  }, [testTables]);
+
+  /* ── Column table columns (with inline editing + delete) ── */
+  const colTableCols: any[] = [
     {
-      title: 'Name', dataIndex: 'name', key: 'name', width: 160,
+      title: 'Name', dataIndex: 'name', key: 'name', width: 150,
       render: (name: string) => {
         const isPk = name === selectedModel?.primary_key;
         const isFk = selectedModel
@@ -389,7 +696,7 @@ export default function ModelingPage() {
       },
     },
     {
-      title: 'Alias', dataIndex: 'display_name', key: 'display_name', width: 140,
+      title: 'Alias', dataIndex: 'display_name', key: 'display_name', width: 130,
       render: (val: string, record: any) => {
         if (editing) {
           return (
@@ -405,7 +712,7 @@ export default function ModelingPage() {
         return val || <Text type="secondary">-</Text>;
       },
     },
-    { title: 'Type', dataIndex: 'type', key: 'type', width: 100,
+    { title: 'Type', dataIndex: 'type', key: 'type', width: 90,
       render: (t: string) => <Text code style={{ fontSize: 12 }}>{t}</Text>,
     },
     {
@@ -425,8 +732,57 @@ export default function ModelingPage() {
         return <span style={{ color: '#8c8c8c' }}>{d || '-'}</span>;
       },
     },
+    {
+      title: 'Enum Values',
+      dataIndex: 'enum_values',
+      key: 'enum_values',
+      width: 160,
+      render: (vals: string[], record: any) => {
+        const currentVals = editing
+          ? (editColEnums[record.name] ?? vals ?? [])
+          : (vals ?? []);
+        if (editing) {
+          return (
+            <EnumTagEditor
+              values={currentVals}
+              onChange={(newVals: string[]) =>
+                setEditColEnums(prev => ({ ...prev, [record.name]: newVals }))
+              }
+            />
+          );
+        }
+        return currentVals.length > 0 ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+            {currentVals.map((v: string) => (
+              <Tag key={v} color="purple" style={{ fontSize: 10, margin: 0, fontFamily: 'JetBrains Mono' }}>{v}</Tag>
+            ))}
+          </div>
+        ) : <Text type="secondary">-</Text>;
+      },
+    },
+    {
+      title: '', key: 'action', width: 40,
+      render: (_: any, record: any) => (
+        <Popconfirm
+          title={`Delete column "${record.name}"?`}
+          onConfirm={() => handleDeleteColumn(selectedModel!.name, record.name)}
+          okText="Delete"
+          cancelText="Cancel"
+        >
+          <Tooltip title="Delete column">
+            <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+          </Tooltip>
+        </Popconfirm>
+      ),
+    },
   ];
 
+  /* ── Tables with empty descriptions (for AI select) ── */
+  const tablesWithEmptyDescs = models
+    .filter(m => !m.description || m.columns.some(c => !c.description))
+    .map(m => m.name);
+
+  /* ── Sidebar ── */
   const sidebar = (
     <SidebarSection>
       <SidebarLabel>Models ({models.length})</SidebarLabel>
@@ -439,7 +795,10 @@ export default function ModelingPage() {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8c8c8c" strokeWidth="2">
             <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
           </svg>
-          {m.name}
+          <span style={{ flex: 1 }}>{m.name}</span>
+          {testTables.has(m.name) && (
+            <span style={{ fontSize: 8, background: '#FFE600', color: '#0D0D0D', padding: '1px 4px', fontWeight: 800 }}>TEST</span>
+          )}
         </ModelItem>
       ))}
     </SidebarSection>
@@ -449,7 +808,63 @@ export default function ModelingPage() {
     <RequireConnection>
       <Head><title>Modeling — askDataAI</title></Head>
       <SiderLayout sidebar={sidebar}>
-        <div style={{ width: '100%', height: '100%' }}>
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+          {/* ── Toolbar ── */}
+          <ToolbarWrapper>
+            <Tooltip title="Add a new table to the semantic layer">
+              <Button
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={() => setAddModelOpen(true)}
+                style={{ fontFamily: 'Space Grotesk', fontWeight: 700, borderRadius: 0, border: '2px solid #0D0D0D' }}
+              >
+                Add Table
+              </Button>
+            </Tooltip>
+            <Tooltip title="Add a relationship between tables">
+              <Button
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={() => setAddRelOpen(true)}
+                style={{ fontFamily: 'Space Grotesk', fontWeight: 700, borderRadius: 0, border: '2px solid #0D0D0D' }}
+              >
+                Add Relation
+              </Button>
+            </Tooltip>
+            <div style={{ width: 1, background: '#0D0D0D', margin: '0 4px' }} />
+            <Tooltip title="Generate 2 test tables from DimEmployee & DimDepartmentGroup">
+              <Button
+                size="small"
+                icon={<ExperimentOutlined />}
+                onClick={handleTestGenerate}
+                loading={testLoading}
+                style={{
+                  fontFamily: 'Space Grotesk', fontWeight: 700, borderRadius: 0,
+                  border: '2px solid #0D0D0D', background: '#FFE600', color: '#0D0D0D',
+                }}
+              >
+                Test
+              </Button>
+            </Tooltip>
+            <Tooltip title="AI auto-generate descriptions for tables">
+              <Button
+                size="small"
+                icon={<RobotOutlined />}
+                onClick={() => {
+                  setAiSelectedTables(tablesWithEmptyDescs);
+                  setAiEvents([]);
+                  setAiDescOpen(true);
+                }}
+                style={{
+                  fontFamily: 'Space Grotesk', fontWeight: 700, borderRadius: 0,
+                  border: '2px solid #0D0D0D', background: '#0D0D0D', color: '#FFE600',
+                }}
+              >
+                AI Desc
+              </Button>
+            </Tooltip>
+          </ToolbarWrapper>
+
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -492,21 +907,43 @@ export default function ModelingPage() {
           </ReactFlow>
         </div>
 
+        {/* ══════════════ Detail Drawer ══════════════ */}
         <Drawer
           open={drawerOpen}
           onClose={() => { setDrawerOpen(false); setEditing(false); }}
-          title={selectedModel?.name || ''}
-          width={760}
+          title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {selectedModel?.name}
+              {selectedModel && testTables.has(selectedModel.name) && (
+                <Tag color="warning" style={{ fontSize: 10 }}>🧪 TEST</Tag>
+              )}
+            </span>
+          }
+          width={780}
           destroyOnClose
           extra={
-            editing ? (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Button icon={<CloseOutlined />} onClick={cancelEditing}>Cancel</Button>
-                <Button type="primary" icon={<SaveOutlined />} onClick={saveMetadata} loading={saving}>Save</Button>
-              </div>
-            ) : (
-              <Button icon={<EditOutlined />} onClick={startEditing}>Edit Metadata</Button>
-            )
+            <Space>
+              {editing ? (
+                <>
+                  <Button icon={<CloseOutlined />} onClick={cancelEditing}>Cancel</Button>
+                  <Button type="primary" icon={<SaveOutlined />} onClick={saveMetadata} loading={saving}>Save</Button>
+                </>
+              ) : (
+                <>
+                  <Button icon={<EditOutlined />} onClick={startEditing}>Edit</Button>
+                  <Popconfirm
+                    title={`Delete model "${selectedModel?.name}"?`}
+                    description="This will also remove all related relationships."
+                    onConfirm={() => selectedModel && handleDeleteModel(selectedModel.name)}
+                    okText="Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <Button danger icon={<DeleteOutlined />}>Delete</Button>
+                  </Popconfirm>
+                </>
+              )}
+            </Space>
           }
         >
           {selectedModel && (
@@ -551,24 +988,36 @@ export default function ModelingPage() {
               </MetaField>
 
               <MetaField>
-                <MetaLabel>Relationships</MetaLabel>
+                <MetaLabel style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Relationships</span>
+                </MetaLabel>
                 {relationships
                   .filter(r => r.model_from === selectedModel.name || r.model_to === selectedModel.name)
                   .map((r, i) => (
-                    <div key={i} style={{ padding: '8px 0', fontSize: 13, color: '#434343', borderBottom: '1px solid #f0f0f0' }}>
-                      <div>
-                        <Text strong>{r.model_from}</Text>
-                        <Text type="secondary"> → </Text>
-                        <Text strong>{r.model_to}</Text>
-                        <Tag color="blue" style={{ marginLeft: 8, fontSize: 11 }}>{r.join_type}</Tag>
-                      </div>
-                      {r.condition && (
-                        <div style={{ marginTop: 4 }}>
-                          <code style={{ fontSize: 12, color: '#8c8c8c', background: '#f5f5f5', padding: '2px 6px', borderRadius: 3 }}>
-                            {r.condition}
-                          </code>
+                    <div key={i} style={{ padding: '8px 0', fontSize: 13, color: '#434343', borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div>
+                          <Text strong>{r.model_from}</Text>
+                          <Text type="secondary"> → </Text>
+                          <Text strong>{r.model_to}</Text>
+                          <Tag color="blue" style={{ marginLeft: 8, fontSize: 11 }}>{r.join_type}</Tag>
                         </div>
-                      )}
+                        {r.condition && (
+                          <div style={{ marginTop: 4 }}>
+                            <code style={{ fontSize: 12, color: '#8c8c8c', background: '#f5f5f5', padding: '2px 6px', borderRadius: 3 }}>
+                              {r.condition}
+                            </code>
+                          </div>
+                        )}
+                      </div>
+                      <Popconfirm
+                        title={`Delete relationship "${r.name}"?`}
+                        onConfirm={() => handleDeleteRelationship(r.name)}
+                        okText="Delete"
+                        cancelText="Cancel"
+                      >
+                        <Button type="text" size="small" danger icon={<DeleteOutlined />} />
+                      </Popconfirm>
                     </div>
                   ))
                 }
@@ -579,6 +1028,165 @@ export default function ModelingPage() {
             </>
           )}
         </Drawer>
+
+        {/* ══════════════ Add Model Modal ══════════════ */}
+        <Modal
+          title="Add Table"
+          open={addModelOpen}
+          onCancel={() => setAddModelOpen(false)}
+          footer={null}
+          destroyOnClose
+        >
+          <Form form={addModelForm} onFinish={handleAddModel} layout="vertical">
+            <Form.Item name="name" label="Model Name" rules={[{ required: true }]}>
+              <Input placeholder="e.g. employees" />
+            </Form.Item>
+            <Form.Item name="table_reference" label="Table Reference" rules={[{ required: true }]}>
+              <Input placeholder="e.g. dbo.DimEmployee" />
+            </Form.Item>
+            <Form.Item name="primary_key" label="Primary Key">
+              <Input placeholder="e.g. EmployeeKey" />
+            </Form.Item>
+            <Form.Item name="description" label="Description">
+              <TextArea rows={2} placeholder="Optional description..." />
+            </Form.Item>
+            <Form.Item name="columns" label="Columns (one per line: name:type)" rules={[{ required: true }]}>
+              <TextArea rows={5} placeholder={"EmployeeKey:integer\nFirstName:string\nLastName:string"} />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block icon={<PlusOutlined />}
+                style={{ fontFamily: 'Space Grotesk', fontWeight: 700, borderRadius: 0, border: '2px solid #0D0D0D' }}
+              >
+                Add Table
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* ══════════════ Add Relationship Modal ══════════════ */}
+        <Modal
+          title="Add Relationship"
+          open={addRelOpen}
+          onCancel={() => setAddRelOpen(false)}
+          footer={null}
+          destroyOnClose
+        >
+          <Form form={addRelForm} onFinish={handleAddRelationship} layout="vertical">
+            <Form.Item name="name" label="Relationship Name" rules={[{ required: true }]}>
+              <Input placeholder="e.g. employees_to_geography" />
+            </Form.Item>
+            <Form.Item name="model_from" label="From Model" rules={[{ required: true }]}>
+              <Select placeholder="Select source model">
+                {models.map(m => <Select.Option key={m.name} value={m.name}>{m.name}</Select.Option>)}
+              </Select>
+            </Form.Item>
+            <Form.Item name="model_to" label="To Model" rules={[{ required: true }]}>
+              <Select placeholder="Select target model">
+                {models.map(m => <Select.Option key={m.name} value={m.name}>{m.name}</Select.Option>)}
+              </Select>
+            </Form.Item>
+            <Form.Item name="join_type" label="Join Type" rules={[{ required: true }]}>
+              <Select placeholder="Select join type">
+                <Select.Option value="ONE_TO_ONE">ONE_TO_ONE</Select.Option>
+                <Select.Option value="ONE_TO_MANY">ONE_TO_MANY</Select.Option>
+                <Select.Option value="MANY_TO_ONE">MANY_TO_ONE</Select.Option>
+                <Select.Option value="MANY_TO_MANY">MANY_TO_MANY</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="condition" label="Join Condition" rules={[{ required: true }]}>
+              <Input placeholder="e.g. employees.GeographyKey = geography.GeographyKey" />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block icon={<PlusOutlined />}
+                style={{ fontFamily: 'Space Grotesk', fontWeight: 700, borderRadius: 0, border: '2px solid #0D0D0D' }}
+              >
+                Add Relationship
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* ══════════════ AI Describe Modal ══════════════ */}
+        <Modal
+          title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Space Grotesk' }}>
+              <RobotOutlined /> AI Generate Description
+            </span>
+          }
+          open={aiDescOpen}
+          onCancel={() => !aiRunning && setAiDescOpen(false)}
+          footer={
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <Button onClick={() => setAiDescOpen(false)} disabled={aiRunning}>Close</Button>
+              <Button
+                type="primary"
+                icon={<ThunderboltOutlined />}
+                onClick={handleAiDescribe}
+                loading={aiRunning}
+                style={{
+                  fontFamily: 'Space Grotesk', fontWeight: 700, borderRadius: 0,
+                  border: '2px solid #0D0D0D', background: '#0D0D0D', color: '#FFE600',
+                }}
+              >
+                {aiRunning ? 'Running...' : 'Run AI ▶'}
+              </Button>
+            </div>
+          }
+          width={560}
+          closable={!aiRunning}
+          maskClosable={!aiRunning}
+        >
+          <div style={{ marginBottom: 16 }}>
+            <MetaLabel>Select Tables</MetaLabel>
+            <Select
+              mode="multiple"
+              style={{ width: '100%' }}
+              value={aiSelectedTables}
+              onChange={setAiSelectedTables}
+              placeholder="Select tables to generate descriptions for"
+              disabled={aiRunning}
+            >
+              {models.map(m => (
+                <Select.Option key={m.name} value={m.name}>
+                  {m.name}
+                  {(!m.description) && <Tag color="orange" style={{ marginLeft: 8, fontSize: 10 }}>no desc</Tag>}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+
+          {aiEvents.length > 0 && (
+            <div style={{ background: '#fafafa', border: '2px solid #0D0D0D', padding: 16 }}>
+              <MetaLabel style={{ marginBottom: 12 }}>Pipeline Progress</MetaLabel>
+              {aiEvents.map((evt, i) => {
+                const isRunning = evt.status === 'running';
+                const isDone = evt.status === 'done' || evt.status === 'completed';
+                const isError = evt.status === 'error';
+                return (
+                  <div key={i} style={{
+                    padding: '6px 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    borderBottom: '1px solid #eee',
+                    fontFamily: 'Space Grotesk',
+                    fontSize: 13,
+                  }}>
+                    <span style={{ fontSize: 16 }}>
+                      {isDone ? '✅' : isError ? '❌' : isRunning ? '🔄' : '⏳'}
+                    </span>
+                    <span style={{ flex: 1, fontWeight: isRunning ? 700 : 400 }}>
+                      {PHASE_LABELS[evt.phase] || evt.phase}
+                    </span>
+                    {evt.progress && (
+                      <span style={{ fontSize: 11, color: '#888' }}>{evt.progress}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Modal>
       </SiderLayout>
     </RequireConnection>
   );

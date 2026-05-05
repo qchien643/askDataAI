@@ -1,0 +1,88 @@
+# Business Glossary — business term definitions
+# Mini-Wren-AI uses this glossary to interpret user questions correctly.
+#
+# Format:
+#   name: canonical English term (matched against user question)
+#   aliases: alternative phrasings (Vietnamese, abbreviations, synonyms)
+#   sql_hint: suggested SQL expression
+#   tables: related tables
+#   description: meaning / usage notes
+
+terms:
+  - name: "revenue"
+    aliases: ["sales", "total sales", "doanh thu", "doanh số", "tổng bán", "tiền bán"]
+    sql_hint: "SUM(SalesAmount)"
+    tables: ["internet_sales"]
+    description: "Total sales value, computed as SUM(SalesAmount) from the internet_sales table"
+
+  - name: "profit"
+    aliases: ["margin", "net profit", "lợi nhuận", "lãi"]
+    sql_hint: "SUM(SalesAmount) - SUM(TotalProductCost)"
+    tables: ["internet_sales"]
+    description: "Profit = Revenue - Product cost (SUM(SalesAmount) - SUM(TotalProductCost))"
+
+  - name: "order count"
+    aliases: ["number of orders", "total orders", "số lượng đơn hàng", "số đơn", "tổng đơn"]
+    sql_hint: "COUNT(DISTINCT SalesOrderNumber)"
+    tables: ["internet_sales"]
+    description: "Count of distinct sales orders"
+
+  - name: "quantity sold"
+    aliases: ["quantity", "units sold", "số lượng bán", "số lượng", "SL"]
+    sql_hint: "SUM(OrderQuantity)"
+    tables: ["internet_sales"]
+    description: "Total units of products sold"
+
+  - name: "customer"
+    aliases: ["customers", "buyer", "khách hàng", "KH", "người mua"]
+    sql_hint: ""
+    tables: ["customers"]
+    description: "Customer information from the customers table"
+
+  - name: "product"
+    aliases: ["products", "item", "merchandise", "sản phẩm", "SP", "hàng hóa", "mặt hàng"]
+    sql_hint: ""
+    tables: ["products"]
+    description: "Product information from the products table"
+
+  - name: "product category"
+    aliases: ["category", "product type", "danh mục sản phẩm", "loại sản phẩm", "nhóm SP"]
+    sql_hint: ""
+    tables: ["product_categories"]
+    description: "Product classification by category"
+
+  - name: "Q1"
+    aliases: ["quarter 1", "first quarter", "quý 1"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 1 AND 3"
+    tables: ["internet_sales"]
+    description: "First quarter: months 1-3 (January to March)"
+
+  - name: "Q2"
+    aliases: ["quarter 2", "second quarter", "quý 2"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 4 AND 6"
+    tables: ["internet_sales"]
+    description: "Second quarter: months 4-6 (April to June)"
+
+  - name: "Q3"
+    aliases: ["quarter 3", "third quarter", "quý 3"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 7 AND 9"
+    tables: ["internet_sales"]
+    description: "Third quarter: months 7-9 (July to September)"
+
+  - name: "Q4"
+    aliases: ["quarter 4", "fourth quarter", "quý 4"]
+    sql_hint: "MONTH(OrderDate) BETWEEN 10 AND 12"
+    tables: ["internet_sales"]
+    description: "Fourth quarter: months 10-12 (October to December)"
+
+  - name: "this year"
+    aliases: ["current year", "năm nay", "năm hiện tại"]
+    sql_hint: "YEAR(OrderDate) = YEAR(GETDATE())"
+    tables: ["internet_sales"]
+    description: "Filter records to the current calendar year"
+
+  - name: "last year"
+    aliases: ["previous year", "năm trước", "năm ngoái"]
+    sql_hint: "YEAR(OrderDate) = YEAR(GETDATE()) - 1"
+    tables: ["internet_sales"]
+    description: "Filter records to the previous calendar year"

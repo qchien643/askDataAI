@@ -1,0 +1,1670 @@
+models:
+- name: customers
+  table: dbo.DimCustomer
+  description: 'Individual customer information. Each row represents one customer, including name, email, birth date, income, occupation, and address.'
+  primary_key: CustomerKey
+  columns:
+  - name: CustomerKey
+    display_name: Customer ID
+    type: integer
+    description: Customer identifier (PK, used to join with sales tables)
+    examples:
+    - 11000
+    - 11001
+    - 11002
+    range:
+    - 11000
+    - 29483
+  - name: GeographyKey
+    display_name: Geography Key
+    type: integer
+    description: FK to geography table (customer geographic location)
+    examples:
+    - 2
+    - 3
+    - 4
+    range:
+    - 2
+    - 654
+    foreign_key: geography.GeographyKey
+  - name: CustomerAlternateKey
+    display_name: Alternate Customer ID
+    type: string
+    description: Alternate customer identifier (business key)
+    examples:
+    - AW00011000
+    - AW00011001
+    - AW00011002
+  - name: Title
+    display_name: Title
+    type: string
+    description: 'Title: Mr., Mrs., Ms.'
+    examples:
+    - Mr.
+    - Mrs.
+    - Ms
+  - name: FirstName
+    display_name: First Name
+    type: string
+    description: Customer first name
+    examples:
+    - Aaron
+    - Abby
+    - Abhijit
+  - name: MiddleName
+    display_name: Middle Name
+    type: string
+    description: Customer middle name
+    examples:
+    - A
+    - A.
+    - B
+  - name: LastName
+    display_name: Last Name
+    type: string
+    description: Customer last name
+    examples:
+    - Adams
+    - Agbonile
+    - Alan
+  - name: BirthDate
+    display_name: Birth Date
+    type: date
+    description: Customer birth date
+    examples:
+    - '1916-02-10'
+    - '1917-02-09'
+    - '1917-06-05'
+    range:
+    - '1916-02-10'
+    - '1986-06-25'
+  - name: MaritalStatus
+    display_name: Marital Status
+    type: string
+    description: 'Marital status: S = Single, M = Married'
+    examples:
+    - M
+    - S
+  - name: Gender
+    display_name: Gender
+    type: string
+    description: 'Gender: M = Male, F = Female'
+    examples:
+    - F
+    - M
+  - name: EmailAddress
+    display_name: Email
+    type: string
+    description: Email address
+    examples:
+    - aaron10@adventure-works.com
+    - aaron11@adventure-works.com
+    - aaron12@adventure-works.com
+  - name: YearlyIncome
+    display_name: Yearly Income
+    type: decimal
+    description: Annual income (USD)
+    examples:
+    - 10000.0
+    - 20000.0
+    - 30000.0
+    range:
+    - 10000.0
+    - 170000.0
+  - name: TotalChildren
+    display_name: Total Children
+    type: integer
+    description: Total number of children
+    examples:
+    - 0
+    - 1
+    - 2
+    range:
+    - 0
+    - 5
+  - name: EnglishEducation
+    display_name: Education
+    type: string
+    description: 'Education level: Bachelors, Graduate Degree, High School, Partial College, Partial High School'
+    examples:
+    - Bachelors
+    - Graduate Degree
+    - High School
+  - name: EnglishOccupation
+    display_name: Occupation
+    type: string
+    description: 'Occupation: Professional, Skilled Manual, Clerical, Management, Manual'
+    examples:
+    - Clerical
+    - Management
+    - Manual
+  - name: HouseOwnerFlag
+    display_name: House Owner Flag
+    type: string
+    description: 'House ownership flag: 1 = Yes, 0 = No'
+    examples:
+    - '0'
+    - '1'
+  - name: NumberCarsOwned
+    display_name: Cars Owned
+    type: integer
+    description: Number of cars owned
+    examples:
+    - 0
+    - 1
+    - 2
+    range:
+    - 0
+    - 4
+  - name: AddressLine1
+    display_name: Address
+    type: string
+    description: Address line 1
+    examples:
+    - 00, rue Saint-Lazare
+    - 02, place de Fontenoy
+    - 035, boulevard du Montparnasse
+  - name: Phone
+    display_name: Phone
+    type: string
+    description: Phone number
+    examples:
+    - 1 (11) 500 555-0110
+    - 1 (11) 500 555-0111
+    - 1 (11) 500 555-0112
+  - name: DateFirstPurchase
+    display_name: First Purchase Date
+    type: date
+    description: Date of first purchase
+    examples:
+    - '2010-12-29'
+    - '2010-12-30'
+    - '2010-12-31'
+    range:
+    - '2010-12-29'
+    - '2014-01-28'
+  - name: CommuteDistance
+    display_name: Commute Distance
+    type: string
+    description: 'Commute distance: 0-1 Miles, 1-2 Miles, 2-5 Miles, 5-10 Miles, 10+ Miles'
+    examples:
+    - 0-1 Miles
+    - 10+ Miles
+    - 1-2 Miles
+- name: products
+  table: dbo.DimProduct
+  description: 'Product catalog. Each row represents one product including name, SKU, color, size, list price, cost, and subcategory.
+
+    '
+  primary_key: ProductKey
+  columns:
+  - name: ProductKey
+    display_name: Product ID
+    type: integer
+    description: Product identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 606
+  - name: ProductAlternateKey
+    display_name: SKU
+    type: string
+    description: Alternate product identifier (SKU)
+    examples:
+    - AR-5381
+    - BA-8327
+    - BB-7421
+  - name: ProductSubcategoryKey
+    display_name: Sub Category Key
+    type: integer
+    description: FK to product subcategory table
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 37
+    foreign_key: product_subcategories.ProductSubcategoryKey
+  - name: EnglishProductName
+    display_name: Product Name
+    type: string
+    description: Product name (English)
+    examples:
+    - Adjustable Race
+    - All-Purpose Bike Stand
+    - AWC Logo Cap
+  - name: StandardCost
+    display_name: Manufacturing Cost
+    type: decimal
+    description: Standard manufacturing cost (USD)
+    examples:
+    - 0.8565
+    - 1.4923
+    - 1.8663
+    range:
+    - 0.8565
+    - 2171.2942
+  - name: Color
+    display_name: Color
+    type: string
+    description: Product color
+    examples:
+    - Black
+    - Blue
+    - Grey
+  - name: SafetyStockLevel
+    display_name: Safety Stock Level
+    type: integer
+    description: Safety stock level
+    examples:
+    - 4
+    - 60
+    - 100
+    range:
+    - 4
+    - 1000
+  - name: ReorderPoint
+    display_name: Reorder Point
+    type: integer
+    description: Reorder point threshold
+    examples:
+    - 3
+    - 45
+    - 75
+    range:
+    - 3
+    - 750
+  - name: ListPrice
+    display_name: List Price
+    type: decimal
+    description: List price (USD)
+    examples:
+    - 2.29
+    - 3.99
+    - 4.99
+    range:
+    - 2.29
+    - 3578.27
+  - name: Size
+    display_name: Size
+    type: string
+    description: Product size
+    examples:
+    - '38'
+    - '40'
+    - '42'
+  - name: DaysToManufacture
+    display_name: Days to Manufacture
+    type: integer
+    description: Number of days to manufacture
+    examples:
+    - 0
+    - 1
+    - 2
+    range:
+    - 0
+    - 4
+  - name: DealerPrice
+    display_name: Dealer Price
+    type: decimal
+    description: Dealer price (USD)
+    examples:
+    - 1.374
+    - 2.394
+    - 2.994
+    range:
+    - 1.374
+    - 2146.962
+  - name: Status
+    display_name: Status
+    type: string
+    description: 'Product status: Current, NULL (discontinued)'
+    examples:
+    - Current
+- name: product_subcategories
+  table: dbo.DimProductSubcategory
+  description: Product subcategories (e.g., Road Bikes, Mountain Bikes, Jerseys...)
+  primary_key: ProductSubcategoryKey
+  columns:
+  - name: ProductSubcategoryKey
+    display_name: Sub Category Key
+    type: integer
+    description: Subcategory identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 37
+  - name: ProductCategoryKey
+    display_name: Main Category Key
+    type: integer
+    description: FK to product category table
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 4
+    foreign_key: product_categories.ProductCategoryKey
+  - name: EnglishProductSubcategoryName
+    display_name: Sub Category Name
+    type: string
+    description: Product subcategory name (English)
+    examples:
+    - Bib-Shorts
+    - Bike Racks
+    - Bike Stands
+- name: product_categories
+  table: dbo.DimProductCategory
+  description: 'Product categories: Bikes, Components, Clothing, Accessories'
+  primary_key: ProductCategoryKey
+  columns:
+  - name: ProductCategoryKey
+    display_name: Main Category Key
+    type: integer
+    description: Category identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 4
+  - name: EnglishProductCategoryName
+    display_name: Main Category Name
+    type: string
+    description: 'Product category name (English): Bikes, Components, Clothing, Accessories'
+    examples:
+    - Accessories
+    - Bikes
+    - Clothing
+- name: dates
+  table: dbo.DimDate
+  description: 'Date dimension table. Contains day, week, month, quarter, year information for both Calendar and Fiscal calendars.
+
+    '
+  primary_key: DateKey
+  columns:
+  - name: DateKey
+    display_name: Date Key
+    type: integer
+    description: 'Date identifier (PK, format: YYYYMMDD)'
+    examples:
+    - 20050101
+    - 20050102
+    - 20050103
+    range:
+    - 20050101
+    - 20141231
+  - name: FullDateAlternateKey
+    display_name: Full Date
+    type: date
+    description: Full date value
+    examples:
+    - '2005-01-01'
+    - '2005-01-02'
+    - '2005-01-03'
+    range:
+    - '2005-01-01'
+    - '2014-12-31'
+  - name: EnglishDayNameOfWeek
+    display_name: Day of Week Name
+    type: string
+    description: 'Day name of week (English): Monday, Tuesday...'
+    examples:
+    - Friday
+    - Monday
+    - Saturday
+  - name: DayNumberOfMonth
+    display_name: Day of Month
+    type: integer
+    description: Day number within month (1-31)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 31
+  - name: DayNumberOfYear
+    display_name: Day of Year
+    type: integer
+    description: Day number within year (1-366)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 366
+  - name: WeekNumberOfYear
+    display_name: Week of Year
+    type: integer
+    description: Week number within year (1-53)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 53
+  - name: EnglishMonthName
+    display_name: Month Name
+    type: string
+    description: 'Month name (English): January, February...'
+    examples:
+    - April
+    - August
+    - December
+  - name: MonthNumberOfYear
+    display_name: Month of Year
+    type: integer
+    description: Month number within year (1-12)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 12
+  - name: CalendarQuarter
+    display_name: Quarter
+    type: integer
+    description: Calendar quarter (1-4)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 4
+  - name: CalendarYear
+    display_name: Year
+    type: integer
+    description: Calendar year
+    examples:
+    - 2005
+    - 2006
+    - 2007
+    range:
+    - 2005
+    - 2014
+  - name: CalendarSemester
+    display_name: Semester
+    type: integer
+    description: Calendar semester (1-2)
+    examples:
+    - 1
+    - 2
+    range:
+    - 1
+    - 2
+  - name: FiscalQuarter
+    display_name: Fiscal Quarter
+    type: integer
+    description: Fiscal quarter (1-4)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 4
+  - name: FiscalYear
+    display_name: Fiscal Year
+    type: integer
+    description: Fiscal year
+    examples:
+    - 2005
+    - 2006
+    - 2007
+    range:
+    - 2005
+    - 2014
+- name: geography
+  table: dbo.DimGeography
+  description: 'Geographic information: city, state/province, country, sales territory.'
+  primary_key: GeographyKey
+  columns:
+  - name: GeographyKey
+    display_name: Geography Key
+    type: integer
+    description: Geography identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 655
+  - name: City
+    display_name: City
+    type: string
+    description: City name
+    examples:
+    - Abingdon
+    - Albany
+    - Alexandria
+  - name: StateProvinceCode
+    display_name: State/Province Code
+    type: string
+    description: State/province code
+    examples:
+    - '17'
+    - '31'
+    - '32'
+  - name: StateProvinceName
+    display_name: State/Province Name
+    type: string
+    description: State/province name
+    examples:
+    - Alabama
+    - Alberta
+    - Arizona
+  - name: CountryRegionCode
+    display_name: Country Code
+    type: string
+    description: Country/region code
+    examples:
+    - AU
+    - CA
+    - DE
+  - name: EnglishCountryRegionName
+    display_name: Country Name
+    type: string
+    description: Country/region name (English)
+    examples:
+    - Australia
+    - Canada
+    - France
+  - name: PostalCode
+    display_name: Postal Code
+    type: string
+    description: Postal code
+    examples:
+    - '01071'
+    - 01906
+    - '02062'
+  - name: SalesTerritoryKey
+    display_name: Sales Territory Key
+    type: integer
+    description: FK to sales territory table
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 10
+    foreign_key: sales_territory.SalesTerritoryKey
+- name: sales_territory
+  table: dbo.DimSalesTerritory
+  description: 'Sales territories: North America, Europe, Pacific...'
+  primary_key: SalesTerritoryKey
+  columns:
+  - name: SalesTerritoryKey
+    display_name: Sales Territory Key
+    type: integer
+    description: Sales territory identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 11
+  - name: SalesTerritoryAlternateKey
+    display_name: Alternate Territory Key
+    type: integer
+    description: Alternate territory identifier
+    examples:
+    - 0
+    - 1
+    - 2
+    range:
+    - 0
+    - 10
+  - name: SalesTerritoryRegion
+    display_name: Territory Name
+    type: string
+    description: 'Territory region: Northwest, Northeast, Central, Southwest, Southeast, Canada, France, Germany, Australia, United Kingdom'
+    examples:
+    - Australia
+    - Canada
+    - Central
+  - name: SalesTerritoryCountry
+    display_name: Sales Territory Country
+    type: string
+    description: Sales territory country
+    examples:
+    - Australia
+    - Canada
+    - France
+  - name: SalesTerritoryGroup
+    display_name: Region Group
+    type: string
+    description: 'Territory group: North America, Europe, Pacific'
+    examples:
+    - Europe
+    - NA
+    - North America
+- name: currency
+  table: dbo.DimCurrency
+  description: 'Currency list: USD, EUR, GBP...'
+  primary_key: CurrencyKey
+  columns:
+  - name: CurrencyKey
+    display_name: Currency Key
+    type: integer
+    description: Currency identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 105
+  - name: CurrencyAlternateKey
+    display_name: Currency ISO Code
+    type: string
+    description: ISO currency code (e.g., USD, EUR)
+    examples:
+    - AED
+    - AFA
+    - ALL
+  - name: CurrencyName
+    display_name: Currency Name
+    type: string
+    description: Full currency name
+    examples:
+    - Afghani
+    - Algerian Dinar
+    - Argentine Peso
+- name: promotions
+  table: dbo.DimPromotion
+  description: 'Promotions: No Discount, Volume Discount...'
+  primary_key: PromotionKey
+  columns:
+  - name: PromotionKey
+    display_name: Promotion Key
+    type: integer
+    description: Promotion identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 16
+  - name: PromotionAlternateKey
+    display_name: Alternate Promotion Key
+    type: integer
+    description: Alternate promotion identifier
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 16
+  - name: EnglishPromotionName
+    display_name: Promotion Name
+    type: string
+    description: Promotion name
+    examples:
+    - Half-Price Pedal Sale
+    - LL Road Frame Sale
+    - Mountain Tire Sale
+  - name: EnglishPromotionType
+    display_name: Promotion Type
+    type: string
+    description: Promotion type
+    examples:
+    - Discontinued Product
+    - Excess Inventory
+    - New Product
+  - name: EnglishPromotionCategory
+    display_name: Promotion Category
+    type: string
+    description: Promotion category
+    examples:
+    - Customer
+    - No Discount
+    - Reseller
+  - name: StartDate
+    display_name: Start Date
+    type: datetime
+    description: Promotion start date
+    examples:
+    - '2010-11-29'
+    - '2010-12-29'
+    - '2011-11-12'
+    range:
+    - '2010-11-29'
+    - '2013-10-29'
+  - name: EndDate
+    display_name: End Date
+    type: datetime
+    description: Promotion end date
+    examples:
+    - '2011-12-28'
+    - '2012-01-28'
+    - '2012-02-28'
+    range:
+    - '2011-12-28'
+    - '2014-06-30'
+  - name: MinQty
+    display_name: Min Order Quantity
+    type: integer
+    description: Minimum quantity required to apply promotion
+    examples:
+    - 0
+    - 11
+    - 15
+    range:
+    - 0
+    - 61
+  - name: MaxQty
+    display_name: Max Order Quantity
+    type: integer
+    description: Maximum quantity eligible for promotion
+    examples:
+    - 14
+    - 24
+    - 40
+    range:
+    - 14
+    - 60
+- name: resellers
+  table: dbo.DimReseller
+  description: 'Resellers/dealers: store information, business type, employee count.'
+  primary_key: ResellerKey
+  columns:
+  - name: ResellerKey
+    display_name: Reseller Key
+    type: integer
+    description: Reseller identifier (PK)
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 701
+  - name: GeographyKey
+    display_name: Geography Key
+    type: integer
+    description: FK to geography table
+    examples:
+    - 1
+    - 3
+    - 5
+    range:
+    - 1
+    - 655
+    foreign_key: geography.GeographyKey
+  - name: ResellerAlternateKey
+    display_name: Alternate Reseller Key
+    type: string
+    description: Alternate reseller identifier
+    examples:
+    - AW00000001
+    - AW00000002
+    - AW00000003
+  - name: ResellerName
+    display_name: Reseller Name
+    type: string
+    description: Reseller/store name
+    examples:
+    - A Bicycle Association
+    - A Bike Store
+    - A Cycle Shop
+  - name: NumberEmployees
+    display_name: Number of Employees
+    type: integer
+    description: Number of employees
+    examples:
+    - 2
+    - 3
+    - 4
+    range:
+    - 2
+    - 100
+  - name: OrderFrequency
+    display_name: Order Frequency
+    type: string
+    description: 'Order frequency: A = Annual, S = Semi-Annual, Q = Quarterly'
+    examples:
+    - A
+    - Q
+    - S
+  - name: ProductLine
+    display_name: Product Line
+    type: string
+    description: Product line sold
+    examples:
+    - Mountain
+    - Road
+    - Touring
+  - name: BusinessType
+    display_name: Business Type
+    type: string
+    description: 'Business type: Warehouse, Specialty Bike Shop, Value Added Reseller'
+    examples:
+    - Specialty Bike Shop
+    - Value Added Reseller
+    - Warehouse
+  - name: AnnualSales
+    display_name: Annual Sales
+    type: decimal
+    description: Annual sales (USD)
+    examples:
+    - 300000.0
+    - 800000.0
+    - 1000000.0
+    range:
+    - 300000.0
+    - 3000000.0
+  - name: AnnualRevenue
+    display_name: Annual Net Sales
+    type: decimal
+    description: Annual net revenue (USD)
+    examples:
+    - 30000.0
+    - 80000.0
+    - 100000.0
+    range:
+    - 30000.0
+    - 300000.0
+  - name: YearOpened
+    display_name: Year Opened
+    type: integer
+    description: Year the store was opened
+    examples:
+    - 1974
+    - 1975
+    - 1976
+    range:
+    - 1974
+    - 2005
+- name: internet_sales
+  table: dbo.FactInternetSales
+  description: 'Internet sales (B2C). Each row represents one order line item, containing product, customer, order/ship dates, quantity, price, and cost.
+
+    '
+  primary_key: SalesOrderNumber
+  columns:
+  - name: ProductKey
+    display_name: Product ID
+    type: integer
+    description: FK to products table
+    examples:
+    - 214
+    - 217
+    - 222
+    range:
+    - 214
+    - 606
+    foreign_key: products.ProductKey
+  - name: OrderDateKey
+    display_name: Order Date Key
+    type: integer
+    description: FK to dates table (order date)
+    examples:
+    - 20101229
+    - 20101230
+    - 20101231
+    range:
+    - 20101229
+    - 20140128
+    foreign_key: dates.DateKey
+  - name: DueDateKey
+    display_name: Due Date Key
+    type: integer
+    description: FK to dates table (due date)
+    examples:
+    - 20110110
+    - 20110111
+    - 20110112
+    range:
+    - 20110110
+    - 20140209
+  - name: ShipDateKey
+    display_name: Ship Date Key
+    type: integer
+    description: FK to dates table (ship date)
+    examples:
+    - 20110105
+    - 20110106
+    - 20110107
+    range:
+    - 20110105
+    - 20140204
+  - name: CustomerKey
+    display_name: Customer ID
+    type: integer
+    description: FK to customers table
+    examples:
+    - 11000
+    - 11001
+    - 11002
+    range:
+    - 11000
+    - 29483
+    foreign_key: customers.CustomerKey
+  - name: PromotionKey
+    display_name: Promotion Key
+    type: integer
+    description: FK to promotions table
+    examples:
+    - 1
+    - 2
+    - 13
+    range:
+    - 1
+    - 14
+    foreign_key: promotions.PromotionKey
+  - name: CurrencyKey
+    display_name: Currency Key
+    type: integer
+    description: FK to currency table
+    examples:
+    - 6
+    - 19
+    - 29
+    range:
+    - 6
+    - 100
+    foreign_key: currency.CurrencyKey
+  - name: SalesTerritoryKey
+    display_name: Sales Territory Key
+    type: integer
+    description: FK to sales territory table
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 10
+    foreign_key: sales_territory.SalesTerritoryKey
+  - name: SalesOrderNumber
+    display_name: Order ID
+    type: string
+    description: Sales order number (e.g., SO43697)
+    examples:
+    - SO43697
+    - SO43698
+    - SO43699
+  - name: SalesOrderLineNumber
+    display_name: Line Number
+    type: integer
+    description: Line item number within the order
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 8
+  - name: RevisionNumber
+    display_name: Revision Number
+    type: integer
+    description: Order revision number
+    examples:
+    - 1
+    range:
+    - 1
+    - 1
+  - name: OrderQuantity
+    display_name: Order Quantity
+    type: integer
+    description: Quantity of products ordered
+    examples:
+    - 1
+    range:
+    - 1
+    - 1
+  - name: UnitPrice
+    display_name: Unit Price
+    type: decimal
+    description: Unit price per product (USD)
+    examples:
+    - 2.29
+    - 3.99
+    - 4.99
+    range:
+    - 2.29
+    - 3578.27
+  - name: ExtendedAmount
+    display_name: Total Amount
+    type: decimal
+    description: Extended amount = UnitPrice × OrderQuantity
+    examples:
+    - 2.29
+    - 3.99
+    - 4.99
+    range:
+    - 2.29
+    - 3578.27
+  - name: UnitPriceDiscountPct
+    display_name: Discount Percentage
+    type: decimal
+    description: Unit price discount percentage
+    examples:
+    - 0.0
+    range:
+    - 0.0
+    - 0.0
+  - name: DiscountAmount
+    display_name: Discount Amount
+    type: decimal
+    description: Discount amount (USD)
+    examples:
+    - 0.0
+    range:
+    - 0.0
+    - 0.0
+  - name: ProductStandardCost
+    display_name: Manufacturing Cost
+    type: decimal
+    description: Standard manufacturing cost (USD)
+    examples:
+    - 0.8565
+    - 1.4923
+    - 1.8663
+    range:
+    - 0.8565
+    - 2171.2942
+  - name: TotalProductCost
+    display_name: Total Product Cost
+    type: decimal
+    description: Total product cost (USD)
+    examples:
+    - 0.8565
+    - 1.4923
+    - 1.8663
+    range:
+    - 0.8565
+    - 2171.2942
+  - name: SalesAmount
+    display_name: Sales Amount
+    type: decimal
+    description: Actual sales amount (USD) = ExtendedAmount - DiscountAmount
+    examples:
+    - 2.29
+    - 3.99
+    - 4.99
+    range:
+    - 2.29
+    - 3578.27
+  - name: TaxAmt
+    display_name: Tax Amount
+    type: decimal
+    description: Tax amount (USD)
+    examples:
+    - 0.1832
+    - 0.3192
+    - 0.3992
+    range:
+    - 0.1832
+    - 286.2616
+  - name: Freight
+    display_name: Freight
+    type: decimal
+    description: Freight/shipping cost (USD)
+    examples:
+    - 0.0573
+    - 0.0998
+    - 0.1248
+    range:
+    - 0.0573
+    - 89.4568
+  - name: OrderDate
+    display_name: Order Date
+    type: datetime
+    description: Order date
+    examples:
+    - '2010-12-29'
+    - '2010-12-30'
+    - '2010-12-31'
+    range:
+    - '2010-12-29'
+    - '2014-01-28'
+  - name: DueDate
+    display_name: Due Date
+    type: datetime
+    description: Due date
+    examples:
+    - '2011-01-10'
+    - '2011-01-11'
+    - '2011-01-12'
+    range:
+    - '2011-01-10'
+    - '2014-02-09'
+  - name: ShipDate
+    display_name: Ship Date
+    type: datetime
+    description: Actual ship date
+    examples:
+    - '2011-01-05'
+    - '2011-01-06'
+    - '2011-01-07'
+    range:
+    - '2011-01-05'
+    - '2014-02-04'
+- name: reseller_sales
+  table: dbo.FactResellerSales
+  description: 'Reseller sales (B2B). Each row represents one order line item sold to a reseller, containing product, employee, dates, quantity, and revenue.
+
+    '
+  primary_key: SalesOrderNumber
+  columns:
+  - name: ProductKey
+    display_name: Product ID
+    type: integer
+    description: FK to products table
+    examples:
+    - 212
+    - 213
+    - 214
+    range:
+    - 212
+    - 606
+    foreign_key: products.ProductKey
+  - name: OrderDateKey
+    display_name: Order Date Key
+    type: integer
+    description: FK to dates table (order date)
+    examples:
+    - 20101229
+    - 20110129
+    - 20110301
+    range:
+    - 20101229
+    - 20131129
+    foreign_key: dates.DateKey
+  - name: DueDateKey
+    display_name: Due Date Key
+    type: integer
+    description: FK to dates table (due date)
+    examples:
+    - 20110110
+    - 20110210
+    - 20110313
+    range:
+    - 20110110
+    - 20131211
+  - name: ShipDateKey
+    display_name: Ship Date Key
+    type: integer
+    description: FK to dates table (ship date)
+    examples:
+    - 20110105
+    - 20110205
+    - 20110308
+    range:
+    - 20110105
+    - 20131206
+  - name: ResellerKey
+    display_name: Reseller Key
+    type: integer
+    description: FK to resellers table
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 701
+    foreign_key: resellers.ResellerKey
+  - name: EmployeeKey
+    display_name: Employee ID
+    type: integer
+    description: FK to employees table (salesperson)
+    examples:
+    - 272
+    - 281
+    - 282
+    range:
+    - 272
+    - 296
+  - name: PromotionKey
+    display_name: Promotion Key
+    type: integer
+    description: FK to promotions table
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 16
+    foreign_key: promotions.PromotionKey
+  - name: CurrencyKey
+    display_name: Currency Key
+    type: integer
+    description: FK to currency table
+    examples:
+    - 6
+    - 19
+    - 36
+    range:
+    - 6
+    - 100
+    foreign_key: currency.CurrencyKey
+  - name: SalesTerritoryKey
+    display_name: Sales Territory Key
+    type: integer
+    description: FK to sales territory table
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 10
+    foreign_key: sales_territory.SalesTerritoryKey
+  - name: SalesOrderNumber
+    display_name: Reseller Order ID
+    type: string
+    description: Reseller sales order number
+    examples:
+    - SO43659
+    - SO43659
+    - SO43659
+  - name: SalesOrderLineNumber
+    display_name: Line Number
+    type: integer
+    description: Line item number within the order
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 72
+  - name: OrderQuantity
+    display_name: Order Quantity
+    type: integer
+    description: Quantity of products ordered
+    examples:
+    - 1
+    - 2
+    - 3
+    range:
+    - 1
+    - 44
+  - name: UnitPrice
+    display_name: Unit Price
+    type: decimal
+    description: Unit price per product (USD)
+    examples:
+    - 1.3282
+    - 1.374
+    - 2.495
+    range:
+    - 1.3282
+    - 2146.962
+  - name: ExtendedAmount
+    display_name: Total Amount
+    type: decimal
+    description: Extended amount = UnitPrice × OrderQuantity
+    examples:
+    - 1.374
+    - 2.748
+    - 2.994
+    range:
+    - 1.374
+    - 30992.91
+  - name: UnitPriceDiscountPct
+    display_name: Discount Percentage
+    type: decimal
+    description: Unit price discount percentage
+    examples:
+    - 0.0
+    - 0.02
+    - 0.05
+    range:
+    - 0.0
+    - 0.4
+  - name: DiscountAmount
+    display_name: Discount Amount
+    type: decimal
+    description: Discount amount (USD)
+    examples:
+    - 0.0
+    - 0.3188
+    - 0.6367
+    range:
+    - 0.0
+    - 4005.2376
+  - name: ProductStandardCost
+    display_name: Manufacturing Cost
+    type: decimal
+    description: Standard manufacturing cost (USD)
+    examples:
+    - 0.8565
+    - 1.8663
+    - 2.9733
+    range:
+    - 0.8565
+    - 2171.2942
+  - name: TotalProductCost
+    display_name: Total Product Cost
+    type: decimal
+    description: Total product cost (USD)
+    examples:
+    - 0.8565
+    - 1.713
+    - 1.8663
+    range:
+    - 0.8565
+    - 38530.3854
+  - name: SalesAmount
+    display_name: Sales Amount
+    type: decimal
+    description: Actual sales amount (USD)
+    examples:
+    - 1.374
+    - 2.748
+    - 2.994
+    range:
+    - 1.374
+    - 27893.619
+  - name: TaxAmt
+    display_name: Tax Amount
+    type: decimal
+    description: Tax amount (USD)
+    examples:
+    - 0.1099
+    - 0.2198
+    - 0.2395
+    range:
+    - 0.1099
+    - 2231.4895
+  - name: Freight
+    display_name: Freight
+    type: decimal
+    description: Freight/shipping cost (USD)
+    examples:
+    - 0.0344
+    - 0.0687
+    - 0.0749
+    range:
+    - 0.0344
+    - 697.3405
+  - name: OrderDate
+    display_name: Order Date
+    type: datetime
+    description: Order date
+    examples:
+    - '2010-12-29'
+    - '2011-01-29'
+    - '2011-03-01'
+    range:
+    - '2010-12-29'
+    - '2013-11-29'
+  - name: DueDate
+    display_name: Due Date
+    type: datetime
+    description: Due date
+    examples:
+    - '2011-01-10'
+    - '2011-02-10'
+    - '2011-03-13'
+    range:
+    - '2011-01-10'
+    - '2013-12-11'
+  - name: ShipDate
+    display_name: Ship Date
+    type: datetime
+    description: Actual ship date
+    examples:
+    - '2011-01-05'
+    - '2011-02-05'
+    - '2011-03-08'
+    range:
+    - '2011-01-05'
+    - '2013-12-06'
+- name: employees
+  table: dbo.DimEmployee
+  description: ''
+  primary_key: EmployeeKey
+  columns:
+  - name: EmployeeKey
+    display_name: ''
+    type: integer
+    description: ''
+  - name: ParentEmployeeKey
+    display_name: ''
+    type: integer
+    description: ''
+  - name: EmployeeNationalIDAlternateKey
+    display_name: ''
+    type: string
+    description: ''
+  - name: ParentEmployeeNationalIDAlternateKey
+    display_name: ''
+    type: string
+    description: ''
+  - name: SalesTerritoryKey
+    display_name: ''
+    type: integer
+    description: ''
+  - name: FirstName
+    display_name: ''
+    type: string
+    description: ''
+  - name: LastName
+    display_name: ''
+    type: string
+    description: ''
+  - name: MiddleName
+    display_name: ''
+    type: string
+    description: ''
+  - name: NameStyle
+    display_name: ''
+    type: boolean
+    description: ''
+  - name: Title
+    display_name: ''
+    type: string
+    description: ''
+  - name: HireDate
+    display_name: ''
+    type: date
+    description: ''
+  - name: BirthDate
+    display_name: ''
+    type: date
+    description: ''
+  - name: LoginID
+    display_name: ''
+    type: string
+    description: ''
+  - name: EmailAddress
+    display_name: ''
+    type: string
+    description: ''
+  - name: Phone
+    display_name: ''
+    type: string
+    description: ''
+  - name: MaritalStatus
+    display_name: ''
+    type: string
+    description: ''
+  - name: EmergencyContactName
+    display_name: ''
+    type: string
+    description: ''
+  - name: EmergencyContactPhone
+    display_name: ''
+    type: string
+    description: ''
+  - name: SalariedFlag
+    display_name: ''
+    type: boolean
+    description: ''
+  - name: Gender
+    display_name: ''
+    type: string
+    description: ''
+  - name: PayFrequency
+    display_name: ''
+    type: integer
+    description: ''
+  - name: BaseRate
+    display_name: ''
+    type: decimal
+    description: ''
+  - name: VacationHours
+    display_name: ''
+    type: integer
+    description: ''
+  - name: SickLeaveHours
+    display_name: ''
+    type: integer
+    description: ''
+  - name: CurrentFlag
+    display_name: ''
+    type: boolean
+    description: ''
+  - name: SalesPersonFlag
+    display_name: ''
+    type: boolean
+    description: ''
+  - name: DepartmentName
+    display_name: ''
+    type: string
+    description: ''
+  - name: StartDate
+    display_name: ''
+    type: date
+    description: ''
+  - name: EndDate
+    display_name: ''
+    type: date
+    description: ''
+  - name: Status
+    display_name: ''
+    type: string
+    description: ''
+  - name: EmployeePhoto
+    display_name: ''
+    type: binary
+    description: ''
+  _test: true
+- name: department_groups
+  table: dbo.DimDepartmentGroup
+  description: ''
+  primary_key: DepartmentGroupKey
+  columns:
+  - name: DepartmentGroupKey
+    display_name: ''
+    type: integer
+    description: ''
+  - name: ParentDepartmentGroupKey
+    display_name: ''
+    type: integer
+    description: ''
+  - name: DepartmentGroupName
+    display_name: ''
+    type: string
+    description: ''
+  _test: true
+relationships:
+- name: internet_sales_to_customer
+  from: internet_sales
+  to: customers
+  type: MANY_TO_ONE
+  condition: internet_sales.CustomerKey = customers.CustomerKey
+- name: internet_sales_to_product
+  from: internet_sales
+  to: products
+  type: MANY_TO_ONE
+  condition: internet_sales.ProductKey = products.ProductKey
+- name: internet_sales_to_order_date
+  from: internet_sales
+  to: dates
+  type: MANY_TO_ONE
+  condition: internet_sales.OrderDateKey = dates.DateKey
+- name: internet_sales_to_currency
+  from: internet_sales
+  to: currency
+  type: MANY_TO_ONE
+  condition: internet_sales.CurrencyKey = currency.CurrencyKey
+- name: internet_sales_to_promotion
+  from: internet_sales
+  to: promotions
+  type: MANY_TO_ONE
+  condition: internet_sales.PromotionKey = promotions.PromotionKey
+- name: internet_sales_to_territory
+  from: internet_sales
+  to: sales_territory
+  type: MANY_TO_ONE
+  condition: internet_sales.SalesTerritoryKey = sales_territory.SalesTerritoryKey
+- name: reseller_sales_to_product
+  from: reseller_sales
+  to: products
+  type: MANY_TO_ONE
+  condition: reseller_sales.ProductKey = products.ProductKey
+- name: reseller_sales_to_reseller
+  from: reseller_sales
+  to: resellers
+  type: MANY_TO_ONE
+  condition: reseller_sales.ResellerKey = resellers.ResellerKey
+- name: reseller_sales_to_order_date
+  from: reseller_sales
+  to: dates
+  type: MANY_TO_ONE
+  condition: reseller_sales.OrderDateKey = dates.DateKey
+- name: reseller_sales_to_currency
+  from: reseller_sales
+  to: currency
+  type: MANY_TO_ONE
+  condition: reseller_sales.CurrencyKey = currency.CurrencyKey
+- name: reseller_sales_to_promotion
+  from: reseller_sales
+  to: promotions
+  type: MANY_TO_ONE
+  condition: reseller_sales.PromotionKey = promotions.PromotionKey
+- name: reseller_sales_to_territory
+  from: reseller_sales
+  to: sales_territory
+  type: MANY_TO_ONE
+  condition: reseller_sales.SalesTerritoryKey = sales_territory.SalesTerritoryKey
+- name: customer_to_geography
+  from: customers
+  to: geography
+  type: MANY_TO_ONE
+  condition: customers.GeographyKey = geography.GeographyKey
+- name: geography_to_territory
+  from: geography
+  to: sales_territory
+  type: MANY_TO_ONE
+  condition: geography.SalesTerritoryKey = sales_territory.SalesTerritoryKey
+- name: product_to_subcategory
+  from: products
+  to: product_subcategories
+  type: MANY_TO_ONE
+  condition: products.ProductSubcategoryKey = product_subcategories.ProductSubcategoryKey
+- name: subcategory_to_category
+  from: product_subcategories
+  to: product_categories
+  type: MANY_TO_ONE
+  condition: product_subcategories.ProductCategoryKey = product_categories.ProductCategoryKey
+- name: reseller_to_geography
+  from: resellers
+  to: geography
+  type: MANY_TO_ONE
+  condition: resellers.GeographyKey = geography.GeographyKey

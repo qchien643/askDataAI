@@ -1,0 +1,1677 @@
+# Benchmark dataset for askDataAI Text-to-SQL pipeline
+# Target DB: AdventureWorksDW2025
+# Manifest:  configs/models.yaml
+#
+# Each sample:
+#   id           - stable identifier (used for tracking across runs)
+#   question_vi  - Vietnamese question (input to pipeline)
+#   question_en  - English reference (for documentation only)
+#   gold_sql     - canonical SQL using PHYSICAL names (dbo.DimCustomer, etc.)
+#                  Runs DIRECTLY on AdventureWorks engine via benchmark_runner.
+#   difficulty   - easy / medium / hard
+#   tags         - aggregation, ranking, trend, comparison, filtering,
+#                  multi_hop, nested, window, cte, glossary_term
+#   notes        - optional clarification
+#
+# Distribution: 100 examples (30 easy + 40 medium + 30 hard)
+
+version: "1.0"
+target_db: AdventureWorksDW2025
+manifest_ref: configs/models.yaml
+data_window: "Most data falls in 2013 (52801 orders); 2014 only has January"
+
+examples:
+
+  # ═══════════════════════════════════════════════════════════
+  # EASY (30 samples) — single-table or simple aggregations
+  # ═══════════════════════════════════════════════════════════
+
+  - id: easy_001
+    question_vi: "Có bao nhiêu khách hàng trong hệ thống?"
+    question_en: "How many customers are in the system?"
+    gold_sql: |
+      SELECT COUNT(*) AS total_customers
+      FROM dbo.DimCustomer
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_002
+    question_vi: "Liệt kê 10 sản phẩm có giá niêm yết cao nhất"
+    question_en: "List the top 10 products by list price"
+    gold_sql: |
+      SELECT TOP 10 EnglishProductName, ListPrice
+      FROM dbo.DimProduct
+      ORDER BY ListPrice DESC
+    difficulty: easy
+    tags: [ranking]
+
+  - id: easy_003
+    question_vi: "Sản phẩm màu đỏ có những mẫu nào?"
+    question_en: "Which products come in red color?"
+    gold_sql: |
+      SELECT EnglishProductName, ListPrice, Color
+      FROM dbo.DimProduct
+      WHERE Color = 'Red'
+      ORDER BY EnglishProductName
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_004
+    question_vi: "Tổng doanh thu từ kênh bán online là bao nhiêu?"
+    question_en: "What is the total revenue from internet sales?"
+    gold_sql: |
+      SELECT SUM(SalesAmount) AS total_revenue
+      FROM dbo.FactInternetSales
+    difficulty: easy
+    tags: [aggregation, glossary_term]
+    notes: "Uses 'doanh thu' from glossary -> SUM(SalesAmount)"
+
+  - id: easy_005
+    question_vi: "Khách hàng nữ có thu nhập trên 100000 USD"
+    question_en: "Female customers with yearly income above 100000 USD"
+    gold_sql: |
+      SELECT FirstName, LastName, YearlyIncome
+      FROM dbo.DimCustomer
+      WHERE Gender = 'F' AND YearlyIncome > 100000
+      ORDER BY YearlyIncome DESC
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_006
+    question_vi: "Số lượng đơn hàng theo từng năm"
+    question_en: "Number of orders per year"
+    gold_sql: |
+      SELECT
+        YEAR(OrderDate) AS order_year,
+        COUNT(DISTINCT SalesOrderNumber) AS order_count
+      FROM dbo.FactInternetSales
+      GROUP BY YEAR(OrderDate)
+      ORDER BY order_year
+    difficulty: easy
+    tags: [aggregation, trend, glossary_term]
+    notes: "Uses 'số lượng đơn hàng' from glossary -> COUNT(DISTINCT SalesOrderNumber)"
+
+  - id: easy_007
+    question_vi: "Tổng số sản phẩm trong catalog?"
+    question_en: "How many products in catalog?"
+    gold_sql: |
+      SELECT COUNT(*) AS total_products
+      FROM dbo.DimProduct
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_008
+    question_vi: "Có bao nhiêu đại lý trong hệ thống?"
+    question_en: "How many resellers in the system?"
+    gold_sql: |
+      SELECT COUNT(*) AS total_resellers
+      FROM dbo.DimReseller
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_009
+    question_vi: "Liệt kê 5 sản phẩm có giá thấp nhất, loại trừ giá 0"
+    question_en: "Top 5 cheapest products, excluding price 0"
+    gold_sql: |
+      SELECT TOP 5 EnglishProductName, ListPrice
+      FROM dbo.DimProduct
+      WHERE ListPrice > 0
+      ORDER BY ListPrice ASC
+    difficulty: easy
+    tags: [ranking, filtering]
+
+  - id: easy_010
+    question_vi: "Sản phẩm có chi phí sản xuất cao nhất là gì?"
+    question_en: "Which product has the highest manufacturing cost?"
+    gold_sql: |
+      SELECT TOP 1 EnglishProductName, StandardCost
+      FROM dbo.DimProduct
+      ORDER BY StandardCost DESC
+    difficulty: easy
+    tags: [ranking]
+
+  - id: easy_011
+    question_vi: "Số con tối đa của một khách hàng là bao nhiêu?"
+    question_en: "What is the maximum number of children for a customer?"
+    gold_sql: |
+      SELECT MAX(TotalChildren) AS max_children
+      FROM dbo.DimCustomer
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_012
+    question_vi: "Liệt kê các khách hàng có 5 con trở lên"
+    question_en: "List customers with 5 or more children"
+    gold_sql: |
+      SELECT FirstName, LastName, TotalChildren
+      FROM dbo.DimCustomer
+      WHERE TotalChildren >= 5
+      ORDER BY TotalChildren DESC
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_013
+    question_vi: "Đếm số khách hàng theo giới tính"
+    question_en: "Count customers by gender"
+    gold_sql: |
+      SELECT Gender, COUNT(*) AS customer_count
+      FROM dbo.DimCustomer
+      GROUP BY Gender
+      ORDER BY Gender
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_014
+    question_vi: "Đếm số khách hàng theo trình độ học vấn"
+    question_en: "Count customers by education level"
+    gold_sql: |
+      SELECT EnglishEducation, COUNT(*) AS customer_count
+      FROM dbo.DimCustomer
+      WHERE EnglishEducation IS NOT NULL
+      GROUP BY EnglishEducation
+      ORDER BY customer_count DESC
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_015
+    question_vi: "Sản phẩm có size 'L' có những loại nào?"
+    question_en: "Which products come in size L?"
+    gold_sql: |
+      SELECT EnglishProductName, Size, Color
+      FROM dbo.DimProduct
+      WHERE Size = 'L'
+      ORDER BY EnglishProductName
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_016
+    question_vi: "Giá niêm yết trung bình của tất cả sản phẩm là bao nhiêu?"
+    question_en: "What is the average list price of all products?"
+    gold_sql: |
+      SELECT AVG(ListPrice) AS avg_list_price
+      FROM dbo.DimProduct
+      WHERE ListPrice > 0
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_017
+    question_vi: "Đại lý nào có nhiều nhân viên nhất?"
+    question_en: "Which reseller has the most employees?"
+    gold_sql: |
+      SELECT TOP 1 ResellerName, NumberEmployees
+      FROM dbo.DimReseller
+      ORDER BY NumberEmployees DESC
+    difficulty: easy
+    tags: [ranking]
+
+  - id: easy_018
+    question_vi: "Tổng số đơn hàng online là bao nhiêu?"
+    question_en: "What is the total number of internet orders?"
+    gold_sql: |
+      SELECT COUNT(DISTINCT SalesOrderNumber) AS total_orders
+      FROM dbo.FactInternetSales
+    difficulty: easy
+    tags: [aggregation, glossary_term]
+
+  - id: easy_019
+    question_vi: "Có bao nhiêu sản phẩm đã được bán online (đếm distinct)?"
+    question_en: "How many distinct products have been sold online?"
+    gold_sql: |
+      SELECT COUNT(DISTINCT ProductKey) AS products_sold
+      FROM dbo.FactInternetSales
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_020
+    question_vi: "Doanh thu trung bình mỗi đơn hàng là bao nhiêu?"
+    question_en: "What is the average revenue per order line?"
+    gold_sql: |
+      SELECT AVG(SalesAmount) AS avg_order_amount
+      FROM dbo.FactInternetSales
+    difficulty: easy
+    tags: [aggregation, glossary_term]
+
+  - id: easy_021
+    question_vi: "Tổng số tiền thuế đã thu là bao nhiêu?"
+    question_en: "What is the total tax amount collected?"
+    gold_sql: |
+      SELECT SUM(TaxAmt) AS total_tax
+      FROM dbo.FactInternetSales
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_022
+    question_vi: "Có bao nhiêu khu vực bán hàng trong hệ thống?"
+    question_en: "How many sales territories?"
+    gold_sql: |
+      SELECT COUNT(*) AS total_territories
+      FROM dbo.DimSalesTerritory
+    difficulty: easy
+    tags: [aggregation]
+
+  - id: easy_023
+    question_vi: "Liệt kê tất cả các quốc gia trong bảng địa lý"
+    question_en: "List all distinct countries in the geography table"
+    gold_sql: |
+      SELECT DISTINCT EnglishCountryRegionName
+      FROM dbo.DimGeography
+      ORDER BY EnglishCountryRegionName
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_024
+    question_vi: "Khách hàng nào sinh năm 1970?"
+    question_en: "Customers born in 1970"
+    gold_sql: |
+      SELECT FirstName, LastName, BirthDate
+      FROM dbo.DimCustomer
+      WHERE YEAR(BirthDate) = 1970
+      ORDER BY BirthDate
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_025
+    question_vi: "Đếm số đơn hàng theo từng tháng năm 2013"
+    question_en: "Count orders by month in 2013"
+    gold_sql: |
+      SELECT
+        MONTH(OrderDate) AS month,
+        COUNT(DISTINCT SalesOrderNumber) AS orders
+      FROM dbo.FactInternetSales
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY MONTH(OrderDate)
+      ORDER BY month
+    difficulty: easy
+    tags: [aggregation, trend, glossary_term]
+
+  - id: easy_026
+    question_vi: "Loại promotion nào có nhiều chương trình nhất?"
+    question_en: "Which promotion type has the most programs?"
+    gold_sql: |
+      SELECT EnglishPromotionType, COUNT(*) AS promotion_count
+      FROM dbo.DimPromotion
+      GROUP BY EnglishPromotionType
+      ORDER BY promotion_count DESC
+    difficulty: easy
+    tags: [aggregation, ranking]
+
+  - id: easy_027
+    question_vi: "Liệt kê các loại business của đại lý"
+    question_en: "List distinct reseller business types"
+    gold_sql: |
+      SELECT DISTINCT BusinessType
+      FROM dbo.DimReseller
+      WHERE BusinessType IS NOT NULL
+      ORDER BY BusinessType
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_028
+    question_vi: "Liệt kê tên các subcategory sản phẩm"
+    question_en: "List all product subcategory names"
+    gold_sql: |
+      SELECT DISTINCT EnglishProductSubcategoryName
+      FROM dbo.DimProductSubcategory
+      ORDER BY EnglishProductSubcategoryName
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_029
+    question_vi: "Loại tiền tệ nào được hệ thống hỗ trợ?"
+    question_en: "Which currencies does the system support?"
+    gold_sql: |
+      SELECT DISTINCT CurrencyName
+      FROM dbo.DimCurrency
+      ORDER BY CurrencyName
+    difficulty: easy
+    tags: [filtering]
+
+  - id: easy_030
+    question_vi: "Tổng số đơn hàng đại lý là bao nhiêu?"
+    question_en: "What is the total number of reseller orders?"
+    gold_sql: |
+      SELECT COUNT(DISTINCT SalesOrderNumber) AS total_reseller_orders
+      FROM dbo.FactResellerSales
+    difficulty: easy
+    tags: [aggregation, glossary_term]
+
+  # ═══════════════════════════════════════════════════════════
+  # MEDIUM (40 samples) — joins, GROUP BY, time-based, HAVING
+  # ═══════════════════════════════════════════════════════════
+
+  - id: medium_001
+    question_vi: "Top 5 sản phẩm có doanh thu cao nhất quý 1 năm 2013"
+    question_en: "Top 5 products by revenue in Q1 2013"
+    gold_sql: |
+      SELECT TOP 5
+        p.EnglishProductName,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      WHERE YEAR(s.OrderDate) = 2013
+        AND MONTH(s.OrderDate) BETWEEN 1 AND 3
+      GROUP BY p.EnglishProductName
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [ranking, aggregation, trend, glossary_term]
+
+  - id: medium_002
+    question_vi: "Doanh thu theo từng tháng trong năm 2013"
+    question_en: "Monthly revenue in 2013"
+    gold_sql: |
+      SELECT
+        MONTH(OrderDate) AS month,
+        SUM(SalesAmount) AS revenue
+      FROM dbo.FactInternetSales
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY MONTH(OrderDate)
+      ORDER BY month
+    difficulty: medium
+    tags: [aggregation, trend, glossary_term]
+
+  - id: medium_003
+    question_vi: "Số đơn hàng theo từng khu vực bán hàng, sắp xếp giảm dần"
+    question_en: "Order count by sales territory, sorted descending"
+    gold_sql: |
+      SELECT
+        t.SalesTerritoryRegion AS region,
+        COUNT(DISTINCT s.SalesOrderNumber) AS order_count
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      JOIN dbo.DimSalesTerritory t ON g.SalesTerritoryKey = t.SalesTerritoryKey
+      GROUP BY t.SalesTerritoryRegion
+      ORDER BY order_count DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: medium_004
+    question_vi: "Thu nhập trung bình của khách hàng theo nghề nghiệp"
+    question_en: "Average customer income by occupation"
+    gold_sql: |
+      SELECT
+        EnglishOccupation AS occupation,
+        AVG(YearlyIncome) AS avg_income,
+        COUNT(*) AS customer_count
+      FROM dbo.DimCustomer
+      WHERE EnglishOccupation IS NOT NULL
+      GROUP BY EnglishOccupation
+      ORDER BY avg_income DESC
+    difficulty: medium
+    tags: [aggregation, ranking]
+
+  - id: medium_005
+    question_vi: "Doanh thu theo từng danh mục sản phẩm"
+    question_en: "Revenue by product category"
+    gold_sql: |
+      SELECT
+        pc.EnglishProductCategoryName AS category,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+      JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+      GROUP BY pc.EnglishProductCategoryName
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: medium_006
+    question_vi: "Quốc gia nào có nhiều hơn 1000 khách hàng?"
+    question_en: "Which countries have more than 1000 customers?"
+    gold_sql: |
+      SELECT
+        g.EnglishCountryRegionName AS country,
+        COUNT(*) AS customer_count
+      FROM dbo.DimCustomer c
+      JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      GROUP BY g.EnglishCountryRegionName
+      HAVING COUNT(*) > 1000
+      ORDER BY customer_count DESC
+    difficulty: medium
+    tags: [aggregation, filtering, multi_hop]
+
+  - id: medium_007
+    question_vi: "Top 5 đại lý có doanh thu cao nhất"
+    question_en: "Top 5 resellers by revenue"
+    gold_sql: |
+      SELECT TOP 5
+        r.ResellerName,
+        SUM(rs.SalesAmount) AS revenue
+      FROM dbo.FactResellerSales rs
+      JOIN dbo.DimReseller r ON rs.ResellerKey = r.ResellerKey
+      GROUP BY r.ResellerName
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [ranking, aggregation, glossary_term]
+
+  - id: medium_008
+    question_vi: "Sản phẩm có giá niêm yết cao hơn giá trung bình"
+    question_en: "Products with list price above the average"
+    gold_sql: |
+      SELECT EnglishProductName, ListPrice
+      FROM dbo.DimProduct
+      WHERE ListPrice > (
+        SELECT AVG(ListPrice)
+        FROM dbo.DimProduct
+        WHERE ListPrice > 0
+      )
+      ORDER BY ListPrice DESC
+    difficulty: medium
+    tags: [filtering, nested]
+
+  - id: medium_009
+    question_vi: "Top 10 khách hàng có tổng doanh thu cao nhất năm 2013"
+    question_en: "Top 10 customers by revenue in 2013"
+    gold_sql: |
+      SELECT TOP 10
+        c.FirstName + ' ' + c.LastName AS customer_name,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      WHERE YEAR(s.OrderDate) = 2013
+      GROUP BY c.CustomerKey, c.FirstName, c.LastName
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [ranking, aggregation, trend, glossary_term, multi_hop]
+
+  - id: medium_010
+    question_vi: "Doanh thu theo từng quý của năm 2013"
+    question_en: "Quarterly revenue in 2013"
+    gold_sql: |
+      SELECT
+        DATEPART(QUARTER, OrderDate) AS quarter,
+        SUM(SalesAmount) AS revenue
+      FROM dbo.FactInternetSales
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY DATEPART(QUARTER, OrderDate)
+      ORDER BY quarter
+    difficulty: medium
+    tags: [aggregation, trend, glossary_term]
+
+  - id: medium_011
+    question_vi: "Sản phẩm thuộc danh mục Bikes có doanh thu cao nhất"
+    question_en: "Top-revenue product in Bikes category"
+    gold_sql: |
+      SELECT TOP 1
+        p.EnglishProductName,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+      JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+      WHERE pc.EnglishProductCategoryName = 'Bikes'
+      GROUP BY p.EnglishProductName
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [ranking, aggregation, multi_hop, filtering, glossary_term]
+
+  - id: medium_012
+    question_vi: "Số đơn hàng theo từng promotion"
+    question_en: "Order count by promotion"
+    gold_sql: |
+      SELECT
+        pr.EnglishPromotionName AS promotion,
+        COUNT(DISTINCT s.SalesOrderNumber) AS order_count
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimPromotion pr ON s.PromotionKey = pr.PromotionKey
+      GROUP BY pr.EnglishPromotionName
+      ORDER BY order_count DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: medium_013
+    question_vi: "Top 5 thành phố có nhiều khách hàng nhất"
+    question_en: "Top 5 cities by customer count"
+    gold_sql: |
+      SELECT TOP 5
+        g.City,
+        COUNT(*) AS customer_count
+      FROM dbo.DimCustomer c
+      JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      GROUP BY g.City
+      ORDER BY customer_count DESC
+    difficulty: medium
+    tags: [ranking, aggregation, multi_hop]
+
+  - id: medium_014
+    question_vi: "Doanh thu theo giới tính của khách hàng"
+    question_en: "Revenue by customer gender"
+    gold_sql: |
+      SELECT
+        c.Gender,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      GROUP BY c.Gender
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: medium_015
+    question_vi: "Khách hàng có thu nhập trên trung bình toàn hệ thống"
+    question_en: "Customers with income above the system average"
+    gold_sql: |
+      SELECT FirstName, LastName, YearlyIncome
+      FROM dbo.DimCustomer
+      WHERE YearlyIncome > (SELECT AVG(YearlyIncome) FROM dbo.DimCustomer)
+      ORDER BY YearlyIncome DESC
+    difficulty: medium
+    tags: [filtering, nested, comparison]
+
+  - id: medium_016
+    question_vi: "Đại lý kiểu Warehouse có hơn 50 nhân viên"
+    question_en: "Warehouse-type resellers with more than 50 employees"
+    gold_sql: |
+      SELECT ResellerName, NumberEmployees, BusinessType
+      FROM dbo.DimReseller
+      WHERE NumberEmployees > 50 AND BusinessType = 'Warehouse'
+      ORDER BY NumberEmployees DESC
+    difficulty: medium
+    tags: [filtering]
+
+  - id: medium_017
+    question_vi: "Tổng doanh thu theo từng quốc gia"
+    question_en: "Total revenue by country"
+    gold_sql: |
+      SELECT
+        g.EnglishCountryRegionName AS country,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      GROUP BY g.EnglishCountryRegionName
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: medium_018
+    question_vi: "Tháng nào năm 2013 có doanh thu cao nhất?"
+    question_en: "Which month in 2013 had the highest revenue?"
+    gold_sql: |
+      SELECT TOP 1
+        MONTH(OrderDate) AS month,
+        SUM(SalesAmount) AS revenue
+      FROM dbo.FactInternetSales
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY MONTH(OrderDate)
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [ranking, aggregation, trend, glossary_term]
+
+  - id: medium_019
+    question_vi: "Số đại lý theo từng nhóm vùng"
+    question_en: "Reseller count by territory group"
+    gold_sql: |
+      SELECT
+        t.SalesTerritoryGroup AS region_group,
+        COUNT(*) AS reseller_count
+      FROM dbo.DimReseller r
+      JOIN dbo.DimGeography g ON r.GeographyKey = g.GeographyKey
+      JOIN dbo.DimSalesTerritory t ON g.SalesTerritoryKey = t.SalesTerritoryKey
+      GROUP BY t.SalesTerritoryGroup
+      ORDER BY reseller_count DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop]
+
+  - id: medium_020
+    question_vi: "Top 5 sản phẩm bán nhiều số lượng nhất"
+    question_en: "Top 5 products by order quantity"
+    gold_sql: |
+      SELECT TOP 5
+        p.EnglishProductName,
+        SUM(s.OrderQuantity) AS quantity_sold
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      GROUP BY p.EnglishProductName
+      ORDER BY quantity_sold DESC
+    difficulty: medium
+    tags: [ranking, aggregation, multi_hop, glossary_term]
+
+  - id: medium_021
+    question_vi: "Doanh thu reseller theo từng năm"
+    question_en: "Reseller revenue by year"
+    gold_sql: |
+      SELECT
+        YEAR(OrderDate) AS year,
+        SUM(SalesAmount) AS revenue
+      FROM dbo.FactResellerSales
+      GROUP BY YEAR(OrderDate)
+      ORDER BY year
+    difficulty: medium
+    tags: [aggregation, trend, glossary_term]
+
+  - id: medium_022
+    question_vi: "Khách hàng có tổng doanh thu trên 10000 USD"
+    question_en: "Customers with total revenue above 10000 USD"
+    gold_sql: |
+      SELECT
+        c.FirstName + ' ' + c.LastName AS customer_name,
+        SUM(s.SalesAmount) AS total_revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      GROUP BY c.CustomerKey, c.FirstName, c.LastName
+      HAVING SUM(s.SalesAmount) > 10000
+      ORDER BY total_revenue DESC
+    difficulty: medium
+    tags: [aggregation, filtering, multi_hop, glossary_term]
+
+  - id: medium_023
+    question_vi: "Lợi nhuận theo từng danh mục sản phẩm"
+    question_en: "Profit by product category"
+    gold_sql: |
+      SELECT
+        pc.EnglishProductCategoryName AS category,
+        SUM(s.SalesAmount) - SUM(s.TotalProductCost) AS profit
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+      JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+      GROUP BY pc.EnglishProductCategoryName
+      ORDER BY profit DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: medium_024
+    question_vi: "Top 10 đại lý theo doanh thu năm 2013"
+    question_en: "Top 10 resellers by revenue in 2013"
+    gold_sql: |
+      SELECT TOP 10
+        r.ResellerName,
+        SUM(rs.SalesAmount) AS revenue
+      FROM dbo.FactResellerSales rs
+      JOIN dbo.DimReseller r ON rs.ResellerKey = r.ResellerKey
+      WHERE YEAR(rs.OrderDate) = 2013
+      GROUP BY r.ResellerName
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [ranking, aggregation, trend, glossary_term, multi_hop]
+
+  - id: medium_025
+    question_vi: "Khu vực nào có giá trị đơn hàng trung bình cao nhất?"
+    question_en: "Which territory has the highest average order value?"
+    gold_sql: |
+      SELECT TOP 1
+        t.SalesTerritoryRegion AS region,
+        AVG(s.SalesAmount) AS avg_order_value
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimSalesTerritory t ON s.SalesTerritoryKey = t.SalesTerritoryKey
+      GROUP BY t.SalesTerritoryRegion
+      ORDER BY avg_order_value DESC
+    difficulty: medium
+    tags: [ranking, aggregation, multi_hop]
+
+  - id: medium_026
+    question_vi: "Số khách hàng theo nghề nghiệp và giới tính"
+    question_en: "Customer count by occupation and gender"
+    gold_sql: |
+      SELECT
+        EnglishOccupation AS occupation,
+        Gender,
+        COUNT(*) AS customer_count
+      FROM dbo.DimCustomer
+      WHERE EnglishOccupation IS NOT NULL
+      GROUP BY EnglishOccupation, Gender
+      ORDER BY EnglishOccupation, Gender
+    difficulty: medium
+    tags: [aggregation]
+
+  - id: medium_027
+    question_vi: "Sản phẩm có giá trên 1000 USD"
+    question_en: "Products with list price over 1000 USD"
+    gold_sql: |
+      SELECT EnglishProductName, ListPrice, Color
+      FROM dbo.DimProduct
+      WHERE ListPrice > 1000
+      ORDER BY ListPrice DESC
+    difficulty: medium
+    tags: [filtering]
+
+  - id: medium_028
+    question_vi: "Đếm số đơn hàng theo ngày trong tuần năm 2013"
+    question_en: "Order count by day-of-week in 2013"
+    gold_sql: |
+      SELECT
+        DATENAME(WEEKDAY, OrderDate) AS day_of_week,
+        COUNT(DISTINCT SalesOrderNumber) AS orders
+      FROM dbo.FactInternetSales
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY DATENAME(WEEKDAY, OrderDate)
+      ORDER BY orders DESC
+    difficulty: medium
+    tags: [aggregation, trend, glossary_term]
+
+  - id: medium_029
+    question_vi: "Doanh thu trung bình theo trình độ học vấn của khách hàng"
+    question_en: "Average revenue per order by customer education"
+    gold_sql: |
+      SELECT
+        c.EnglishEducation AS education,
+        AVG(s.SalesAmount) AS avg_revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      WHERE c.EnglishEducation IS NOT NULL
+      GROUP BY c.EnglishEducation
+      ORDER BY avg_revenue DESC
+    difficulty: medium
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: medium_030
+    question_vi: "Sản phẩm chưa từng được bán online"
+    question_en: "Products never sold online"
+    gold_sql: |
+      SELECT p.EnglishProductName, p.ListPrice
+      FROM dbo.DimProduct p
+      WHERE p.ProductKey NOT IN (
+        SELECT DISTINCT ProductKey FROM dbo.FactInternetSales
+      )
+      AND p.ListPrice > 0
+      ORDER BY p.ListPrice DESC
+    difficulty: medium
+    tags: [filtering, nested]
+
+  - id: medium_031
+    question_vi: "Top 5 đại lý có nhiều đơn hàng nhất"
+    question_en: "Top 5 resellers by order count"
+    gold_sql: |
+      SELECT TOP 5
+        r.ResellerName,
+        COUNT(DISTINCT rs.SalesOrderNumber) AS order_count
+      FROM dbo.FactResellerSales rs
+      JOIN dbo.DimReseller r ON rs.ResellerKey = r.ResellerKey
+      GROUP BY r.ResellerName
+      ORDER BY order_count DESC
+    difficulty: medium
+    tags: [ranking, aggregation, multi_hop, glossary_term]
+
+  - id: medium_032
+    question_vi: "Phân bố khách hàng theo nhóm thu nhập"
+    question_en: "Customer distribution by income bracket"
+    gold_sql: |
+      SELECT
+        CASE
+          WHEN YearlyIncome < 30000 THEN 'Low (<30K)'
+          WHEN YearlyIncome < 70000 THEN 'Medium (30-70K)'
+          WHEN YearlyIncome < 100000 THEN 'High (70-100K)'
+          ELSE 'Very High (>=100K)'
+        END AS income_bracket,
+        COUNT(*) AS customer_count
+      FROM dbo.DimCustomer
+      GROUP BY
+        CASE
+          WHEN YearlyIncome < 30000 THEN 'Low (<30K)'
+          WHEN YearlyIncome < 70000 THEN 'Medium (30-70K)'
+          WHEN YearlyIncome < 100000 THEN 'High (70-100K)'
+          ELSE 'Very High (>=100K)'
+        END
+      ORDER BY customer_count DESC
+    difficulty: medium
+    tags: [aggregation, filtering]
+
+  - id: medium_033
+    question_vi: "Số đơn hàng có giá trị trên 1000 USD"
+    question_en: "Number of order lines with amount above 1000 USD"
+    gold_sql: |
+      SELECT COUNT(DISTINCT SalesOrderNumber) AS large_orders
+      FROM dbo.FactInternetSales
+      WHERE SalesAmount > 1000
+    difficulty: medium
+    tags: [aggregation, filtering, glossary_term]
+
+  - id: medium_034
+    question_vi: "Khách hàng đã mua từ 5 sản phẩm khác nhau trở lên"
+    question_en: "Customers who bought 5 or more distinct products"
+    gold_sql: |
+      SELECT
+        c.FirstName + ' ' + c.LastName AS customer_name,
+        COUNT(DISTINCT s.ProductKey) AS distinct_products
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      GROUP BY c.CustomerKey, c.FirstName, c.LastName
+      HAVING COUNT(DISTINCT s.ProductKey) >= 5
+      ORDER BY distinct_products DESC
+    difficulty: medium
+    tags: [aggregation, filtering, multi_hop, glossary_term]
+
+  - id: medium_035
+    question_vi: "Số sản phẩm theo từng màu sắc"
+    question_en: "Product count by color"
+    gold_sql: |
+      SELECT Color, COUNT(*) AS product_count
+      FROM dbo.DimProduct
+      WHERE Color IS NOT NULL
+      GROUP BY Color
+      ORDER BY product_count DESC
+    difficulty: medium
+    tags: [aggregation]
+
+  - id: medium_036
+    question_vi: "Top 3 quốc gia có nhiều đơn hàng nhất"
+    question_en: "Top 3 countries by order count"
+    gold_sql: |
+      SELECT TOP 3
+        g.EnglishCountryRegionName AS country,
+        COUNT(DISTINCT s.SalesOrderNumber) AS orders
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      GROUP BY g.EnglishCountryRegionName
+      ORDER BY orders DESC
+    difficulty: medium
+    tags: [ranking, aggregation, multi_hop, glossary_term]
+
+  - id: medium_037
+    question_vi: "Sản phẩm có doanh thu trong khoảng 5000 đến 10000 USD"
+    question_en: "Products with total revenue between 5000 and 10000 USD"
+    gold_sql: |
+      SELECT
+        p.EnglishProductName,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      GROUP BY p.EnglishProductName
+      HAVING SUM(s.SalesAmount) BETWEEN 5000 AND 10000
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [aggregation, filtering, multi_hop, glossary_term]
+
+  - id: medium_038
+    question_vi: "Số khách hàng theo trạng thái sở hữu nhà"
+    question_en: "Customer count by house ownership"
+    gold_sql: |
+      SELECT
+        CASE WHEN HouseOwnerFlag = '1' THEN 'Owner' ELSE 'Renter' END AS ownership,
+        COUNT(*) AS customer_count
+      FROM dbo.DimCustomer
+      GROUP BY HouseOwnerFlag
+      ORDER BY customer_count DESC
+    difficulty: medium
+    tags: [aggregation, filtering]
+
+  - id: medium_039
+    question_vi: "Doanh thu từng tháng năm 2013, sắp xếp giảm dần"
+    question_en: "Monthly revenue in 2013 sorted descending"
+    gold_sql: |
+      SELECT
+        MONTH(OrderDate) AS month,
+        SUM(SalesAmount) AS revenue
+      FROM dbo.FactInternetSales
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY MONTH(OrderDate)
+      ORDER BY revenue DESC
+    difficulty: medium
+    tags: [aggregation, ranking, trend, glossary_term]
+
+  - id: medium_040
+    question_vi: "Số khách hàng đã mua hàng theo từng năm"
+    question_en: "Active buyer count per year"
+    gold_sql: |
+      SELECT
+        YEAR(OrderDate) AS year,
+        COUNT(DISTINCT CustomerKey) AS active_customers
+      FROM dbo.FactInternetSales
+      GROUP BY YEAR(OrderDate)
+      ORDER BY year
+    difficulty: medium
+    tags: [aggregation, trend, glossary_term]
+
+  # ═══════════════════════════════════════════════════════════
+  # HARD (30 samples) — multi-hop, CTE, window, set ops
+  # ═══════════════════════════════════════════════════════════
+
+  - id: hard_001
+    question_vi: "Khách hàng có tổng doanh thu trong quý 1 năm 2013 cao hơn doanh thu trung bình của khu vực họ"
+    question_en: "Customers whose Q1 2013 revenue exceeds the average revenue in their territory"
+    gold_sql: |
+      WITH cust_territory AS (
+        SELECT c.CustomerKey, g.SalesTerritoryKey
+        FROM dbo.DimCustomer c
+        JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      ),
+      cust_revenue AS (
+        SELECT
+          ct.CustomerKey,
+          ct.SalesTerritoryKey,
+          SUM(s.SalesAmount) AS revenue
+        FROM dbo.FactInternetSales s
+        JOIN cust_territory ct ON s.CustomerKey = ct.CustomerKey
+        WHERE YEAR(s.OrderDate) = 2013
+          AND MONTH(s.OrderDate) BETWEEN 1 AND 3
+        GROUP BY ct.CustomerKey, ct.SalesTerritoryKey
+      ),
+      region_avg AS (
+        SELECT
+          SalesTerritoryKey,
+          AVG(revenue) AS avg_revenue
+        FROM cust_revenue
+        GROUP BY SalesTerritoryKey
+      )
+      SELECT
+        cr.CustomerKey,
+        cr.revenue,
+        ra.avg_revenue
+      FROM cust_revenue cr
+      JOIN region_avg ra ON cr.SalesTerritoryKey = ra.SalesTerritoryKey
+      WHERE cr.revenue > ra.avg_revenue
+      ORDER BY cr.revenue DESC
+    difficulty: hard
+    tags: [cte, multi_hop, comparison, aggregation, glossary_term]
+
+  - id: hard_002
+    question_vi: "Xếp hạng các sản phẩm theo doanh thu trong từng danh mục"
+    question_en: "Rank products by revenue within each category"
+    gold_sql: |
+      SELECT
+        pc.EnglishProductCategoryName AS category,
+        p.EnglishProductName AS product,
+        SUM(s.SalesAmount) AS revenue,
+        ROW_NUMBER() OVER (
+          PARTITION BY pc.ProductCategoryKey
+          ORDER BY SUM(s.SalesAmount) DESC
+        ) AS rank_in_category
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+      JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+      GROUP BY pc.ProductCategoryKey, pc.EnglishProductCategoryName, p.EnglishProductName
+    difficulty: hard
+    tags: [window, multi_hop, aggregation, glossary_term]
+
+  - id: hard_003
+    question_vi: "Top 3 sản phẩm có doanh thu cao nhất trong mỗi danh mục"
+    question_en: "Top 3 products by revenue within each category"
+    gold_sql: |
+      WITH ranked_products AS (
+        SELECT
+          pc.EnglishProductCategoryName AS category,
+          p.EnglishProductName AS product,
+          SUM(s.SalesAmount) AS revenue,
+          ROW_NUMBER() OVER (
+            PARTITION BY pc.ProductCategoryKey
+            ORDER BY SUM(s.SalesAmount) DESC
+          ) AS rn
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+        JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+        GROUP BY pc.ProductCategoryKey, pc.EnglishProductCategoryName, p.EnglishProductName
+      )
+      SELECT category, product, revenue
+      FROM ranked_products
+      WHERE rn <= 3
+      ORDER BY category, revenue DESC
+    difficulty: hard
+    tags: [cte, window, multi_hop, ranking, glossary_term]
+
+  - id: hard_004
+    question_vi: "Khách hàng đã mua hàng năm 2012 nhưng không mua năm 2013"
+    question_en: "Customers who bought in 2012 but not in 2013"
+    gold_sql: |
+      SELECT
+        c.CustomerKey,
+        c.FirstName,
+        c.LastName,
+        c.EmailAddress
+      FROM dbo.DimCustomer c
+      WHERE EXISTS (
+        SELECT 1
+        FROM dbo.FactInternetSales s
+        WHERE s.CustomerKey = c.CustomerKey
+          AND YEAR(s.OrderDate) = 2012
+      )
+      AND NOT EXISTS (
+        SELECT 1
+        FROM dbo.FactInternetSales s
+        WHERE s.CustomerKey = c.CustomerKey
+          AND YEAR(s.OrderDate) = 2013
+      )
+      ORDER BY c.CustomerKey
+    difficulty: hard
+    tags: [nested, comparison, filtering]
+
+  - id: hard_005
+    question_vi: "Tăng trưởng doanh thu từng tháng so với tháng trước trong năm 2013"
+    question_en: "Month-over-month revenue growth in 2013"
+    gold_sql: |
+      WITH monthly AS (
+        SELECT
+          MONTH(OrderDate) AS month,
+          SUM(SalesAmount) AS revenue
+        FROM dbo.FactInternetSales
+        WHERE YEAR(OrderDate) = 2013
+        GROUP BY MONTH(OrderDate)
+      )
+      SELECT
+        month,
+        revenue,
+        LAG(revenue) OVER (ORDER BY month) AS prev_month_revenue,
+        revenue - LAG(revenue) OVER (ORDER BY month) AS mom_growth
+      FROM monthly
+      ORDER BY month
+    difficulty: hard
+    tags: [cte, window, trend, comparison, glossary_term]
+
+  - id: hard_006
+    question_vi: "Top 5 khách hàng có doanh thu cao nhất trong mỗi quốc gia"
+    question_en: "Top 5 customers by revenue within each country"
+    gold_sql: |
+      WITH cust_revenue AS (
+        SELECT
+          c.CustomerKey,
+          c.FirstName + ' ' + c.LastName AS customer_name,
+          g.EnglishCountryRegionName AS country,
+          SUM(s.SalesAmount) AS revenue,
+          ROW_NUMBER() OVER (
+            PARTITION BY g.EnglishCountryRegionName
+            ORDER BY SUM(s.SalesAmount) DESC
+          ) AS rn
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+        JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+        GROUP BY c.CustomerKey, c.FirstName, c.LastName, g.EnglishCountryRegionName
+      )
+      SELECT country, customer_name, revenue
+      FROM cust_revenue
+      WHERE rn <= 5
+      ORDER BY country, revenue DESC
+    difficulty: hard
+    tags: [cte, window, multi_hop, ranking, glossary_term]
+
+  - id: hard_007
+    question_vi: "Khách hàng có doanh thu cao nhất trong từng quốc gia"
+    question_en: "Top-revenue customer in each country"
+    gold_sql: |
+      WITH ranked AS (
+        SELECT
+          c.FirstName + ' ' + c.LastName AS customer_name,
+          g.EnglishCountryRegionName AS country,
+          SUM(s.SalesAmount) AS revenue,
+          ROW_NUMBER() OVER (
+            PARTITION BY g.EnglishCountryRegionName
+            ORDER BY SUM(s.SalesAmount) DESC
+          ) AS rn
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+        JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+        GROUP BY c.CustomerKey, c.FirstName, c.LastName, g.EnglishCountryRegionName
+      )
+      SELECT country, customer_name, revenue
+      FROM ranked
+      WHERE rn = 1
+      ORDER BY country
+    difficulty: hard
+    tags: [cte, window, multi_hop, ranking, glossary_term]
+
+  - id: hard_008
+    question_vi: "Top 3 sản phẩm bán chạy nhất trong từng quý của năm 2013"
+    question_en: "Top 3 products by revenue per quarter in 2013"
+    gold_sql: |
+      WITH product_sales AS (
+        SELECT
+          p.EnglishProductName AS product,
+          DATEPART(QUARTER, s.OrderDate) AS quarter,
+          SUM(s.SalesAmount) AS revenue,
+          ROW_NUMBER() OVER (
+            PARTITION BY DATEPART(QUARTER, s.OrderDate)
+            ORDER BY SUM(s.SalesAmount) DESC
+          ) AS rn
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        WHERE YEAR(s.OrderDate) = 2013
+        GROUP BY p.EnglishProductName, DATEPART(QUARTER, s.OrderDate)
+      )
+      SELECT quarter, product, revenue
+      FROM product_sales
+      WHERE rn <= 3
+      ORDER BY quarter, revenue DESC
+    difficulty: hard
+    tags: [cte, window, ranking, trend, glossary_term, multi_hop]
+
+  - id: hard_009
+    question_vi: "Tỷ lệ phần trăm doanh thu của mỗi danh mục so với tổng"
+    question_en: "Each category's revenue as a percentage of total"
+    gold_sql: |
+      WITH cat_revenue AS (
+        SELECT
+          pc.EnglishProductCategoryName AS category,
+          SUM(s.SalesAmount) AS revenue
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+        JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+        GROUP BY pc.EnglishProductCategoryName
+      ),
+      total AS (
+        SELECT SUM(revenue) AS grand_total FROM cat_revenue
+      )
+      SELECT
+        cr.category,
+        cr.revenue,
+        ROUND(cr.revenue * 100.0 / t.grand_total, 2) AS pct_of_total
+      FROM cat_revenue cr
+      CROSS JOIN total t
+      ORDER BY cr.revenue DESC
+    difficulty: hard
+    tags: [cte, multi_hop, aggregation, comparison, glossary_term]
+
+  - id: hard_010
+    question_vi: "Top 10 khách hàng có nhiều đơn hàng nhất, kèm giá trị trung bình mỗi đơn"
+    question_en: "Top 10 customers by order count, with average order value"
+    gold_sql: |
+      WITH cust_orders AS (
+        SELECT
+          c.CustomerKey,
+          c.FirstName + ' ' + c.LastName AS customer_name,
+          COUNT(DISTINCT s.SalesOrderNumber) AS order_count,
+          AVG(s.SalesAmount) AS avg_order_value,
+          SUM(s.SalesAmount) AS total_revenue
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+        GROUP BY c.CustomerKey, c.FirstName, c.LastName
+      )
+      SELECT TOP 10 customer_name, order_count, avg_order_value, total_revenue
+      FROM cust_orders
+      ORDER BY order_count DESC
+    difficulty: hard
+    tags: [cte, ranking, aggregation, multi_hop, glossary_term]
+
+  - id: hard_011
+    question_vi: "Sản phẩm có doanh thu năm 2013 cao hơn năm 2012"
+    question_en: "Products whose 2013 revenue exceeds their 2012 revenue"
+    gold_sql: |
+      WITH yearly AS (
+        SELECT
+          p.EnglishProductName AS product,
+          YEAR(s.OrderDate) AS year,
+          SUM(s.SalesAmount) AS revenue
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        WHERE YEAR(s.OrderDate) IN (2012, 2013)
+        GROUP BY p.EnglishProductName, YEAR(s.OrderDate)
+      ),
+      pivoted AS (
+        SELECT
+          product,
+          SUM(CASE WHEN year = 2012 THEN revenue ELSE 0 END) AS rev_2012,
+          SUM(CASE WHEN year = 2013 THEN revenue ELSE 0 END) AS rev_2013
+        FROM yearly
+        GROUP BY product
+      )
+      SELECT product, rev_2012, rev_2013, rev_2013 - rev_2012 AS growth
+      FROM pivoted
+      WHERE rev_2013 > rev_2012 AND rev_2012 > 0
+      ORDER BY growth DESC
+    difficulty: hard
+    tags: [cte, comparison, aggregation, multi_hop, trend, glossary_term]
+
+  - id: hard_012
+    question_vi: "Doanh thu cộng dồn theo từng tháng trong năm 2013"
+    question_en: "Cumulative revenue by month in 2013"
+    gold_sql: |
+      WITH monthly AS (
+        SELECT
+          MONTH(OrderDate) AS month,
+          SUM(SalesAmount) AS revenue
+        FROM dbo.FactInternetSales
+        WHERE YEAR(OrderDate) = 2013
+        GROUP BY MONTH(OrderDate)
+      )
+      SELECT
+        month,
+        revenue,
+        SUM(revenue) OVER (ORDER BY month) AS cumulative_revenue
+      FROM monthly
+      ORDER BY month
+    difficulty: hard
+    tags: [cte, window, trend, glossary_term]
+
+  - id: hard_013
+    question_vi: "Khách hàng đã mua hàng vào năm 2013 nhưng chưa từng mua năm 2012"
+    question_en: "Customers who bought in 2013 but never in 2012"
+    gold_sql: |
+      SELECT
+        c.CustomerKey,
+        c.FirstName,
+        c.LastName
+      FROM dbo.DimCustomer c
+      WHERE EXISTS (
+        SELECT 1 FROM dbo.FactInternetSales s
+        WHERE s.CustomerKey = c.CustomerKey AND YEAR(s.OrderDate) = 2013
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM dbo.FactInternetSales s
+        WHERE s.CustomerKey = c.CustomerKey AND YEAR(s.OrderDate) = 2012
+      )
+      ORDER BY c.CustomerKey
+    difficulty: hard
+    tags: [nested, filtering, comparison]
+
+  - id: hard_014
+    question_vi: "Tỷ lệ chuyển đổi: phần trăm khách hàng đã từng mua hàng"
+    question_en: "Conversion rate: percentage of customers who have made a purchase"
+    gold_sql: |
+      SELECT
+        COUNT(DISTINCT c.CustomerKey) AS total_customers,
+        COUNT(DISTINCT s.CustomerKey) AS buyers,
+        ROUND(COUNT(DISTINCT s.CustomerKey) * 100.0 / COUNT(DISTINCT c.CustomerKey), 2) AS conversion_pct
+      FROM dbo.DimCustomer c
+      LEFT JOIN dbo.FactInternetSales s ON c.CustomerKey = s.CustomerKey
+    difficulty: hard
+    tags: [aggregation, comparison, multi_hop]
+
+  - id: hard_015
+    question_vi: "Sản phẩm có doanh thu cao hơn doanh thu trung bình của danh mục đó"
+    question_en: "Products with revenue above the average of their category"
+    gold_sql: |
+      WITH product_revenue AS (
+        SELECT
+          p.EnglishProductName AS product,
+          pc.EnglishProductCategoryName AS category,
+          pc.ProductCategoryKey,
+          SUM(s.SalesAmount) AS revenue
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+        JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+        GROUP BY p.EnglishProductName, pc.EnglishProductCategoryName, pc.ProductCategoryKey
+      ),
+      cat_avg AS (
+        SELECT ProductCategoryKey, AVG(revenue) AS avg_rev
+        FROM product_revenue
+        GROUP BY ProductCategoryKey
+      )
+      SELECT pr.product, pr.category, pr.revenue, ca.avg_rev
+      FROM product_revenue pr
+      JOIN cat_avg ca ON pr.ProductCategoryKey = ca.ProductCategoryKey
+      WHERE pr.revenue > ca.avg_rev
+      ORDER BY pr.category, pr.revenue DESC
+    difficulty: hard
+    tags: [cte, multi_hop, comparison, aggregation, glossary_term]
+
+  - id: hard_016
+    question_vi: "Xếp hạng doanh thu sản phẩm theo từng tháng năm 2013"
+    question_en: "Rank product revenue per month in 2013"
+    gold_sql: |
+      SELECT
+        MONTH(s.OrderDate) AS month,
+        p.EnglishProductName AS product,
+        SUM(s.SalesAmount) AS revenue,
+        RANK() OVER (
+          PARTITION BY MONTH(s.OrderDate)
+          ORDER BY SUM(s.SalesAmount) DESC
+        ) AS month_rank
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+      WHERE YEAR(s.OrderDate) = 2013
+      GROUP BY MONTH(s.OrderDate), p.EnglishProductName
+    difficulty: hard
+    tags: [window, multi_hop, aggregation, trend, glossary_term]
+
+  - id: hard_017
+    question_vi: "Top 5 khu vực đóng góp lớn nhất vào doanh thu Q4 2013"
+    question_en: "Top 5 territories by revenue in Q4 2013"
+    gold_sql: |
+      SELECT TOP 5
+        t.SalesTerritoryRegion AS region,
+        SUM(s.SalesAmount) AS revenue
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimSalesTerritory t ON s.SalesTerritoryKey = t.SalesTerritoryKey
+      WHERE YEAR(s.OrderDate) = 2013 AND MONTH(s.OrderDate) BETWEEN 10 AND 12
+      GROUP BY t.SalesTerritoryRegion
+      ORDER BY revenue DESC
+    difficulty: hard
+    tags: [ranking, aggregation, multi_hop, trend, glossary_term, filtering]
+
+  - id: hard_018
+    question_vi: "Khách hàng có ít nhất 3 đơn hàng với tổng giá trị mỗi đơn trên 500 USD"
+    question_en: "Customers with at least 3 orders whose total order value exceeds 500 USD each"
+    gold_sql: |
+      WITH order_totals AS (
+        SELECT
+          s.CustomerKey,
+          s.SalesOrderNumber,
+          SUM(s.SalesAmount) AS order_total
+        FROM dbo.FactInternetSales s
+        GROUP BY s.CustomerKey, s.SalesOrderNumber
+      )
+      SELECT
+        c.FirstName + ' ' + c.LastName AS customer_name,
+        COUNT(*) AS order_count
+      FROM order_totals o
+      JOIN dbo.DimCustomer c ON o.CustomerKey = c.CustomerKey
+      WHERE o.order_total > 500
+      GROUP BY c.CustomerKey, c.FirstName, c.LastName
+      HAVING COUNT(*) >= 3
+      ORDER BY order_count DESC
+    difficulty: hard
+    tags: [cte, aggregation, filtering, multi_hop, glossary_term]
+
+  - id: hard_019
+    question_vi: "Tỷ lệ phần trăm khách hàng theo nhóm tuổi"
+    question_en: "Customer percentage by age group"
+    gold_sql: |
+      WITH age_group AS (
+        SELECT
+          CASE
+            WHEN DATEDIFF(YEAR, BirthDate, '2014-01-01') < 30 THEN 'Under 30'
+            WHEN DATEDIFF(YEAR, BirthDate, '2014-01-01') < 50 THEN '30-49'
+            WHEN DATEDIFF(YEAR, BirthDate, '2014-01-01') < 70 THEN '50-69'
+            ELSE '70+'
+          END AS age_range,
+          CustomerKey
+        FROM dbo.DimCustomer
+      ),
+      counts AS (
+        SELECT age_range, COUNT(*) AS cnt
+        FROM age_group
+        GROUP BY age_range
+      )
+      SELECT
+        age_range,
+        cnt,
+        ROUND(cnt * 100.0 / SUM(cnt) OVER (), 2) AS pct
+      FROM counts
+      ORDER BY cnt DESC
+    difficulty: hard
+    tags: [cte, window, aggregation]
+
+  - id: hard_020
+    question_vi: "Sản phẩm bán chạy nhất theo từng quốc gia trong năm 2013"
+    question_en: "Top-selling product per country in 2013"
+    gold_sql: |
+      WITH country_product AS (
+        SELECT
+          g.EnglishCountryRegionName AS country,
+          p.EnglishProductName AS product,
+          SUM(s.SalesAmount) AS revenue,
+          ROW_NUMBER() OVER (
+            PARTITION BY g.EnglishCountryRegionName
+            ORDER BY SUM(s.SalesAmount) DESC
+          ) AS rn
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+        JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        WHERE YEAR(s.OrderDate) = 2013
+        GROUP BY g.EnglishCountryRegionName, p.EnglishProductName
+      )
+      SELECT country, product, revenue
+      FROM country_product
+      WHERE rn = 1
+      ORDER BY country
+    difficulty: hard
+    tags: [cte, window, multi_hop, ranking, trend, glossary_term]
+
+  - id: hard_021
+    question_vi: "Phân phối doanh thu theo nhóm thu nhập của khách hàng"
+    question_en: "Revenue distribution by customer income bracket"
+    gold_sql: |
+      SELECT
+        CASE
+          WHEN c.YearlyIncome < 30000 THEN 'Low'
+          WHEN c.YearlyIncome < 70000 THEN 'Medium'
+          WHEN c.YearlyIncome < 100000 THEN 'High'
+          ELSE 'Very High'
+        END AS income_bracket,
+        COUNT(DISTINCT c.CustomerKey) AS customers,
+        SUM(s.SalesAmount) AS revenue,
+        AVG(s.SalesAmount) AS avg_order
+      FROM dbo.FactInternetSales s
+      JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+      GROUP BY
+        CASE
+          WHEN c.YearlyIncome < 30000 THEN 'Low'
+          WHEN c.YearlyIncome < 70000 THEN 'Medium'
+          WHEN c.YearlyIncome < 100000 THEN 'High'
+          ELSE 'Very High'
+        END
+      ORDER BY revenue DESC
+    difficulty: hard
+    tags: [aggregation, multi_hop, glossary_term]
+
+  - id: hard_022
+    question_vi: "Top 10 cặp sản phẩm thường được mua cùng nhau"
+    question_en: "Top 10 product pairs frequently bought together"
+    gold_sql: |
+      SELECT TOP 10
+        p1.EnglishProductName AS product1,
+        p2.EnglishProductName AS product2,
+        COUNT(*) AS co_occurrence
+      FROM dbo.FactInternetSales s1
+      JOIN dbo.FactInternetSales s2
+        ON s1.SalesOrderNumber = s2.SalesOrderNumber
+        AND s1.SalesOrderLineNumber < s2.SalesOrderLineNumber
+      JOIN dbo.DimProduct p1 ON s1.ProductKey = p1.ProductKey
+      JOIN dbo.DimProduct p2 ON s2.ProductKey = p2.ProductKey
+      GROUP BY p1.EnglishProductName, p2.EnglishProductName
+      ORDER BY co_occurrence DESC
+    difficulty: hard
+    tags: [multi_hop, aggregation, ranking]
+
+  - id: hard_023
+    question_vi: "Phân nhóm khách hàng theo Customer Lifetime Value (LTV)"
+    question_en: "Customer LTV bucket distribution"
+    gold_sql: |
+      WITH cust_total AS (
+        SELECT
+          c.CustomerKey,
+          SUM(s.SalesAmount) AS ltv
+        FROM dbo.DimCustomer c
+        LEFT JOIN dbo.FactInternetSales s ON c.CustomerKey = s.CustomerKey
+        GROUP BY c.CustomerKey
+      )
+      SELECT
+        CASE
+          WHEN ltv IS NULL OR ltv = 0 THEN 'No purchase'
+          WHEN ltv < 1000 THEN 'Low (<1K)'
+          WHEN ltv < 5000 THEN 'Medium (1-5K)'
+          WHEN ltv < 10000 THEN 'High (5-10K)'
+          ELSE 'VIP (>=10K)'
+        END AS ltv_bracket,
+        COUNT(*) AS customers
+      FROM cust_total
+      GROUP BY
+        CASE
+          WHEN ltv IS NULL OR ltv = 0 THEN 'No purchase'
+          WHEN ltv < 1000 THEN 'Low (<1K)'
+          WHEN ltv < 5000 THEN 'Medium (1-5K)'
+          WHEN ltv < 10000 THEN 'High (5-10K)'
+          ELSE 'VIP (>=10K)'
+        END
+      ORDER BY customers DESC
+    difficulty: hard
+    tags: [cte, aggregation, glossary_term]
+
+  - id: hard_024
+    question_vi: "Tỷ lệ tăng trưởng doanh thu năm 2013 so với 2012 theo danh mục sản phẩm"
+    question_en: "Revenue growth percentage 2013 vs 2012 by category"
+    gold_sql: |
+      WITH cat_yearly AS (
+        SELECT
+          pc.EnglishProductCategoryName AS category,
+          YEAR(s.OrderDate) AS year,
+          SUM(s.SalesAmount) AS revenue
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        JOIN dbo.DimProductSubcategory psc ON p.ProductSubcategoryKey = psc.ProductSubcategoryKey
+        JOIN dbo.DimProductCategory pc ON psc.ProductCategoryKey = pc.ProductCategoryKey
+        WHERE YEAR(s.OrderDate) IN (2012, 2013)
+        GROUP BY pc.EnglishProductCategoryName, YEAR(s.OrderDate)
+      ),
+      pivoted AS (
+        SELECT
+          category,
+          MAX(CASE WHEN year = 2012 THEN revenue ELSE 0 END) AS rev_2012,
+          MAX(CASE WHEN year = 2013 THEN revenue ELSE 0 END) AS rev_2013
+        FROM cat_yearly
+        GROUP BY category
+      )
+      SELECT
+        category,
+        rev_2012,
+        rev_2013,
+        ROUND((rev_2013 - rev_2012) * 100.0 / NULLIF(rev_2012, 0), 2) AS growth_pct
+      FROM pivoted
+      ORDER BY growth_pct DESC
+    difficulty: hard
+    tags: [cte, multi_hop, aggregation, comparison, trend, glossary_term]
+
+  - id: hard_025
+    question_vi: "Khách hàng có doanh thu năm 2013 cao hơn năm 2012 ít nhất 50%"
+    question_en: "Customers whose 2013 revenue exceeded 2012 revenue by at least 50%"
+    gold_sql: |
+      WITH yearly_revenue AS (
+        SELECT
+          c.CustomerKey,
+          c.FirstName + ' ' + c.LastName AS customer_name,
+          YEAR(s.OrderDate) AS year,
+          SUM(s.SalesAmount) AS revenue
+        FROM dbo.DimCustomer c
+        JOIN dbo.FactInternetSales s ON c.CustomerKey = s.CustomerKey
+        WHERE YEAR(s.OrderDate) IN (2012, 2013)
+        GROUP BY c.CustomerKey, c.FirstName, c.LastName, YEAR(s.OrderDate)
+      ),
+      pivoted AS (
+        SELECT
+          CustomerKey,
+          MAX(customer_name) AS customer_name,
+          SUM(CASE WHEN year = 2012 THEN revenue ELSE 0 END) AS rev_2012,
+          SUM(CASE WHEN year = 2013 THEN revenue ELSE 0 END) AS rev_2013
+        FROM yearly_revenue
+        GROUP BY CustomerKey
+      )
+      SELECT customer_name, rev_2012, rev_2013, rev_2013 - rev_2012 AS growth
+      FROM pivoted
+      WHERE rev_2012 > 0 AND rev_2013 >= rev_2012 * 1.5
+      ORDER BY growth DESC
+    difficulty: hard
+    tags: [cte, comparison, multi_hop, trend, glossary_term]
+
+  - id: hard_026
+    question_vi: "Thu nhập trung vị của khách hàng theo từng quốc gia"
+    question_en: "Median customer income by country"
+    gold_sql: |
+      SELECT DISTINCT
+        g.EnglishCountryRegionName AS country,
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY c.YearlyIncome)
+          OVER (PARTITION BY g.EnglishCountryRegionName) AS median_income
+      FROM dbo.DimCustomer c
+      JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      ORDER BY median_income DESC
+    difficulty: hard
+    tags: [window, multi_hop, aggregation]
+
+  - id: hard_027
+    question_vi: "Đại lý có doanh thu cao hơn trung bình của loại business của họ"
+    question_en: "Resellers with revenue above the average of their business type"
+    gold_sql: |
+      WITH reseller_total AS (
+        SELECT
+          r.ResellerKey,
+          r.ResellerName,
+          r.BusinessType,
+          SUM(rs.SalesAmount) AS revenue
+        FROM dbo.DimReseller r
+        JOIN dbo.FactResellerSales rs ON r.ResellerKey = rs.ResellerKey
+        GROUP BY r.ResellerKey, r.ResellerName, r.BusinessType
+      ),
+      type_avg AS (
+        SELECT BusinessType, AVG(revenue) AS avg_rev
+        FROM reseller_total
+        GROUP BY BusinessType
+      )
+      SELECT rt.ResellerName, rt.BusinessType, rt.revenue, ta.avg_rev
+      FROM reseller_total rt
+      JOIN type_avg ta ON rt.BusinessType = ta.BusinessType
+      WHERE rt.revenue > ta.avg_rev
+      ORDER BY rt.BusinessType, rt.revenue DESC
+    difficulty: hard
+    tags: [cte, comparison, aggregation, multi_hop, glossary_term]
+
+  - id: hard_028
+    question_vi: "Doanh thu cộng dồn của top 5 sản phẩm theo từng tháng năm 2013"
+    question_en: "Cumulative monthly revenue for top 5 products in 2013"
+    gold_sql: |
+      WITH product_monthly AS (
+        SELECT
+          p.EnglishProductName AS product,
+          MONTH(s.OrderDate) AS month,
+          SUM(s.SalesAmount) AS revenue
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimProduct p ON s.ProductKey = p.ProductKey
+        WHERE YEAR(s.OrderDate) = 2013
+        GROUP BY p.EnglishProductName, MONTH(s.OrderDate)
+      ),
+      product_total AS (
+        SELECT
+          product,
+          SUM(revenue) AS total_rev,
+          RANK() OVER (ORDER BY SUM(revenue) DESC) AS r
+        FROM product_monthly
+        GROUP BY product
+      )
+      SELECT
+        pm.product,
+        pm.month,
+        pm.revenue,
+        SUM(pm.revenue) OVER (PARTITION BY pm.product ORDER BY pm.month) AS cumulative
+      FROM product_monthly pm
+      JOIN product_total pt ON pm.product = pt.product
+      WHERE pt.r <= 5
+      ORDER BY pm.product, pm.month
+    difficulty: hard
+    tags: [cte, window, multi_hop, ranking, trend, glossary_term]
+
+  - id: hard_029
+    question_vi: "Khách hàng đầu tiên và cuối cùng đặt hàng trong từng quốc gia"
+    question_en: "First and last customer to place an order in each country"
+    gold_sql: |
+      WITH cust_orders AS (
+        SELECT
+          g.EnglishCountryRegionName AS country,
+          c.FirstName + ' ' + c.LastName AS customer,
+          s.OrderDate,
+          ROW_NUMBER() OVER (
+            PARTITION BY g.EnglishCountryRegionName
+            ORDER BY s.OrderDate ASC
+          ) AS first_rn,
+          ROW_NUMBER() OVER (
+            PARTITION BY g.EnglishCountryRegionName
+            ORDER BY s.OrderDate DESC
+          ) AS last_rn
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+        JOIN dbo.DimGeography g ON c.GeographyKey = g.GeographyKey
+      )
+      SELECT
+        country,
+        MIN(CASE WHEN first_rn = 1 THEN customer END) AS first_customer,
+        MIN(CASE WHEN first_rn = 1 THEN OrderDate END) AS first_order_date,
+        MIN(CASE WHEN last_rn = 1 THEN customer END) AS last_customer,
+        MIN(CASE WHEN last_rn = 1 THEN OrderDate END) AS last_order_date
+      FROM cust_orders
+      GROUP BY country
+      ORDER BY country
+    difficulty: hard
+    tags: [cte, window, multi_hop, comparison]
+
+  - id: hard_030
+    question_vi: "Top 10 khách hàng có giá trị đơn trung bình cao nhất, có ít nhất 2 đơn"
+    question_en: "Top 10 customers by average order value, with at least 2 orders"
+    gold_sql: |
+      WITH cust_stats AS (
+        SELECT
+          c.CustomerKey,
+          c.FirstName + ' ' + c.LastName AS customer_name,
+          COUNT(DISTINCT s.SalesOrderNumber) AS order_count,
+          AVG(s.SalesAmount) AS avg_order_value
+        FROM dbo.FactInternetSales s
+        JOIN dbo.DimCustomer c ON s.CustomerKey = c.CustomerKey
+        GROUP BY c.CustomerKey, c.FirstName, c.LastName
+      )
+      SELECT TOP 10 customer_name, order_count, avg_order_value
+      FROM cust_stats
+      WHERE order_count >= 2
+      ORDER BY avg_order_value DESC
+    difficulty: hard
+    tags: [cte, ranking, aggregation, filtering, multi_hop, glossary_term]

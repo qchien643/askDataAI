@@ -18,30 +18,31 @@ env/
 .env.*.local
 
 # ── Data & runtime-generated ──
-chroma_data/
-chroma_test_data/
-manifests/
-manifest/
-semantic_memory.json
-test_output.txt
+data/chroma_data/
+data/manifests/
+data/semantic_memory.json
 *.log
 *.db
 
-# ── Reference code (không thuộc project) ──
-WrenAI/
+# ── HuggingFace model snapshots (downloaded via scripts/download-models.ps1) ──
+models/
 
-# ── Legacy / unused ──
-gradio_app.py
-API_DOCS.md
-PIPELINE_ANALYSIS.md
+# ── Reference code (không thuộc project, để ở thư mục cha) ──
+WrenAI/
+claude-obsidian/
 
 # ── IDE ──
 .vscode/
 .idea/
+.claude/
 *.tmp
 *.swp
 *.swo
 mini-wren-ai.code-workspace
+
+# ── Local backups & test runtime output ──
+*.before-mschema-backup
+tests/test_results.json
 
 # ── Node / Frontend ──
 web/node_modules/

@@ -15,6 +15,10 @@ import type {
   DeployResponse,
   HealthResponse,
   ModelUpdateData,
+  AddModelData,
+  AddRelationshipData,
+  TestGenerateResponse,
+  AutoDescribeEvent,
 } from '@/utils/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
@@ -24,6 +28,12 @@ export interface ProgressEvent {
   stage: string;
   label: string;
   detail?: string;
+}
+
+// Token event emitted by /v1/ask/stream (Stage 11 CoT + Stage 12 SQL)
+export interface TokenEvent {
+  text: string;
+  stage: 'reasoning' | 'sql';
 }
 
 // ── Base helpers ──
@@ -157,6 +167,7 @@ export const api = {
     debug: boolean,
     overrides: Record<string, any>,
     onProgress: (evt: ProgressEvent) => void,
+    onToken?: (evt: TokenEvent) => void,
   ): Promise<AskResponse> =>
     new Promise<AskResponse>(async (resolve, reject) => {
       let res: Response;
@@ -195,6 +206,8 @@ export const api = {
             const payload = JSON.parse(dataLine);
             if (eventType === 'progress') {
               onProgress(payload as ProgressEvent);
+            } else if (eventType === 'token') {
+              onToken?.(payload as TokenEvent);
             } else if (eventType === 'result') {
               resolve(payload as AskResponse);
             } else if (eventType === 'error') {
@@ -255,4 +268,70 @@ export const api = {
   // Deploy (re-deploy)
   deploy: () =>
     apiPost<DeployResponse>('/v1/deploy'),
+
+  // ── Schema CRUD ──
+  addModel: (data: AddModelData) =>
+    apiPost<{ success: boolean; model: string; message: string }>('/v1/models', data),
+  deleteModel: (name: string) =>
+    apiDelete<{ success: boolean; model: string; relationships_removed: number }>(
+      `/v1/models/${encodeURIComponent(name)}`
+    ),
+  deleteColumn: (modelName: string, columnName: string) =>
+    apiDelete<{ success: boolean }>(
+      `/v1/models/${encodeURIComponent(modelName)}/columns/${encodeURIComponent(columnName)}`
+    ),
+  addRelationship: (data: AddRelationshipData) =>
+    apiPost<{ success: boolean; name: string }>('/v1/relationships', data),
+  deleteRelationship: (name: string) =>
+    apiDelete<{ success: boolean }>(`/v1/relationships/${encodeURIComponent(name)}`),
+
+  // ── Test Generate ──
+  testGenerate: () =>
+    apiPost<TestGenerateResponse>('/v1/models/test-generate'),
+
+  // ── AI Auto-Describe (SSE) ──
+  autoDescribeStream: (
+    tables: string[],
+    onEvent: (evt: AutoDescribeEvent) => void,
+  ): Promise<void> =>
+    new Promise<void>(async (resolve, reject) => {
+      let res: Response;
+      try {
+        res = await fetch(`${API_BASE}/v1/models/auto-describe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tables, mode: 'overwrite' }),
+        });
+      } catch {
+        return reject(new ApiError('Backend không phản hồi.', 0));
+      }
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({ detail: `HTTP ${res.status}` }));
+        return reject(new ApiError(err.detail || `API error: ${res.status}`, res.status));
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const blocks = buffer.split('\n\n');
+        buffer = blocks.pop() ?? '';
+        for (const block of blocks) {
+          if (!block.trim()) continue;
+          for (const line of block.split('\n')) {
+            if (line.startsWith('data: ')) {
+              try {
+                const payload = JSON.parse(line.slice(6));
+                onEvent(payload as AutoDescribeEvent);
+              } catch { /* skip malformed */ }
+            }
+          }
+        }
+      }
+      resolve();
+    }),
 };

@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.security.pi_guardrail import PIGuardrail, PIGuardResult
+from askdataai.security.pi_guardrail import PIGuardrail, PIGuardResult
 
 def main():
     guard = PIGuardrail(enabled=True, threshold=0.5)

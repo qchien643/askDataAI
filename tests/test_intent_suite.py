@@ -29,7 +29,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.generation.pre_filter import PreFilter, PreFilterResult
+from askdataai.generation.pre_filter import PreFilter, PreFilterResult
 
 # ─── TEST CASES ──────────────────────────────────────────────────
 # Format: (question, expected_prefilter, expected_final_intent, category)
@@ -186,10 +186,10 @@ def run_full_pipeline_tests():
     print("  (Requires OPENAI_API_KEY in .env)")
     print()
     
-    from src.generation.pre_filter import PreFilter, PreFilterResult
-    from src.generation.intent_classifier import IntentClassifier, Intent
-    from src.generation.llm_client import LLMClient
-    from src.config import settings
+    from askdataai.generation.pre_filter import PreFilter, PreFilterResult
+    from askdataai.generation.intent_classifier import IntentClassifier, Intent
+    from askdataai.generation.llm_client import LLMClient
+    from askdataai.config import settings
 
     pf = PreFilter()
     llm = LLMClient(api_key=settings.openai_api_key, base_url=settings.openai_base_url)

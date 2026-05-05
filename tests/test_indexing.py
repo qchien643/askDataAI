@@ -20,14 +20,14 @@ import shutil
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.config import settings
-from src.connectors.connection import SQLServerConnector
-from src.connectors.schema_introspector import SchemaIntrospector
-from src.modeling.manifest_builder import ManifestBuilder
-from src.modeling.deploy import ManifestDeployer
-from src.indexing.embedder import HuggingFaceEmbedder
-from src.indexing.vector_store import VectorStore
-from src.indexing.schema_indexer import (
+from askdataai.config import settings
+from askdataai.connectors.connection import SQLServerConnector
+from askdataai.connectors.schema_introspector import SchemaIntrospector
+from askdataai.modeling.manifest_builder import ManifestBuilder
+from askdataai.modeling.deploy import ManifestDeployer
+from askdataai.indexing.embedder import OpenAIEmbedder
+from askdataai.indexing.vector_store import VectorStore
+from askdataai.indexing.schema_indexer import (
     SchemaIndexer,
     DDLChunker,
     TableDescriptionChunker,
@@ -46,7 +46,7 @@ def test_embedder():
     """Test 1: HuggingFace embedder."""
     separator("TEST 1: HuggingFace Embedder")
 
-    embedder = HuggingFaceEmbedder(api_key=settings.huggingface_api_key)
+    embedder = OpenAIEmbedder(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
     print(f"   Model: {embedder.model_name}")
 
     vec = embedder.embed_text("test embedding")

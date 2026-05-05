@@ -1,45 +1,20 @@
-# Python
+venv/
 __pycache__/
 *.py[cod]
-*.pyo
-venv/
-.venv/
-*.egg-info/
-
-# Environment & secrets
+.git/
 .env
-.env.local
-.env.*.local
-
-# Runtime data (use volumes instead)
-chroma_data/
-chroma_test_data/
-manifests/
-semantic_memory.json
-test_output.txt
-*.log
-
-# Node / Frontend
-web/node_modules/
-web/.next/
-web/out/
-
-# Reference & docs
+data/chroma_data/
+data/manifests/
+data/semantic_memory.json
+# HuggingFace model snapshots (mount as volume in docker-compose if needed for offline)
+models/
 WrenAI/
+claude-obsidian/
+web/
+tests/
 docs/
-gradio_app.py
-
-# IDE
+*.md
+!CLAUDE.md
+.gitignore
 .vscode/
 .idea/
-*.tmp
-*.swp
-mini-wren-ai.code-workspace
-
-# Git
-.git/
-.gitignore
-
-# OS
-.DS_Store
-Thumbs.db

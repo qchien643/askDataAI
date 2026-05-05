@@ -18,10 +18,10 @@ import json
 # Thêm parent directory vào path để import src
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.config import settings
-from src.connectors.connection import SQLServerConnector
-from src.connectors.schema_introspector import SchemaIntrospector
-from src.connectors.exceptions import ConnectionError, QueryError
+from askdataai.config import settings
+from askdataai.connectors.connection import SQLServerConnector
+from askdataai.connectors.schema_introspector import SchemaIntrospector
+from askdataai.connectors.exceptions import ConnectionError, QueryError
 
 
 def separator(title: str):

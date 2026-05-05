@@ -1,0 +1,762 @@
+{
+  "metadata": {
+    "tag": "smoke",
+    "git_sha": "8946146",
+    "timestamp": "2026-04-30T21:27:21",
+    "dataset_size": 3
+  },
+  "config_snapshot": {
+    "backend_url": "http://localhost:8000",
+    "judge_model": "gpt-4o-mini",
+    "openai_base_url": "https://api.openai.com/v1"
+  },
+  "summary": {
+    "total": 3,
+    "correct": 2,
+    "ex_match_rate": 0.6667,
+    "valid_rate": 1.0,
+    "by_method": {
+      "exact": 1,
+      "llm_judge": 2
+    },
+    "by_difficulty": {
+      "easy": {
+        "n": 3,
+        "correct": 2,
+        "ex_rate": 0.6666666666666666,
+        "valid_rate": 1.0
+      }
+    },
+    "by_tag": {
+      "aggregation": {
+        "n": 1,
+        "ex_rate": 1.0
+      },
+      "filtering": {
+        "n": 1,
+        "ex_rate": 0.0
+      },
+      "ranking": {
+        "n": 1,
+        "ex_rate": 1.0
+      }
+    },
+    "latency_p50_ms": 19760,
+    "latency_p95_ms": 26239
+  },
+  "results": [
+    {
+      "example_id": "easy_001",
+      "difficulty": "easy",
+      "tags": [
+        "aggregation"
+      ],
+      "pred_sql": "SELECT COUNT(*) AS TotalCustomers\nFROM [dbo].[DimCustomer];",
+      "pred_translated": "How many customers are in the system?",
+      "pred_rows": [
+        {
+          "TotalCustomers": 18484
+        }
+      ],
+      "pred_cols": [
+        "TotalCustomers"
+      ],
+      "pred_row_count": 1,
+      "pred_valid": true,
+      "pred_error": "",
+      "pred_intent": "TEXT_TO_SQL",
+      "pred_retries": 0,
+      "gold_rows": [
+        {
+          "total_customers": 18484
+        }
+      ],
+      "gold_cols": [
+        "total_customers"
+      ],
+      "gold_row_count": 1,
+      "gold_valid": true,
+      "gold_error": "",
+      "match": true,
+      "match_method": "exact",
+      "judge_verdict": "",
+      "judge_reasoning": "",
+      "judge_confidence": 0.0,
+      "compare_reason": "set match (perm=(0,))",
+      "pipeline_latency_ms": 26239,
+      "gold_latency_ms": 266,
+      "judge_latency_ms": 0
+    },
+    {
+      "example_id": "easy_002",
+      "difficulty": "easy",
+      "tags": [
+        "ranking"
+      ],
+      "pred_sql": "WITH TopProducts AS (\n    SELECT TOP 10\n        ProductKey,\n        EnglishProductName,\n        ListPrice\n    FROM [dbo].[DimProduct]\n    ORDER BY ListPrice DESC\n)\nSELECT\n    ProductKey,\n    EnglishProductName,\n    ListPrice\nFROM TopProducts\nORDER BY ListPrice DESC;",
+      "pred_translated": "List the top 10 products with the highest listed price",
+      "pred_rows": [
+        {
+          "ProductKey": 310,
+          "EnglishProductName": "Road-150 Red, 62",
+          "ListPrice": 3578.27
+        },
+        {
+          "ProductKey": 311,
+          "EnglishProductName": "Road-150 Red, 44",
+          "ListPrice": 3578.27
+        },
+        {
+          "ProductKey": 312,
+          "EnglishProductName": "Road-150 Red, 48",
+          "ListPrice": 3578.27
+        },
+        {
+          "ProductKey": 313,
+          "EnglishProductName": "Road-150 Red, 52",
+          "ListPrice": 3578.27
+        },
+        {
+          "ProductKey": 314,
+          "EnglishProductName": "Road-150 Red, 56",
+          "ListPrice": 3578.27
+        },
+        {
+          "ProductKey": 344,
+          "EnglishProductName": "Mountain-100 Silver, 38",
+          "ListPrice": 3399.99
+        },
+        {
+          "ProductKey": 345,
+          "EnglishProductName": "Mountain-100 Silver, 42",
+          "ListPrice": 3399.99
+        },
+        {
+          "ProductKey": 346,
+          "EnglishProductName": "Mountain-100 Silver, 44",
+          "ListPrice": 3399.99
+        },
+        {
+          "ProductKey": 347,
+          "EnglishProductName": "Mountain-100 Silver, 48",
+          "ListPrice": 3399.99
+        },
+        {
+          "ProductKey": 348,
+          "EnglishProductName": "Mountain-100 Black, 38",
+          "ListPrice": 3374.99
+        }
+      ],
+      "pred_cols": [
+        "ProductKey",
+        "EnglishProductName",
+        "ListPrice"
+      ],
+      "pred_row_count": 10,
+      "pred_valid": true,
+      "pred_error": "",
+      "pred_intent": "TEXT_TO_SQL",
+      "pred_retries": 0,
+      "gold_rows": [
+        {
+          "EnglishProductName": "Road-150 Red, 62",
+          "ListPrice": 3578.27
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 44",
+          "ListPrice": 3578.27
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 48",
+          "ListPrice": 3578.27
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 52",
+          "ListPrice": 3578.27
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 56",
+          "ListPrice": 3578.27
+        },
+        {
+          "EnglishProductName": "Mountain-100 Silver, 38",
+          "ListPrice": 3399.99
+        },
+        {
+          "EnglishProductName": "Mountain-100 Silver, 42",
+          "ListPrice": 3399.99
+        },
+        {
+          "EnglishProductName": "Mountain-100 Silver, 44",
+          "ListPrice": 3399.99
+        },
+        {
+          "EnglishProductName": "Mountain-100 Silver, 48",
+          "ListPrice": 3399.99
+        },
+        {
+          "EnglishProductName": "Mountain-100 Black, 38",
+          "ListPrice": 3374.99
+        }
+      ],
+      "gold_cols": [
+        "EnglishProductName",
+        "ListPrice"
+      ],
+      "gold_row_count": 10,
+      "gold_valid": true,
+      "gold_error": "",
+      "match": true,
+      "match_method": "llm_judge",
+      "judge_verdict": "correct",
+      "judge_reasoning": "The predicted SQL correctly retrieves the top 10 products by list price, including the required columns, and the additional 'ProductKey' column does not detract from the answer's correctness. The core data matches the intent of the question.",
+      "judge_confidence": 0.9,
+      "compare_reason": "column_count mismatch (3 pred vs 2 gold)",
+      "pipeline_latency_ms": 19760,
+      "gold_latency_ms": 18,
+      "judge_latency_ms": 2723
+    },
+    {
+      "example_id": "easy_003",
+      "difficulty": "easy",
+      "tags": [
+        "filtering"
+      ],
+      "pred_sql": "SELECT EnglishProductName\nFROM [dbo].[DimProduct]\nWHERE Color = 'Red';",
+      "pred_translated": "Which product models are available in red color?",
+      "pred_rows": [
+        {
+          "EnglishProductName": "HL Road Frame - Red, 58"
+        },
+        {
+          "EnglishProductName": "Sport-100 Helmet, Red"
+        },
+        {
+          "EnglishProductName": "Sport-100 Helmet, Red"
+        },
+        {
+          "EnglishProductName": "Sport-100 Helmet, Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 62"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 62"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 62"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 44"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 44"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 44"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 48"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 48"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 48"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 52"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 52"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 52"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 56"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 56"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 56"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 44"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 44"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 48"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 48"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 52"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 52"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 58"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 58"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 60"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 60"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 62"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 62"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 44"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 48"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 52"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 58"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 60"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 62"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 44"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 48"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 52"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 56"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 58"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 60"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 44"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 48"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 52"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 58"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 58"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 60"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 60"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 62"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 62"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 44"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 44"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 48"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 48"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 52"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 52"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 44"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 48"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 52"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 58"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 58"
+        }
+      ],
+      "pred_cols": [
+        "EnglishProductName"
+      ],
+      "pred_row_count": 63,
+      "pred_valid": true,
+      "pred_error": "",
+      "pred_intent": "TEXT_TO_SQL",
+      "pred_retries": 0,
+      "gold_rows": [
+        {
+          "EnglishProductName": "HL Road Frame - Red, 44",
+          "ListPrice": 1263.4598,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 44",
+          "ListPrice": 1301.3636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 44",
+          "ListPrice": 1431.5,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 48",
+          "ListPrice": 1263.4598,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 48",
+          "ListPrice": 1301.3636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 48",
+          "ListPrice": 1431.5,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 52",
+          "ListPrice": 1263.4598,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 52",
+          "ListPrice": 1301.3636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 52",
+          "ListPrice": 1431.5,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 56",
+          "ListPrice": 1263.4598,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 56",
+          "ListPrice": 1301.3636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 56",
+          "ListPrice": 1431.5,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 58",
+          "ListPrice": null,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 62",
+          "ListPrice": 1263.4598,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 62",
+          "ListPrice": 1301.3636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "HL Road Frame - Red, 62",
+          "ListPrice": 1431.5,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 44",
+          "ListPrice": 306.5636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 44",
+          "ListPrice": 337.22,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 48",
+          "ListPrice": 306.5636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 48",
+          "ListPrice": 337.22,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 52",
+          "ListPrice": 306.5636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 52",
+          "ListPrice": 337.22,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 58",
+          "ListPrice": 306.5636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 58",
+          "ListPrice": 337.22,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 60",
+          "ListPrice": 306.5636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 60",
+          "ListPrice": 337.22,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 62",
+          "ListPrice": 306.5636,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "LL Road Frame - Red, 62",
+          "ListPrice": 337.22,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 44",
+          "ListPrice": 594.83,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 48",
+          "ListPrice": 594.83,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 52",
+          "ListPrice": 594.83,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 58",
+          "ListPrice": 594.83,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "ML Road Frame - Red, 60",
+          "ListPrice": 594.83,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 44",
+          "ListPrice": 3578.27,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 48",
+          "ListPrice": 3578.27,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 52",
+          "ListPrice": 3578.27,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 56",
+          "ListPrice": 3578.27,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-150 Red, 62",
+          "ListPrice": 3578.27,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 44",
+          "ListPrice": 2443.35,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 48",
+          "ListPrice": 2443.35,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 52",
+          "ListPrice": 2443.35,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 58",
+          "ListPrice": 2181.5625,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-250 Red, 58",
+          "ListPrice": 2443.35,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 44",
+          "ListPrice": 1457.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 48",
+          "ListPrice": 1457.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 52",
+          "ListPrice": 1457.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 58",
+          "ListPrice": 1457.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-450 Red, 60",
+          "ListPrice": 1457.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 44",
+          "ListPrice": 699.0982,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 44",
+          "ListPrice": 782.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 48",
+          "ListPrice": 699.0982,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 48",
+          "ListPrice": 782.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 52",
+          "ListPrice": 699.0982,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 52",
+          "ListPrice": 782.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 58",
+          "ListPrice": 699.0982,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 58",
+          "ListPrice": 782.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 60",
+          "ListPrice": 699.0982,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 60",
+          "ListPrice": 782.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 62",
+          "ListPrice": 699.0982,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Road-650 Red, 62",
+          "ListPrice": 782.99,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Sport-100 Helmet, Red",
+          "ListPrice": 33.6442,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Sport-100 Helmet, Red",
+          "ListPrice": 33.6442,
+          "Color": "Red"
+        },
+        {
+          "EnglishProductName": "Sport-100 Helmet, Red",
+          "ListPrice": 34.99,
+          "Color": "Red"
+        }
+      ],
+      "gold_cols": [
+        "EnglishProductName",
+        "ListPrice",
+        "Color"
+      ],
+      "gold_row_count": 63,
+      "gold_valid": true,
+      "gold_error": "",
+      "match": false,
+      "match_method": "llm_judge",
+      "judge_verdict": "partial",
+      "judge_reasoning": "The predicted SQL correctly identifies products that come in red color, but it omits the ListPrice and Color columns, which are relevant to the user's question about the products. Therefore, while it provides the correct entities, it lacks key information.",
+      "judge_confidence": 0.7,
+      "compare_reason": "column_count mismatch (1 pred vs 3 gold)",
+      "pipeline_latency_ms": 19151,
+      "gold_latency_ms": 65,
+      "judge_latency_ms": 2060
+    }
+  ]
+}

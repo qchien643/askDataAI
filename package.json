@@ -1,0 +1,25 @@
+{
+  "name": "mini-wren-ai",
+  "version": "1.0.0",
+  "description": "**Text-to-SQL Platform** — Hỏi câu hỏi bằng tiếng Việt, nhận SQL + kết quả + biểu đồ tự động.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duongvan17/text_to_sql.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/duongvan17/text_to_sql/issues"
+  },
+  "homepage": "https://github.com/duongvan17/text_to_sql#readme"
+}
